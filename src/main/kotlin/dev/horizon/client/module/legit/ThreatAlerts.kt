@@ -10,9 +10,11 @@ import dev.horizon.client.module.Module
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.core.BlockPos
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -23,8 +25,8 @@ import java.util.UUID
 /**
  * Not in the original: warns about the things that start most Bedwars deaths, from what the server already sends (it
  * sends nothing itself, so nothing can see it). An enemy within [range] switching to a fireball, TNT, a bow or an
- * ender pearl, or turning invisible; and around your own bed (the one nearest where you first stood in this world):
- * an enemy coming within [bedRange], or a block next to it being broken. Each alert is a notification, with a sound
+ * ender pearl, or turning invisible; and, in a game (see [inGame]), around your own bed (the one nearest where you
+ * first stood in this world): an enemy coming within [bedRange], or an enemy breaking a block next to it. Each alert is a notification, with a sound
  * and a chat line if wanted, and the same one doesn't repeat for [COOLDOWN_MS].
  */
 class ThreatAlerts : Module("threat-alerts", Categories.LEGIT) {
@@ -77,7 +79,7 @@ class ThreatAlerts : Module("threat-alerts", Categories.LEGIT) {
                 clear()
             }
             ticksIn++
-            if (bed.value) watchBed(p, lvl)
+            if (bed.value && inGame(p)) watchBed(p, lvl)
             val r2 = range.value * range.value.toDouble()
             val seen = HashSet<UUID>()
             for (other in lvl.players()) {
@@ -109,16 +111,23 @@ class ThreatAlerts : Module("threat-alerts", Categories.LEGIT) {
             if (!bed.value) return@on
             val home = bedPos ?: return@on
             val p = mc.player ?: return@on
+            if (!inGame(p)) return@on
             when (val pk = e.packet) {
                 is ClientboundBlockDestructionPacket -> {
-                    if (pk.id == p.id || pk.progress !in 0..9) return@on
-                    if (pk.pos.distManhattan(home) <= BED_BLOCKS) alert("bed/break", "Someone is breaking blocks at your bed", bedIcon(home))
+                    if (pk.id == p.id || pk.progress !in 0..9 || pk.pos.distManhattan(home) > BED_BLOCKS) return@on
+                    // The server says who's breaking it: a teammate's (or anything not a player's) isn't news.
+                    val breaker = mc.level?.getEntity(pk.id) as? Player
+                    if (breaker == null || Teams.isTeammate(breaker)) return@on
+                    alert("bed/break", "${breaker.name.string} is breaking blocks at your bed", bedIcon(home))
                 }
                 is ClientboundBlockUpdatePacket -> {
                     if (!pk.blockState.isAir || pk.pos.distManhattan(home) > BED_BLOCKS) return@on
-                    // Your own breaking isn't news.
-                    if (p.position().distanceTo(Vec3.atCenterOf(pk.pos)) < 5.5 && mc.gameMode?.isDestroying == true) return@on
-                    alert("bed/gone", "A block at your bed was broken", bedIcon(home))
+                    // Here it doesn't say who: only news when an enemy is close enough to have done it (so not
+                    // your own breaking, or a teammate's).
+                    val at = Vec3.atCenterOf(pk.pos)
+                    val enemy = mc.level?.players()?.any { it !== p && !Teams.isTeammate(it) && !it.isSpectator &&
+                        it.eyePosition.distanceTo(at) <= BREAK_REACH } == true
+                    if (enemy) alert("bed/gone", "A block at your bed was broken", bedIcon(home))
                 }
             }
         }
@@ -137,6 +146,15 @@ class ThreatAlerts : Module("threat-alerts", Categories.LEGIT) {
         s.`is`(Items.BOW) || s.`is`(Items.CROSSBOW) -> Kind.BOW
         s.`is`(Items.ENDER_PEARL) -> Kind.PEARL
         else -> null
+    }
+
+    /**
+     * In a Bedwars game rather than a lobby: every team's players wear leather armour dyed their colour, which lobbies
+     * (full of decoration beds) never put on you. Bed alerts only run then.
+     */
+    private fun inGame(p: Player): Boolean = DYED_SLOTS.any { slot ->
+        val dyed = p.getItemBySlot(slot).get(DataComponents.DYED_COLOR) ?: return@any false
+        TeamMatcher.normalizeArmorColor(dyed.rgb()) != null
     }
 
     /** Finds your bed once you've been in the world a moment, then watches who comes near it. */
@@ -202,5 +220,8 @@ class ThreatAlerts : Module("threat-alerts", Categories.LEGIT) {
         const val BED_SEARCH = 24
         /** Blocks around the bed (by Manhattan distance) that count as its defence. */
         const val BED_BLOCKS = 4
+        /** How far from a broken block a player could have broken it (survival reach, and a little). */
+        const val BREAK_REACH = 5.5
+        val DYED_SLOTS = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
     }
 }
