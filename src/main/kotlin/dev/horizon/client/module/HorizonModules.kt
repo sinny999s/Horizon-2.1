@@ -70,6 +70,7 @@ import dev.horizon.client.module.equip.NoServerSlot
 import dev.horizon.client.module.equip.ReFiller
 import dev.horizon.client.module.equip.ToolSaver
 import dev.horizon.client.module.equip.XCarry
+import dev.horizon.client.module.esp.BedPlates
 import dev.horizon.client.module.esp.BreakEsp
 import dev.horizon.client.module.esp.HoleEsp
 import dev.horizon.client.module.esp.ItemEsp
@@ -428,5 +429,6 @@ object HorizonModules {
         Modules.register(PearlSave())
         Modules.register(ThreatAlerts())
         Modules.register(GhostMode)
+        Modules.register(BedPlates())
     }
 }

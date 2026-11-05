@@ -212,4 +212,5 @@ pearl-save=Throws an ender pearl back to safety when you're knocked too far out 
 godbridge=Assists with bridging techniques: full-speed diagonal GodBridging and edge-catching legit Ninja bridging.
 highway-builder=Automatically paves multi-block-wide highways beneath you as you travel.
 trail-follower=Follows trails of loaded chunks under the nether roof automatically.
+bed-plates=Shows the blocks defending each bed, layer by layer, over the bed, so you know what to bring before you rush.
 ghost-mode=Turns off and hides blatant modules, and keeps Aura on legit settings, for servers that watch closely.
