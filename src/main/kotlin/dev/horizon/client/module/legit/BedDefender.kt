@@ -1,5 +1,6 @@
 package dev.horizon.client.module.legit
 
+import dev.horizon.client.combat.BedTeams
 import dev.horizon.client.combat.Inventory
 import dev.horizon.client.combat.Placer
 import dev.horizon.client.combat.PlaceBoxes
@@ -37,7 +38,7 @@ import kotlin.math.sqrt
 
 /**
  * Not in the original: Auto Bed Defender for BedWars.
- * Automatically scans for your team's bed, determines the core defense positions (surrounding and above the bed blocks),
+ * Automatically scans for your team's bed (the nearest one that [BedTeams] doesn't know to be another team's), determines the core defense positions (surrounding and above the bed blocks),
  * picks the best defense blocks (prioritizing Obsidian for the inner core, and auto-swapping Obsidian from inventory
  * to hotbar if available, followed by End Stone, Wood, and Wool), and places them using legit smooth rotations.
  */
@@ -232,6 +233,8 @@ class BedDefender : Module("bed-defender", Categories.LEGIT, listOf("auto-bed-de
             val pos = BlockPos(x, y, z)
             val state = level.getBlockState(pos)
             if (state.`is`(BlockTags.BEDS)) {
+                // Never another team's bed: building onto it would only defend it for them.
+                if (BedTeams.bedAt(level, pos)?.let { BedTeams.owner(it) } == BedTeams.Owner.ENEMY) continue
                 val d = Vec3.atCenterOf(pos).distanceToSqr(p.eyePosition)
                 if (d < nearestDistSq) {
                     nearestDistSq = d

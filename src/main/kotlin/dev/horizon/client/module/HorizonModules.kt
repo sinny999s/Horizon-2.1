@@ -103,6 +103,7 @@ import dev.horizon.client.module.legit.BlockIn
 import dev.horizon.client.module.legit.BedDefender
 import dev.horizon.client.module.legit.Clutch
 import dev.horizon.client.module.legit.FireballDeflect
+import dev.horizon.client.module.legit.BedBreaker
 import dev.horizon.client.module.legit.GhostMode
 import dev.horizon.client.module.legit.GodBridge
 import dev.horizon.client.module.legit.PearlSave
@@ -430,5 +431,6 @@ object HorizonModules {
         Modules.register(ThreatAlerts())
         Modules.register(GhostMode)
         Modules.register(BedPlates())
+        Modules.register(BedBreaker())
     }
 }

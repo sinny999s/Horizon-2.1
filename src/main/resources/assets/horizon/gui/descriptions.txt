@@ -213,4 +213,5 @@ godbridge=Assists with bridging techniques: full-speed diagonal GodBridging and 
 highway-builder=Automatically paves multi-block-wide highways beneath you as you travel.
 trail-follower=Follows trails of loaded chunks under the nether roof automatically.
 bed-plates=Shows the blocks defending each bed, layer by layer, over the bed, so you know what to bring before you rush.
+bed-breaker=Digs into an enemy bed like a player: picks the quickest way through its defense, aims there, switches to the right tool and mines block by block. Never your own bed.
 ghost-mode=Turns off and hides blatant modules, and keeps Aura on legit settings, for servers that watch closely.
