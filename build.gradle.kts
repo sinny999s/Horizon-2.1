@@ -20,12 +20,15 @@ base {
 
 repositories {
     mavenCentral()
+    // The Hypixel Mod API's classes, to compile against: at runtime they come from the Hypixel Mod API mod, if installed.
+    maven("https://repo.hypixel.net/repository/Hypixel/")
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     implementation("net.fabricmc:fabric-loader:$loaderVersion")
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion")
+    compileOnly("net.hypixel:mod-api:1.0.2")
     // Kotlin's standard library and kotlinx.serialization come from Fabric Language Kotlin at runtime.
     implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
     // SVG icons (Horizon rasterised its icons with JSVG 1.x), shipped inside the mod jar (MIT).

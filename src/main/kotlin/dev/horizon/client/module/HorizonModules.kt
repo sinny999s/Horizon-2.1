@@ -19,6 +19,7 @@ import dev.horizon.client.module.attack.BedAura
 import dev.horizon.client.module.attack.AnchorAura
 import dev.horizon.client.module.equip.AutoDrop
 import dev.horizon.client.module.world.ChestAura
+import dev.horizon.client.module.misc.PartyProtect
 import dev.horizon.client.module.misc.DiscordAlerts
 import dev.horizon.client.module.player.AutoMount
 import dev.horizon.client.module.world.HighwayBuilder
@@ -85,6 +86,7 @@ import dev.horizon.client.module.esp.Tracers
 import dev.horizon.client.module.esp.TunnelEsp
 import dev.horizon.client.module.esp.VoidEsp
 import dev.horizon.client.module.esp.XRay
+import dev.horizon.client.module.legit.NoHitDelay
 import dev.horizon.client.module.legit.AimAssist
 import dev.horizon.client.module.legit.AnchorBind
 import dev.horizon.client.module.legit.AutoBuff
@@ -100,7 +102,6 @@ import dev.horizon.client.module.legit.Teams
 import dev.horizon.client.module.legit.TriggerBot
 import dev.horizon.client.module.legit.WTap
 import dev.horizon.client.module.legit.BlockIn
-import dev.horizon.client.module.legit.BedDefender
 import dev.horizon.client.module.legit.Clutch
 import dev.horizon.client.module.legit.FireballDeflect
 import dev.horizon.client.module.legit.BedBreaker
@@ -423,7 +424,6 @@ object HorizonModules {
         Modules.register(TriggerBot())
         Modules.register(WTap())
         Modules.register(BlockIn())
-        Modules.register(BedDefender())
         Modules.register(GodBridge())
         Modules.register(Clutch())
         Modules.register(FireballDeflect())
@@ -432,5 +432,7 @@ object HorizonModules {
         Modules.register(GhostMode)
         Modules.register(BedPlates())
         Modules.register(BedBreaker())
+        Modules.register(PartyProtect())
+        Modules.register(NoHitDelay())
     }
 }

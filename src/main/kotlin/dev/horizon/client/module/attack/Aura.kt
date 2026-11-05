@@ -1,5 +1,6 @@
 package dev.horizon.client.module.attack
 
+import dev.horizon.client.combat.Bedwars
 import dev.horizon.client.combat.InstantRequest
 import dev.horizon.client.combat.Inventory
 import dev.horizon.client.combat.Packets
@@ -65,12 +66,15 @@ class Aura : Module("aura", Categories.ATTACK) {
     enum class WhileShielding { PAUSE, IGNORE, UNPRESS, LEGIT }
     enum class RandomizeDelay { OFF, VULCAN, DEFAULT, LEGIT }
     enum class Sprint { LEGIT, LEGIT_EXTRA, NORMAL, HVH }
+    enum class AntibotMode { AUTO, ARMOR, TAB_LIST }
     @Suppress("EnumEntryName")
     enum class Sort { Distance, Health, FOV }
 
     val range = float("range", 3.0f, 3.0f..6.0f)
     val ignoreWalls = bool("ignore-walls", true)
     val fov = int("fov", 180, 1..180).also { ValueLabels.register("fov", 1, "trigger") }
+    /** Not in the original: no attacks in a Bedwars lobby or waiting room, back to it when the match starts ([Bedwars]). */
+    val lobbyOff = bool("lobby-off", true)
     val advanced = group("advanced") { rotationMode.value == RotationMode.ADVANCED }
     val point = enum("point", Point.CENTER, parent = advanced.value) { rotationMode.value == RotationMode.ADVANCED }
     val pointJitter = enum("point-jitter", PointJitter.NONE, parent = advanced.value) { rotationMode.value == RotationMode.ADVANCED }
@@ -186,6 +190,13 @@ class Aura : Module("aura", Categories.ATTACK) {
     val ignoreTeam = bool("ignore-team", false, parent = targets.value)
     val ignoreCreative = bool("ignore-creative", true, parent = targets.value)
     val ignoreNaked = bool("ignore-naked", false, parent = targets.value)
+    /**
+     * Not in the original: how [antibot] tells a bot. ARMOR is the original's check (full, fresh, unenchanted armour
+     * with leather or iron in it), which in Bedwars is every player in the starting kit. TAB_LIST counts a player
+     * missing from the tab list as a bot (Hypixel's bots and NPCs aren't in it; real players are), or one with an
+     * NPC's UUID (version 2). AUTO is TAB_LIST in Bedwars ([Bedwars]) or on Hypixel ([HypixelApi]), ARMOR elsewhere.
+     */
+    val antibotMode = enum("antibot-mode", AntibotMode.AUTO) { antibot.value }
 
     /** 1.8.x spam-click combat is active (auto-detected through ViaFabricPlus, or forced to [CombatMode.LEGACY]). */
     fun isLegacyCombat(): Boolean = when (combatMode.value) {
@@ -249,6 +260,9 @@ class Aura : Module("aura", Categories.ATTACK) {
         if (backTrack.value) backTracker.render()
     }
 
+    /** Said so in chat for this lobby. */
+    private var lobbyTold = false
+
     override fun onEnable() = reset()
 
     override fun onDisable() {
@@ -281,6 +295,13 @@ class Aura : Module("aura", Categories.ATTACK) {
     /** The original's `jv.Ps`. */
     private fun shouldPause(): Boolean {
         val p = mc.player ?: return true
+        // Not in the original: nothing to fight in a lobby or a game's waiting room.
+        if (lobbyOff.value && Bedwars.inLobby) {
+            if (!lobbyTold) moduleMessage(name.trim(), "held off in the lobby until the match starts")
+            lobbyTold = true
+            return true
+        }
+        lobbyTold = false
         if (effectiveRotation() === LegitRotation && requireClick.value && !PlayerState.physical(mc.options.keyAttack)) return true
         if (PlayerState.containerOpen && pauseInInventory.value) return true
         val blocker = p.useItem.get(DataComponents.BLOCKS_ATTACKS) != null || p.useItem.useAnimation == ItemUseAnimation.BLOCK

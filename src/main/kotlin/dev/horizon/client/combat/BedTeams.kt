@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.properties.BedPart
 
 /**
- * Not in the original: whose bed is whose, for Bedwars (Bed Plates, Bed Breaker, Bed Defender). A bed is yours when
+ * Not in the original: whose bed is whose, for Bedwars (Bed Plates, Bed Breaker). A bed is yours when
  * its colour is your team's (from your dyed armour, else your name / scoreboard team colour). Two things make that
  * unreliable, and are handled:
  * - A server that shows every bed in one colour (a 1.8 server translated for new clients can): when two or more beds
@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.state.properties.BedPart
  * - Close shades (aqua armour against a cyan or light blue bed): your colour is matched to the nearest colour among the
  *   beds that are actually there, and only if it's close.
  * The server saying so: hitting your own bed gets a "can't break your own bed" kind of message, after which that bed
- * is yours for the rest of the world ([learnOwn]).
+ * is yours for the rest of the world ([learnOwn]). So does standing by it when a match starts ([Bedwars]).
  */
 object BedTeams {
     enum class Owner { OWN, ENEMY, UNKNOWN }
@@ -86,6 +86,8 @@ object BedTeams {
         val p = mc.player ?: return Owner.UNKNOWN
         checkLevel()
         if (bed.head in learned || bed.foot in learned) return Owner.OWN
+        // A team has one bed: once yours is known, every other is someone else's.
+        if (learned.isNotEmpty()) return Owner.ENEMY
         // Every bed one colour: colour isn't the team's.
         if (seenColors.values.sum() >= 2 && seenColors.size == 1) return Owner.UNKNOWN
         val mine = myRgb(p) ?: return Owner.UNKNOWN
@@ -94,12 +96,13 @@ object BedTeams {
         return if (nearest == bed.color && distTo(bed.color, mine) <= CLOSE) Owner.OWN else Owner.ENEMY
     }
 
-    /** The server refused to let you break the bed at [pos]: it's yours. */
-    fun learnOwn(pos: BlockPos) {
+    /** The bed at [pos] is yours (the server refused to break it, or you started the match by it). Whether it's news. */
+    fun learnOwn(pos: BlockPos): Boolean {
         checkLevel()
-        val level = mc.level ?: return
-        val bed = bedAt(level, pos) ?: return
-        learned += bed.head
+        val level = mc.level ?: return false
+        val bed = bedAt(level, pos) ?: return false
+        learned.clear()
+        return learned.add(bed.head)
     }
 
     private fun checkLevel() {

@@ -54,6 +54,8 @@ object HorizonClient : ClientModInitializer {
         World3D.init()
         Particles3D.init()
         StaffDetector.init()
+        dev.horizon.client.compat.HypixelApi.init()
+        dev.horizon.client.combat.Bedwars.init()
         PreLaunch.stage("Registering modules", 0.70f)
         HorizonModules.register()
         PreLaunch.stage("Registering commands and menus", 0.88f)

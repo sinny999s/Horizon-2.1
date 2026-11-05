@@ -89,7 +89,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
         "crosshair" to "Spreads as you swing and move", "flight-widget" to "Compass, pitch and stats while gliding",
         "phase-widget" to "Your hitbox in the block you stand in", "cooldowns-widget" to "Items on cooldown, like pearls",
         "macro-widget" to "Your item macros and their keys", "array-list-widget" to "Every enabled module, with its mode",
-        "session-stats-widget" to "Playtime, kills, deaths, K/D and totem pops",
+        "session-stats-widget" to "Playtime, kills, deaths and K/D; on Hypixel also finals, FKDR, beds and wins",
         "keystrokes-widget" to "WASD, mouse buttons, spacebar and CPS",
     )
 

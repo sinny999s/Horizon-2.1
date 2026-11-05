@@ -15,7 +15,9 @@ object Friends {
     private val file get() = Storage.root.resolve("homies.hzn")
     private val serializer = ListSerializer(String.serializer())
 
-    fun isFriend(name: String) = names.contains(name)
+    /** Not in the original: also your Hypixel party, while Party Protect is on. */
+    fun isFriend(name: String) = names.contains(name) ||
+        dev.horizon.client.module.misc.PartyProtect.instance?.covers(name) == true
 
     fun add(name: String) {
         names += name

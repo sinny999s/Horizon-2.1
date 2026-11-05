@@ -1,10 +1,12 @@
 package dev.horizon.client.module.attack
 
+import dev.horizon.client.combat.Bedwars
 import dev.horizon.client.combat.Packets
 import dev.horizon.client.combat.PlayerState
 import dev.horizon.client.combat.Rng
 import dev.horizon.client.combat.Rotation
 import dev.horizon.client.combat.Scheduler
+import dev.horizon.client.compat.HypixelApi
 import dev.horizon.client.config.Friends
 import dev.horizon.client.event.MouseTurnEvent
 import dev.horizon.client.module.Modules
@@ -241,9 +243,22 @@ class AuraTargets(private val aura: Aura) {
         return false
     }
 
-    /** Full, fresh, unenchanted armour with leather or iron in it, an empty off-hand and something in the main hand. */
     private fun isBot(p: Player): Boolean {
         if (p === mc.player) return false
+        return when (aura.antibotMode.value) {
+            Aura.AntibotMode.ARMOR -> armorBot(p)
+            Aura.AntibotMode.TAB_LIST -> tabBot(p)
+            Aura.AntibotMode.AUTO ->
+                if (Bedwars.raw != Bedwars.Phase.NONE || Bedwars.phase != Bedwars.Phase.NONE || HypixelApi.location != null) tabBot(p)
+                else armorBot(p)
+        }
+    }
+
+    /** Not in the original: not in the tab list, or an NPC's UUID (version 2, as Hypixel gives its NPCs). */
+    private fun tabBot(p: Player) = mc.connection?.getPlayerInfo(p.uuid) == null || p.uuid.version() == 2
+
+    /** Full, fresh, unenchanted armour with leather or iron in it, an empty off-hand and something in the main hand. */
+    private fun armorBot(p: Player): Boolean {
         val armor = listOf(p.inventory.getItem(39), p.inventory.getItem(38), p.inventory.getItem(37), p.inventory.getItem(36))
         return armor.all { it.item != Items.AIR && !it.isDamaged } && armor.all { it.isEnchantable } && p.offhandItem.item == Items.AIR &&
             armor.any { it.item in BOT_ARMOR } && p.mainHandItem.item != Items.AIR
