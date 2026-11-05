@@ -160,4 +160,27 @@ class BridgePlannerTest {
             BridgePlanner.step(s, p, solid, false)
         }
     }
+
+    @Test
+    fun aJumpThatFallsShortHitsTheSideWithWalls() {
+        // An island one block higher than the bridge, 3 blocks past its end, and a sprint-jump off the end east: the
+        // feet are under the island's top by the time the box reaches it. With walls the player slides down its side;
+        // without, the step goes through the side and "lands" inside it.
+        val solid = { x: Int, y: Int, _: Int -> x in 4004..4008 && y in -31..-29 }
+        val a = BridgePlanner.push(0.0, 1.0, -90.0, 0.026)
+        val p = BridgePlanner.Params(0.0, -1.0, 0.0, 0.0, 0.0, a[0], a[1])
+        fun play(walls: Boolean): BridgePlanner.State {
+            val s = BridgePlanner.State(4001.02, -28.58, 4002.5, 0.217, 0.333, 0.0, false)
+            // To where the feet are past the island's middle block, still beside it.
+            for (t in 0 until 13) {
+                BridgePlanner.step(s, p, solid, false, walls)
+                if (s.onGround) break
+            }
+            return s
+        }
+        val hit = play(true)
+        assertFalse(hit.onGround, "landed at ${hit.x} ${hit.y}")
+        assertEquals(4003.7, hit.x, 1e-6)
+        assertTrue(play(false).onGround)
+    }
 }

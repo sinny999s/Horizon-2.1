@@ -201,7 +201,7 @@ class PearlSave : Module("pearl-save", Categories.LEGIT) {
             val x0 = s.x
             val y0 = s.y
             val z0 = s.z
-            BridgePlanner.step(s, params, ::solid, false)
+            BridgePlanner.step(s, params, ::solid, false, walls = true)
             if (s.onGround) return Fall(null, froms)
             froms += From(s.x, s.y + eye, s.z, s.x - x0, s.y - y0, s.z - z0)
             if (s.y < floorY) return Fall(t, froms)

@@ -107,8 +107,11 @@ object BridgePlanner {
         return clickTarget(next, p, world, p.margin) == null
     }
 
-    /** One tick of vanilla movement: the jump, the keys' push, the fall onto anything under the feet, friction. */
-    fun step(s: State, p: Params, world: (Int, Int, Int) -> Boolean, jump: Boolean) {
+    /**
+     * One tick of vanilla movement: the jump, the keys' push, the fall onto anything under the feet, friction. With
+     * [walls], the box also stops against blocks it runs into sideways (a jump that falls short hits the far side).
+     */
+    fun step(s: State, p: Params, world: (Int, Int, Int) -> Boolean, jump: Boolean, walls: Boolean = false) {
         val ground = s.onGround
         if (jump && ground) s.vy = p.jumpPower
         s.vx += if (ground) p.groundX else p.airX
@@ -124,8 +127,17 @@ object BridgePlanner {
             }
         }
         s.y += dy
-        s.x += s.vx
-        s.z += s.vz
+        if (!walls) {
+            s.x += s.vx
+            s.z += s.vz
+        } else if (abs(s.vx) >= abs(s.vz)) {
+            // Vanilla: the larger of the two first.
+            wallX(s, p, world)
+            wallZ(s, p, world)
+        } else {
+            wallZ(s, p, world)
+            wallX(s, p, world)
+        }
         s.onGround = landed
         val f = if (ground) p.groundFriction else p.airFriction
         s.vx *= f
@@ -215,6 +227,62 @@ object BridgePlanner {
     }
 
     /** The highest block top between the feet at [y] and [toY] under the player's box, or null. */
+    /** Moves along X, stopping against the first solid block the box runs into (and losing the X speed, as vanilla). */
+    private fun wallX(s: State, p: Params, world: (Int, Int, Int) -> Boolean) {
+        val dx = s.vx
+        val hw = p.halfWidth
+        val y0 = floor(s.y + EPS).toInt()
+        val y1 = floor(s.y + p.height - EPS).toInt()
+        val z0 = floor(s.z - hw + EPS).toInt()
+        val z1 = floor(s.z + hw - EPS).toInt()
+        fun blocked(cx: Int): Boolean {
+            for (cy in y0..y1) for (cz in z0..z1) if (world(cx, cy, cz)) return true
+            return false
+        }
+        if (dx > 0) {
+            for (cx in floor(s.x + hw - EPS).toInt() + 1..floor(s.x + hw + dx - EPS).toInt()) if (blocked(cx)) {
+                s.x = cx - hw
+                s.vx = 0.0
+                return
+            }
+        } else if (dx < 0) {
+            for (cx in floor(s.x - hw + EPS).toInt() - 1 downTo floor(s.x - hw + dx + EPS).toInt()) if (blocked(cx)) {
+                s.x = cx + 1 + hw
+                s.vx = 0.0
+                return
+            }
+        }
+        s.x += dx
+    }
+
+    /** [wallX] along Z. */
+    private fun wallZ(s: State, p: Params, world: (Int, Int, Int) -> Boolean) {
+        val dz = s.vz
+        val hw = p.halfWidth
+        val y0 = floor(s.y + EPS).toInt()
+        val y1 = floor(s.y + p.height - EPS).toInt()
+        val x0 = floor(s.x - hw + EPS).toInt()
+        val x1 = floor(s.x + hw - EPS).toInt()
+        fun blocked(cz: Int): Boolean {
+            for (cy in y0..y1) for (cx in x0..x1) if (world(cx, cy, cz)) return true
+            return false
+        }
+        if (dz > 0) {
+            for (cz in floor(s.z + hw - EPS).toInt() + 1..floor(s.z + hw + dz - EPS).toInt()) if (blocked(cz)) {
+                s.z = cz - hw
+                s.vz = 0.0
+                return
+            }
+        } else if (dz < 0) {
+            for (cz in floor(s.z - hw + EPS).toInt() - 1 downTo floor(s.z - hw + dz + EPS).toInt()) if (blocked(cz)) {
+                s.z = cz + 1 + hw
+                s.vz = 0.0
+                return
+            }
+        }
+        s.z += dz
+    }
+
     private fun floorUnder(x: Double, y: Double, z: Double, toY: Double, p: Params, world: (Int, Int, Int) -> Boolean): Double? {
         var by = floor(y - EPS).toInt()
         val lowest = floor(toY).toInt()

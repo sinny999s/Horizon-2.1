@@ -37,7 +37,9 @@ import kotlin.math.sqrt
  * line of blocks from the edge to under your path, one click at a time (no faster than [MIN_GAP] ticks apart), each
  * against the last, preferring a line that can be done before your feet pass its level. Blocks come from the hotbar if
  * you aren't holding any. Walking straight off an edge leaves no time for this (for a player either); it's the time a
- * knock-up or a jump gives above the edge that makes the save.
+ * knock-up or a jump gives above the edge that makes the save. A jump that falls short of an island counts too: the
+ * fall is played out against walls, so one that hits the island's side and slides down it is seen as a fall (and the
+ * island's side is a block to build against).
  */
 class Clutch : Module("clutch", Categories.LEGIT) {
     enum class FilterMode { NONE, BLACKLIST, WHITELIST }
@@ -222,7 +224,7 @@ class Clutch : Module("clutch", Categories.LEGIT) {
             val x0 = s.x
             val y0 = s.y
             val z0 = s.z
-            BridgePlanner.step(s, params, solid, false)
+            BridgePlanner.step(s, params, solid, false, walls = true)
             if (s.onGround) return s.y < min(p.y, groundY) - minDrop.value
             // Every block top the feet sink past this tick, under where the box was (vanilla moves along Y first).
             var top = floor(y0).toInt()
