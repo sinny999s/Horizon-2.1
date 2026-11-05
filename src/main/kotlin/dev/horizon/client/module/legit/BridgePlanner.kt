@@ -36,7 +36,8 @@ object BridgePlanner {
      * tick on the ground and in the air (world space), the player's size and physics, and how often the module clicks
      * ([clickGap] ticks between clicks at least, the next one allowed [nextClickIn] ticks from now). The look-ahead
      * only counts on clicks that land at least [margin] inside the face's edges, so a mouse count's change of aim
-     * (or a hand on the mouse) can't turn a planned click into a miss.
+     * (or a hand on the mouse) can't turn a planned click into a miss. With [climb], a jump also steps the bridge up
+     * (see [clickTarget]).
      */
     class Params(
         val lookX: Double, val lookY: Double, val lookZ: Double,
@@ -46,6 +47,7 @@ object BridgePlanner {
         val reach: Double = 4.5, val jumpPower: Double = 0.42, val gravity: Double = 0.08,
         val groundFriction: Double = 0.6 * 0.91, val airFriction: Double = 0.91,
         val clickGap: Int = 1, val nextClickIn: Int = 0, val margin: Double = 0.03,
+        val climb: Boolean = false,
     )
 
     /** A block the crosshair is on, the face it entered through, and where along the view it was hit. */
@@ -133,29 +135,41 @@ object BridgePlanner {
 
     /**
      * The block a click would place this tick, packed by [key], or null: the crosshair's first block must be hit on a
-     * side (never the top, so the bridge stays flat, nor the bottom) at least [margin] inside its edges, and the free
-     * cell beside it must be below the feet, at most two blocks down and clear of the player.
+     * side (not the bottom) at least [margin] inside its edges, and the free cell beside it must be below the feet, at
+     * most two blocks down and clear of the player. The top is only clicked with [Params.climb], in the air, for a
+     * block that will be under the feet (they're over it and already above it): the jump's step up.
      */
     fun clickTarget(s: State, p: Params, world: (Int, Int, Int) -> Boolean, margin: Double = 0.0): Long? {
         val ey = s.y + p.eye
         val hit = raycast(s.x, ey, s.z, p, world) ?: return null
         val face = hit.face
-        if (face == UP || face == DOWN) return null
+        if (face == DOWN) return null
+        val step = face == UP
+        if (step && (!p.climb || s.onGround)) return null
         if (margin > 0) {
-            val across = if (face == NORTH || face == SOUTH) s.x + p.lookX * hit.distance - hit.x
-            else s.z + p.lookZ * hit.distance - hit.z
-            val up = ey + p.lookY * hit.distance - hit.y
-            if (across < margin || across > 1 - margin || up < margin || up > 1 - margin) return null
+            val hx = s.x + p.lookX * hit.distance - hit.x
+            val hy = ey + p.lookY * hit.distance - hit.y
+            val hz = s.z + p.lookZ * hit.distance - hit.z
+            val (u, v) = when (face) {
+                NORTH, SOUTH -> hx to hy
+                UP -> hx to hz
+                else -> hz to hy
+            }
+            if (u < margin || u > 1 - margin || v < margin || v > 1 - margin) return null
         }
         val tx = hit.x + FACE_X[face]
         val tz = hit.z + FACE_Z[face]
-        val ty = hit.y
+        val ty = hit.y + FACE_Y[face]
         if (world(tx, ty, tz)) return null
         if (ty.toDouble() >= s.y) return null
         if (ty < floor(s.y).toInt() - 2) return null
-        // Vanilla refuses a block that would overlap the player.
         val hw = p.halfWidth
-        if (tx < s.x + hw && tx + 1 > s.x - hw && tz < s.z + hw && tz + 1 > s.z - hw && ty < s.y + p.height && ty + 1 > s.y) return null
+        val over = tx < s.x + hw && tx + 1 > s.x - hw && tz < s.z + hw && tz + 1 > s.z - hw
+        // A step is only worth it under the feet, and only with them clearly above it: a hair above is enough for the
+        // client but not for the server, which then refuses it.
+        if (step && (!over || s.y < ty + 1 + STEP_CLEARANCE)) return null
+        // Vanilla refuses a block that would overlap the player.
+        if (over && ty < s.y + p.height && ty + 1 > s.y) return null
         return key(tx, ty, tz)
     }
 
@@ -246,10 +260,13 @@ object BridgePlanner {
     const val WEST = 4
     const val EAST = 5
     private val FACE_X = intArrayOf(0, 0, 0, 0, -1, 1)
+    private val FACE_Y = intArrayOf(-1, 1, 0, 0, 0, 0)
     private val FACE_Z = intArrayOf(0, 0, -1, 1, 0, 0)
 
     /** A drop this far below the starting height counts as having left the bridge. */
     private const val DROP = 0.3
+    /** How far above a step's top the feet must be for it to be placed. */
+    const val STEP_CLEARANCE = 0.1
     /** Longest a jump can still be in the air after the look-ahead ends. */
     private const val LANDING = 25
     private const val EPS = 1e-7

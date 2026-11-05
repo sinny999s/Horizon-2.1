@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
  * held still, clicking whenever the crosshair would extend the bridge and jumping when [BridgePlanner] says so.
  */
 class BridgePlannerTest {
-    private class Run(val placed: Int, val jumps: Int, val fell: Boolean, val levels: Set<Int>)
+    private class Run(val placed: Int, val jumps: Int, val fell: Boolean, val levels: Set<Int>, val y: Double = 0.0)
 
     private fun look(yaw: Double, pitch: Double): DoubleArray {
         val y = Math.toRadians(yaw)
@@ -26,7 +26,8 @@ class BridgePlannerTest {
      * the plan each tick only knows the pitch of that tick.
      */
     private fun bridge(yaw: Double, pitch: Double, strafe: Double, forward: Double, ticks: Int = 600,
-                       startZ: Double = 2001.5, clickGap: Int = 1, startX: Double = 2000.5, dither: Double = 0.0): Run {
+                       startZ: Double = 2001.5, clickGap: Int = 1, startX: Double = 2000.5, dither: Double = 0.0,
+                       climb: Boolean = false): Run {
         val blocks = HashSet<Long>()
         for (z in 1998..2002) blocks += BridgePlanner.key(2000, -61, z)
         val solid = { x: Int, y: Int, z: Int -> BridgePlanner.key(x, y, z) in blocks }
@@ -40,7 +41,7 @@ class BridgePlannerTest {
         for (t in 0 until ticks) {
             val l = look(yaw, if (t / 3 % 2 == 0) pitch else pitch - dither)
             val wait = (clickGap - (t - lastClick)).coerceAtLeast(0)
-            val p = BridgePlanner.Params(l[0], l[1], l[2], g[0], g[1], a[0], a[1], clickGap = clickGap, nextClickIn = wait)
+            val p = BridgePlanner.Params(l[0], l[1], l[2], g[0], g[1], a[0], a[1], clickGap = clickGap, nextClickIn = wait, climb = climb)
             if (wait == 0) {
                 val target = BridgePlanner.clickTarget(s, p, solid)
                 if (target != null) {
@@ -51,13 +52,14 @@ class BridgePlannerTest {
                 }
             }
             val after = BridgePlanner.Params(l[0], l[1], l[2], g[0], g[1], a[0], a[1], clickGap = clickGap,
-                nextClickIn = (clickGap - (t - lastClick)).coerceAtLeast(0))
+                nextClickIn = (clickGap - (t - lastClick)).coerceAtLeast(0), climb = climb)
             val jump = BridgePlanner.shouldJump(s, after, solid)
             if (jump) jumps++
             BridgePlanner.step(s, after, solid, jump)
-            if (s.y < -61.0) return Run(placed, jumps, true, levels)
+            // Fallen: more than a block below the highest the bridge got.
+            if (s.y < (levels.maxOrNull() ?: -61) - 0.0) return Run(placed, jumps, true, levels, s.y)
         }
-        return Run(placed, jumps, false, levels)
+        return Run(placed, jumps, false, levels, s.y)
     }
 
     private fun assertHolds(yaw: Double, pitches: ClosedFloatingPointRange<Double>, strafe: Double, forward: Double,
@@ -97,6 +99,30 @@ class BridgePlannerTest {
         assertHolds(0.0, 77.5..80.0, 0.0, -0.98, dither = 0.15)
         assertHolds(45.0, 73.0..77.0, -0.7071, -0.7071, startX = 2000.73, dither = 0.15)
     }
+
+    /** With climb on, every jump also steps the bridge up a block: never more than one at a time, and never a fall. */
+    @Test
+    fun climbsAStepPerJump() {
+        for ((yaw, pitches, strafe, forward, x) in listOf(
+            Climb(0.0, 77.5..80.0, 0.0, -0.98, 2000.5),
+            Climb(45.0, 73.0..77.0, -0.7071, -0.7071, 2000.8),
+        )) {
+            var pitch = pitches.start
+            while (pitch <= pitches.endInclusive) {
+                val r = bridge(yaw, pitch, strafe, forward, startX = x, climb = true)
+                val at = "at yaw $yaw pitch $pitch"
+                assertFalse(r.fell, "fell $at after ${r.placed} blocks, at y ${r.y}")
+                assertTrue(r.placed >= 60, "only ${r.placed} blocks $at")
+                val lv = r.levels.sorted()
+                assertTrue(lv.size >= 4, "climbed only to ${lv.last()} $at")
+                assertEquals((lv.first()..lv.last()).toList(), lv, "skipped a level $at: $lv")
+                pitch += 0.5
+            }
+        }
+    }
+
+    private data class Climb(val yaw: Double, val pitches: ClosedFloatingPointRange<Double>, val strafe: Double,
+                             val forward: Double, val x: Double)
 
     @Test
     fun holdsWithAClickEveryOtherTick() {

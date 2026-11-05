@@ -83,6 +83,8 @@ class GodBridge : Module("godbridge", Categories.LEGIT, listOf("god-bridge", "sc
     val activationBlocks = int("activation-blocks", 3, 0..10) { mode.value == Mode.GOD_BRIDGE }
     val placeDelay = int("place-delay", 0, 0..5) { mode.value == Mode.GOD_BRIDGE }
     val requireRightClick = bool("require-right-click", false) { mode.value == Mode.GOD_BRIDGE }
+    /** Each jump also steps the bridge up a block (a block under the feet at the top of the jump); off, it stays flat. */
+    val climb = bool("climb", false) { mode.value == Mode.GOD_BRIDGE && autoJump.value }
 
     // General settings
     val blockCount = bool("block-count", true)
@@ -410,6 +412,7 @@ class GodBridge : Module("godbridge", Categories.LEGIT, listOf("god-bridge", "sc
             gravity = p.gravity,
             // The click delay's random extra tick is assumed every time, so the plan never counts on a quick one.
             clickGap = max(1, placeDelay.value + 1),
+            climb = climb.value,
             nextClickIn = max(0, nextDelay - (p.tickCount - lastPlaceTick)),
         )
         val solid = { x: Int, y: Int, z: Int ->
@@ -429,20 +432,31 @@ class GodBridge : Module("godbridge", Categories.LEGIT, listOf("god-bridge", "sc
 
     /**
      * Whether a right click on [hit] would extend the bridge: a solid, non-interactive block whose touching tile is
-     * free, on its side (so the bridge stays flat), below the walking level and close to the feet, so the module never
-     * builds walls, steps or towers.
+     * free, on its side (so the bridge stays flat; the top only for a [climb] step), below the walking level and close to
+     * the feet, so the module never builds walls or towers.
      */
     private fun canBridgeOn(p: Player, level: Level, hit: BlockHitResult): Boolean {
         val clicked = level.getBlockState(hit.blockPos)
         if (clicked.canBeReplaced()) return false
         val target = hit.blockPos.relative(hit.direction)
         if (!level.getBlockState(target).canBeReplaced()) return false
-        if (hit.direction == Direction.DOWN || hit.direction == Direction.UP) return false
+        if (hit.direction == Direction.DOWN) return false
+        if (hit.direction == Direction.UP && !steps(p, target)) return false
         if (target.y.toDouble() >= p.y) return false
         if (target.y < p.blockY - 2) return false
         // Only click plain blocks, never a chest, door, crafting table etc. next to the bridge.
         if (clicked.getMenuProvider(level, hit.blockPos) != null) return false
         return true
+    }
+
+    /**
+     * With [climb], the top of a block may be clicked mid-jump for the step up: only for a block that will be under the
+     * feet (the player is over it, and the feet are already clearly above it, or the server refuses it).
+     */
+    private fun steps(p: Player, target: BlockPos): Boolean {
+        if (!climb.value || p.onGround() || p.y < target.y + 1.0 + BridgePlanner.STEP_CLEARANCE) return false
+        val b = p.boundingBox
+        return target.x < b.maxX && target.x + 1 > b.minX && target.z < b.maxZ && target.z + 1 > b.minZ
     }
 
     /** The pitch that, looking straight back along the bridge, reaches as far along it as [diagonal] does at 45 degrees. */
