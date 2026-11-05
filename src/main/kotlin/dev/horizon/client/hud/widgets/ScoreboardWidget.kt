@@ -7,6 +7,9 @@ import dev.horizon.client.hud.HudWidget
 import dev.horizon.client.render.Animation
 import dev.horizon.client.render.Colors
 import dev.horizon.client.render.Easing
+import net.minecraft.client.gui.Font
+import net.minecraft.client.gui.font.glyphs.BakedSheetGlyph
+import net.minecraft.locale.Language
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.numbers.StyledFormat
@@ -14,7 +17,6 @@ import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Objective
 import net.minecraft.world.scores.PlayerScoreEntry
 import net.minecraft.world.scores.PlayerTeam
-import java.util.Optional
 import kotlin.math.max
 
 /**
@@ -104,29 +106,46 @@ object ScoreboardWidget : HudWidget("scoreboard-widget") {
             .toList()
     }
 
-    /** [c] as coloured runs: its styles' colours, and any § codes typed into its text (old-style servers), over [base]. */
+    /**
+     * [c] as coloured runs, read exactly as vanilla's sidebar reads it: through vanilla's own formatted-text order, so
+     * `§` codes in the text (old-style servers) and their quirks act as they do there, and a character vanilla's font
+     * draws as nothing is left out too (servers such as Hypixel add such characters to keep their lines apart).
+     */
     private fun runs(c: Component, base: Int): List<Run> {
         val out = ArrayList<Run>()
-        c.visit({ style: Style, text: String ->
-            var color = style.color?.let { 0xFF000000.toInt() or it.value } ?: base
-            val sb = StringBuilder()
-            var i = 0
-            while (i < text.length) {
-                if (text[i] == '§' && i + 1 < text.length) {
-                    if (sb.isNotEmpty()) out += Run(sb.toString(), color).also { sb.clear() }
-                    val code = text[i + 1].lowercaseChar()
-                    val n = "0123456789abcdef".indexOf(code)
-                    if (code == 'r') color = base else if (n >= 0) color = CODES[n]
-                    i += 2
-                    continue
-                }
-                sb.append(text[i])
-                i++
-            }
-            if (sb.isNotEmpty()) out += Run(sb.toString(), color)
-            Optional.empty<Unit>()
-        }, Style.EMPTY)
+        val sb = StringBuilder()
+        var color = base
+        Language.getInstance().getVisualOrder(c).accept { _, style, cp ->
+            if (cp != ' '.code && !vanillaDraws(cp, style)) return@accept true
+            val col = style.color?.let { 0xFF000000.toInt() or it.value } ?: base
+            if (col != color && sb.isNotEmpty()) out += Run(sb.toString(), color).also { sb.clear() }
+            color = col
+            sb.appendCodePoint(cp)
+            true
+        }
+        if (sb.isNotEmpty()) out += Run(sb.toString(), color)
         return out
+    }
+
+    private val drawn = HashMap<Pair<Int, Any?>, Boolean>()
+
+    /** Vanilla's `Font.getGlyph(codepoint, style)`: the glyph its text drawing uses. */
+    private val getGlyph = Font::class.java.getDeclaredMethod("getGlyph", Int::class.javaPrimitiveType, Style::class.java)
+        .apply { isAccessible = true }
+
+    /**
+     * Whether vanilla's font draws [cp] in [style]'s font as anything: only a glyph on its texture sheet, with a width,
+     * does; an empty glyph, the invisible one it uses for a character it has none for, or one a resource pack or mod
+     * made zero-width (Hypixel's lines end in emoji that the player's font may blank), draws nothing.
+     */
+    private fun vanillaDraws(cp: Int, style: Style): Boolean {
+        if (cp < 0x7f) return true
+        return drawn.getOrPut(cp to style.font) {
+            val font = Style.EMPTY.withFont(style.font)
+            val glyph = getGlyph.invoke(mc.font, cp, font)
+            val advance = mc.font.width(Component.literal(String(Character.toChars(cp))).withStyle(font))
+            glyph is BakedSheetGlyph && advance > 0
+        }
     }
 
     private fun width(runs: List<Run>) = runs.sumOf { tw(it.text).toDouble() }.toFloat()
@@ -142,11 +161,6 @@ object ScoreboardWidget : HudWidget("scoreboard-widget") {
     /** Vanilla's sidebar order: highest score first, then by name. */
     private val ORDER = Comparator.comparingInt<PlayerScoreEntry> { it.value() }.reversed()
         .thenComparing({ it.owner() }, String.CASE_INSENSITIVE_ORDER)
-
-    /** Vanilla's colours for the codes 0-9 and a-f. */
-    private val CODES = intArrayOf(0xFF000000.toInt(), 0xFF0000AA.toInt(), 0xFF00AA00.toInt(), 0xFF00AAAA.toInt(), 0xFFAA0000.toInt(),
-        0xFFAA00AA.toInt(), 0xFFFFAA00.toInt(), 0xFFAAAAAA.toInt(), 0xFF555555.toInt(), 0xFF5555FF.toInt(), 0xFF55FF55.toInt(),
-        0xFF55FFFF.toInt(), 0xFFFF5555.toInt(), 0xFFFF55FF.toInt(), 0xFFFFFF55.toInt(), -1)
 
     /** Vanilla's sidebar red, for a score with no colour of its own. */
     private const val SCORE = 0xFFFF5555.toInt()
