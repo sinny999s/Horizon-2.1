@@ -110,6 +110,11 @@ class Clutch : Module("clutch", Categories.LEGIT) {
                 spotU = Rng.double(0.3, 0.7)
                 spotV = Rng.double(0.3, 0.7)
             }
+            // Nothing to build with: the camera is left alone (a pearl, if Pearl Save has one, is the way out).
+            if (!isValidBlock(p.mainHandItem) && (!switchBlocks.value || Inventory.hotbarFind { isValidBlock(it) } == null)) {
+                aim = null
+                return@on
+            }
             aim = plan(p, level)
             // The crosshair as vanilla's own right click would see it this tick.
             (mc as MinecraftAccessor).horizon_pick(1f)
