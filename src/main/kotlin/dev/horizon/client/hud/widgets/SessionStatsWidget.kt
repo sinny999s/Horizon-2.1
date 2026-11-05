@@ -2,27 +2,23 @@ package dev.horizon.client.hud.widgets
 
 import dev.horizon.client.event.EventBus
 import dev.horizon.client.event.PlayerDeathEvent
-import dev.horizon.client.event.ReceivePacketEvent
 import dev.horizon.client.gui.modern.Tok
 import dev.horizon.client.hud.HudWidget
 import dev.horizon.client.render.Animation
 import dev.horizon.client.render.Easing
-import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import kotlin.math.max
 
 /**
- * Not in the original: Session Stats HUD widget showing session playtime, kills, deaths, K/D ratio, and totem pops.
+ * Not in the original: Session Stats HUD widget showing session playtime, kills, deaths and K/D ratio.
  */
 object SessionStatsWidget : HudWidget("session-stats-widget") {
     val showPlaytime = bool("playtime", true)
     val showKills = bool("kills", true)
     val showDeaths = bool("deaths", true)
     val showKd = bool("kd", true)
-    val showPops = bool("pops", true)
 
     var kills = 0
     var deaths = 0
-    var pops = 0
     val sessionStartTime = System.currentTimeMillis()
 
     private var wasDead = false
@@ -33,15 +29,6 @@ object SessionStatsWidget : HudWidget("session-stats-widget") {
             val p = mc.player ?: return@on
             if (e.player !== p && e.player.distanceTo(p) < 40f) {
                 kills++
-            }
-        }
-        EventBus.on<ReceivePacketEvent>(this) { e ->
-            val pk = e.packet
-            if (pk is ClientboundEntityEventPacket && pk.eventId.toInt() == 35) {
-                val ent = pk.getEntity(mc.level ?: return@on)
-                if (ent === mc.player) {
-                    pops++
-                }
             }
         }
     }
@@ -83,10 +70,6 @@ object SessionStatsWidget : HudWidget("session-stats-widget") {
         if (showKd.value) {
             val kd = if (deaths == 0) kills.toFloat() else kills.toFloat() / deaths
             rows += "K/D" to String.format("%.2f", kd)
-        }
-
-        if (showPops.value) {
-            rows += "Totems" to pops.toString()
         }
 
         var width = headerWidth(title)
