@@ -6,6 +6,7 @@ import dev.horizon.client.gui.Keys
 import dev.horizon.client.gui.Sounds
 import dev.horizon.client.module.ClickGuiModule
 import dev.horizon.client.module.Modules
+import dev.horizon.client.module.legit.GhostMode
 import dev.horizon.client.render.Canvas
 import dev.horizon.client.render.Colors
 import dev.horizon.client.render.Theme
@@ -278,11 +279,11 @@ internal class ThemeMenu(private val ax: Float, private val ay: Float) : Popover
     }
 }
 
-/** The sidebar's profile: switch module configs, or open the original's Windows and HUD editor. */
+/** The sidebar's profile: switch module configs, turn Ghost Mode on or off, or open the Windows and HUD editor. */
 internal class ProfileMenu(private val ax: Float, private val ay: Float) : Popover() {
     override fun draw(): Boolean {
         val configs = Configs.of(ConfigType.MODULES).list.toList()
-        card(ax, ay - (configs.size * 15f + 60f), 120f, configs.size * 15f + 56f)
+        card(ax, ay - (configs.size * 15f + 80f), 120f, configs.size * 15f + 76f)
         var py = y + 4f
         Ui.text(Type.section, "CONFIGS", x + 6f, py + 5f, Tok.T4)
         py += 10f
@@ -297,6 +298,15 @@ internal class ProfileMenu(private val ax: Float, private val ay: Float) : Popov
             }
             py += 15f
         }
+        Ui.box(x + 4f, py + 2f, w - 8f, 0.5f, 0f, Tok.LINE)
+        py += 5f
+        // Not in the original: Ghost Mode's switch, saved with the config above.
+        val ghost = GhostMode.enabled
+        option("ghost", x + 3f, py, w - 6f, "Ghost mode", ghost, "eyeoff") {
+            GhostMode.toggle()
+            if (ghost) Sounds.DISABLE.play() else Sounds.ENABLE.play()
+        }
+        py += 15f
         Ui.box(x + 4f, py + 2f, w - 8f, 0.5f, 0f, Tok.LINE)
         py += 5f
         option("open:windows", x + 3f, py, w - 6f, "Windows", false, "windows") { Minecraft.getInstance().gui.setScreen(ModernWindows) }

@@ -9,6 +9,7 @@ import dev.horizon.client.module.Categories
 import dev.horizon.client.module.ClickGuiModule
 import dev.horizon.client.module.Module
 import dev.horizon.client.module.Modules
+import dev.horizon.client.module.legit.GhostMode
 import dev.horizon.client.module.SubCategory
 import dev.horizon.client.render.Canvas
 import dev.horizon.client.render.Colors
@@ -102,7 +103,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         closing = false
         opened = true
         Ui.animFrom("open", 600, 0f)
-        if (selected == null) selected = Modules.all.firstOrNull { it.id == "auto-crystal" }
+        if (selected == null) selected = shown().firstOrNull { it.id == "auto-crystal" } ?: shown().firstOrNull { it.id == "aura" }
         enterView(0f)
     }
 
@@ -215,8 +216,8 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         Ui.box(sx, 5.75f, SEARCH_W, 18f, 5.5f, if (focusedNow) 0x59000000 else 0x40000000, 0.5f,
             if (focusedNow) Tok.alpha(Tok.a1, 0.55f) else if (over) 0x26FFFFFF else Tok.LINE2)
         Ui.icon("search", sx + 6f, 10.75f, 8f, Tok.T3)
-        val total = Modules.all.sumOf { m -> m.settings.count { GuiData.valued(it) && it.id != "enabled" && it.id != "bind" } }
-        Ui.fieldText(search, sx + 19f, 14.75f, SEARCH_W - 54f, Type.label, "Search ${Modules.all.size} modules and $total settings")
+        val total = shown().sumOf { m -> m.settings.count { GuiData.valued(it) && it.id != "enabled" && it.id != "bind" } }
+        Ui.fieldText(search, sx + 19f, 14.75f, SEARCH_W - 54f, Type.label, "Search ${shown().size} modules and $total settings")
         Ui.keycap(sx + SEARCH_W - 4.5f - Type.chip.width("Ctrl F") - 6f, 10.25f, "Ctrl F")
 
         // tools, right to left
@@ -245,7 +246,15 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
     // ---- sidebar ----
 
     private fun navKeys(): List<View> =
-        Categories.ALL.flatMap { c -> c.subCategories.map { View.Sub(it) } } + listOf(View.Active, View.Fav)
+        Categories.ALL.flatMap { c -> c.subCategories.filter { shows(it) }.map { View.Sub(it) } } + listOf(View.Active, View.Fav)
+
+    /**
+     * Not in the original: the modules the GUI shows. With Ghost Mode on, the blatant ones it blocks are hidden (and a
+     * tab left with none, Rage, with them).
+     */
+    fun shown(): List<Module> = if (GhostMode.enabled) Modules.all.filter { !GhostMode.blocks(it) } else Modules.all
+
+    private fun shows(s: SubCategory) = !GhostMode.enabled || shown().any { it.subCategory == s }
 
     private fun subName(s: SubCategory) = if (s.id == "esp") "ESP" else s.displayName
 
@@ -254,6 +263,9 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
 
     /** The mockup's sidebar: 16-tall category labels and 17-tall tabs, scrolling (no bar) above the profile chip. */
     private fun sidebar() {
+        // Ghost Mode turned on with a hidden tab or module open: move off it.
+        (view as? View.Sub)?.let { v -> if (!shows(v.sub)) navKeys().firstOrNull()?.let { view = it; enterView(0f) } }
+        selected?.let { m -> if (GhostMode.blocks(m)) selected = mods(view).firstOrNull() ?: shown().firstOrNull() }
         Ui.box(SIDE, BAR, 0.5f, H - BAR - STATUS, 0f, Tok.LINE)
         val top = BAR + 6.5f
         val bottom = PROFILE_Y - 4f
@@ -274,7 +286,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         }
         for (c in Categories.ALL) {
             cat(c.displayName)
-            for (s in c.subCategories) item(View.Sub(s), subName(s), s.id)
+            for (s in c.subCategories) if (shows(s)) item(View.Sub(s), subName(s), s.id)
         }
         cat("Collections")
         item(View.Active, "Enabled", "active")
@@ -324,7 +336,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
     }
 
     fun mods(v: View): List<Module> {
-        val all = Modules.all
+        val all = shown()
         return when (v) {
             is View.Sub -> all.filter { it.subCategory == v.sub }.sortedBy { it.id.lowercase(Locale.ROOT) }
             View.Active -> all.filter { it.enabled }.sortedBy { it.id.lowercase(Locale.ROOT) }
@@ -561,7 +573,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
             Ui.text(Type.status, t, hx, cy, Tok.T3)
             hx += Type.status.width(t) + 7f
         }
-        val all = Modules.all
+        val all = shown()
         val txt = "${all.count { it.enabled }} enabled · ${all.count { it.bind.key != -1 }} binds · ${all.size} modules"
         val tx = W - 9.5f - Type.status.width(txt)
         Ui.textR(Type.status, txt, W - 9.5f, cy, Tok.T3)
@@ -602,7 +614,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         }
         val mods = ArrayList<Pair<SearchHit, Int>>()
         val sets = ArrayList<Pair<SearchHit, Int>>()
-        for (m in Modules.all) {
+        for (m in shown()) {
             val sc = maxOf(score(GuiData.name(m), q) * 3, score(m.id, q) * 3, m.aliases.maxOfOrNull { score(it, q) * 2 } ?: 0,
                 if (q in GuiData.description(m).lowercase(Locale.ROOT)) 1 else 0)
             if (sc > 0) mods += SearchHit(m, null) to sc

@@ -80,6 +80,10 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
     /** The original's `z()`: on, re-plugged on the bus, the enable hook, then the notification. */
     fun enable() {
         if (enabledSetting.value) return
+        if (dev.horizon.client.module.legit.GhostMode.blocks(this)) {
+            Notifications.post(name, "is blocked by Ghost Mode", 1f, NotificationType.WARNING)
+            return
+        }
         enabledSetting.value = true
         unplug()
         plug()

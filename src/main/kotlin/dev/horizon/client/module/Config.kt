@@ -23,6 +23,7 @@ object Config : SettingsConfigs<ModulesFile>("modules", ModulesFile.serializer()
      * hook; one that is off now and was on (or missing) in [previous] runs its disable hook. No sounds.
      */
     fun reconcile(previous: NamedConfig?) {
+        dev.horizon.client.module.legit.GhostMode.configApplied()
         for (m in Modules.all) {
             val was = previous?.holders?.firstOrNull { it.id == m.id }?.settings?.firstOrNull { it.id == "enabled" }?.value?.toBoolean()
             m.unplug()
@@ -33,5 +34,6 @@ object Config : SettingsConfigs<ModulesFile>("modules", ModulesFile.serializer()
                 m.onDisable()
             }
         }
+        dev.horizon.client.module.legit.GhostMode.enforce()
     }
 }
