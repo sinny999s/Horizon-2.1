@@ -22,7 +22,7 @@ import kotlin.concurrent.thread
  * downloads them to `horizon/updates`, and stages a Windows-safe swap on game shutdown.
  */
 object AutoUpdater {
-    private const val REPO = "sinny999s/Horizon-2.0"
+    private const val REPO = "sinny999s/Horizon-2.1"
     private const val API_URL = "https://api.github.com/repos/$REPO/releases"
 
     val currentVersion: String = FabricLoader.getInstance().getModContainer(HorizonClient.ID)
