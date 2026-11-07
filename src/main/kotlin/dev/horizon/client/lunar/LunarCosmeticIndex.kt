@@ -38,19 +38,34 @@ object LunarCosmeticIndex {
     data class Animation(val frametime: Int, val width: Int, val height: Int)
 
     /** The cosmetics index; lines that don't parse are skipped. */
-    /** cosmetics.json's companions (category "companion"; they aren't in the index), as index entries of type "companion". */
-    fun parseCompanions(json: String): Map<Int, Entry> {
+    /**
+     * `assets/lunar/cosmetics.json`: every cosmetic Lunar sells, as Lunar Client's locker lists them. It's kept up to
+     * date where the CSV index stopped (January 2026: ~800 newer cosmetics, "Lunar Purple" among them, are only here).
+     * Its fields map onto the index's columns: category (type), indexType (legacy model), resource (path), geckolibCosmetic,
+     * morph (the particle), tags and colors. Companions (category "companion") were never in the index.
+     */
+    fun parseCosmetics(json: String): Map<Int, Entry> {
         val out = HashMap<Int, Entry>()
         val arr = com.google.gson.JsonParser.parseString(json) as? com.google.gson.JsonArray ?: return out
+        fun str(o: JsonObject, k: String) = o.get(k)?.takeIf { it.isJsonPrimitive }?.asString ?: ""
+        fun tags(o: JsonObject, k: String) = (o.get(k) as? com.google.gson.JsonArray)?.mapNotNull { e ->
+            e.takeIf { it.isJsonPrimitive }?.asString?.trim()?.uppercase()?.takeIf { it.isNotEmpty() }
+        }?.toSet() ?: emptySet()
         for (el in arr) {
             val o = el as? JsonObject ?: continue
-            if (o.get("category")?.asString != "companion") continue
-            val id = o.get("id")?.asInt ?: continue
-            val res = o.get("resource")?.asString ?: continue
-            out[id] = Entry(id, o.get("name")?.asString ?: "#$id", "companion", "NONE", res.removePrefix("lunar:"), true)
+            val id = o.get("id")?.takeIf { it.isJsonPrimitive }?.asInt ?: continue
+            val res = str(o, "resource").takeIf { it.isNotEmpty() } ?: continue
+            val category = str(o, "category")
+            val name = str(o, "name").ifEmpty { "#$id" }
+            out[id] = if (category == "companion") Entry(id, name, "companion", "NONE", res.removePrefix("lunar:"), true)
+            else Entry(id, name, category, str(o, "indexType").ifEmpty { "NONE" }, res.removePrefix("lunar:"),
+                o.get("geckolibCosmetic")?.takeIf { it.isJsonPrimitive }?.asBoolean == true, str(o, "morph"), tags(o, "tags"), tags(o, "colors"))
         }
         return out
     }
+
+    /** cosmetics.json's companions alone (see [parseCosmetics]). */
+    fun parseCompanions(json: String): Map<Int, Entry> = parseCosmetics(json).filterValues { it.type == "companion" }
 
     fun parseIndex(text: String): Map<Int, Entry> {
         val out = HashMap<Int, Entry>()

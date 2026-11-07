@@ -65,13 +65,15 @@ object LunarAssets {
             try {
                 val list = LunarCosmeticIndex.parseAssets(String(assetIndex(), Charsets.UTF_8))
                 assets = list
-                val sha = list[COSMETICS_INDEX] ?: error("no cosmetics index in Lunar's asset index")
-                val parsed = HashMap(LunarCosmeticIndex.parseIndex(String(bySha(sha), Charsets.UTF_8)))
-                // Companions are only in cosmetics.json, not the index.
-                try {
-                    list[COSMETICS_JSON]?.let { s -> parsed.putAll(LunarCosmeticIndex.parseCompanions(String(bySha(s), Charsets.UTF_8))) }
+                // cosmetics.json is the list Lunar Client loads (its CosmeticManager reads nothing else). The CSV index is
+                // a leftover that stopped in January 2026: read only when cosmetics.json can't be.
+                val parsed = try {
+                    val sha = list[COSMETICS_JSON] ?: error("no cosmetics.json in Lunar's asset index")
+                    LunarCosmeticIndex.parseCosmetics(String(bySha(sha), Charsets.UTF_8)).also { check(it.isNotEmpty()) { "cosmetics.json is empty" } }
                 } catch (e: Exception) {
-                    HorizonClient.LOG.warn("Lunar cosmetics: no companions ({})", e.toString())
+                    val sha = list[COSMETICS_INDEX] ?: throw e
+                    HorizonClient.LOG.warn("Lunar cosmetics: {}, so the older index", e.toString())
+                    LunarCosmeticIndex.parseIndex(String(bySha(sha), Charsets.UTF_8))
                 }
                 index = parsed
                 HorizonClient.LOG.info("Lunar cosmetics: {} cosmetics, {} files in Lunar's index", index?.size, list.size)
