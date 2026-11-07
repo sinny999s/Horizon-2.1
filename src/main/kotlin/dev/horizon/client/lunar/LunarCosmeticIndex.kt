@@ -18,7 +18,9 @@ object LunarCosmeticIndex {
     /** One line of the cosmetics index. */
     data class Entry(val id: Int, val name: String, val type: String, val legacyModel: String, val path: String, val gek: Boolean,
                      /** The particle effect it emits while worn (second column), or "". */
-                     val particle: String = "") {
+                     val particle: String = "",
+                     /** Lunar's style tags ("FIRE", "SPACE"...) and colour tags ("RED", "CHROMA"...), as the locker filters by. */
+                     val categories: Set<String> = emptySet(), val colors: Set<String> = emptySet()) {
         /** The path in the asset index ("assets/lunar/cosmetics/..."). */
         val assetPath get() = asset(path)
         val isCloak get() = type == "cloak" && !gek && path.endsWith(".webp")
@@ -61,7 +63,8 @@ object LunarCosmeticIndex {
             val id = p[0].toIntOrNull() ?: continue
             val n = p.size
             val name = p.subList(3, n - 8).joinToString(",")
-            out[id] = Entry(id, name, p[n - 6], p[n - 5], p[n - 4], p[n - 3].equals("true", true), p[1].trim())
+            fun tags(s: String) = s.split('|').map { it.trim().uppercase() }.filter { it.isNotEmpty() }.toSet()
+            out[id] = Entry(id, name, p[n - 6], p[n - 5], p[n - 4], p[n - 3].equals("true", true), p[1].trim(), tags(p[n - 2]), tags(p[n - 1]))
         }
         return out
     }

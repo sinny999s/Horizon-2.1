@@ -2,6 +2,7 @@ package dev.horizon.client.gui.modern
 
 import dev.horizon.client.gui.Keys
 import dev.horizon.client.hud.widgets.Skins
+import dev.horizon.client.lunar.LockerFilter
 import dev.horizon.client.lunar.LunarAssets
 import dev.horizon.client.lunar.LunarCosmetics
 import dev.horizon.client.lunar.LunarEmotes
@@ -24,7 +25,9 @@ import kotlin.math.min
 /**
  * Not in the original: a cosmetics locker like Lunar Client's own, in the new GUI's style. Your player turns in a stage
  * on the left wearing what you've picked; tabs of Lunar's cosmetics (cloaks, hats, face, wings, back, body, pets,
- * auras) and emotes fill the right as a searchable grid. Click a cosmetic to wear it (one of each kind, as in Lunar),
+ * auras) and emotes fill the right as a searchable grid, with a filter row over it: everything, what your Lunar account
+ * owns or what you've picked; newest first or by name; and a Filters panel of Lunar's colour and style tags
+ * ([LockerFilter]). Click a cosmetic to wear it (one of each kind, as in Lunar),
  * again to take it off; hovering one tries it on. Each tile says what it is for you: **Owned** by your Lunar account,
  * (**On Lunar** once it's on your Lunar outfit), or **Client-side**, which only you see ("Not signed in" before Lunar
  * Network has signed in). Owned picks also go on your Lunar outfit ([dev.horizon.client.lunar.LunarAccount], with
@@ -52,6 +55,11 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
     private var scroll = 0f
     private var scrollMax = 0f
     private val search = Ui.Field(max = 40) { scroll = 0f }
+
+    /** The filter row's choices (kept while the game runs), and whether its Filters panel is open. */
+    private var filter = LockerFilter.Filter()
+    private var panel = false
+    private const val ROW = 21f
     private val emotesTab get() = tab == LunarLocker.tabs.size
     private val outfitsTab get() = tab == LunarLocker.tabs.size + 1
     private val badgesTab get() = tab == LunarLocker.tabs.size + 2
@@ -282,6 +290,9 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             tab = it
             scroll = 0f
             Ui.focused = null
+            panel = false
+            // Style tags differ from tab to tab; a colour carries over.
+            filter = filter.copy(style = null)
         }
     }
 
@@ -290,16 +301,29 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
     private fun tiles(): List<Tile> {
         if (outfitsTab || badgesTab) return emptyList()
         val q = search.text.trim().lowercase()
-        if (emotesTab) return LunarEmotes.emotes().filter { q.isEmpty() || q in it.name.lowercase() }
-            .map { Tile(it.id, it.name.split('_').joinToString(" ") { w -> w.replaceFirstChar(Char::uppercase) }, "emote") }
-        return LunarLocker.list(LunarLocker.tabs[tab], q).map { Tile(it.id, it.name, it.type) }
+        if (emotesTab) {
+            val social = dev.horizon.client.lunar.LunarSocial
+            val wheel = dev.horizon.client.lunar.LunarProfileEdits.wheel.values.toSet()
+            val list = LunarEmotes.emotes().map { Tile(it.id, it.name.split('_').joinToString(" ") { w -> w.replaceFirstChar(Char::uppercase) }, "emote") }
+                .filter { t ->
+                    (q.isEmpty() || q in t.name.lowercase()) && when (filter.show) {
+                        LockerFilter.Show.ALL -> true
+                        LockerFilter.Show.OWNED -> social.emotesKnown && social.ownsEmote(t.id)
+                        LockerFilter.Show.PICKED -> t.id in wheel
+                    }
+                }
+            return if (filter.sort == LockerFilter.Sort.NAME) list.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }) else list
+        }
+        return LunarLocker.list(LunarLocker.tabs[tab], q, filter).map { Tile(it.id, it.name, it.type) }
     }
 
     private fun grid() {
         val gx = STAGE + 10f
-        val gy = BAR + 31f
+        val filtered = !outfitsTab && !badgesTab
+        val gy = BAR + 31f + if (filtered) ROW else 0f
         val gw = W - STAGE - 20f
         val gh = H - STATUS - 6f - gy
+        if (filtered) filterRow(gx, BAR + 31f, gw)
         if (outfitsTab) {
             LunarProfilePanes.outfits(gx, gy, gw, gh, search, pickedOutfit) { pickedOutfit = it }
             return
@@ -322,7 +346,13 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             return
         }
         if (list.isEmpty()) {
-            Ui.textC(Type.label, if (emotesTab) "Loading emotes..." else "Nothing matches", gx + gw / 2f, gy + gh / 2f, Tok.T3)
+            val why = when {
+                emotesTab && LunarEmotes.emotes().isEmpty() -> "Loading emotes..."
+                filter.show == LockerFilter.Show.OWNED && !LunarLocker.signedIn && !emotesTab -> "Turn on Lunar in the ClickGUI's Lunar menu to see what you own"
+                filter.show == LockerFilter.Show.PICKED -> "Nothing picked here yet"
+                else -> "Nothing matches"
+            }
+            Ui.textC(Type.label, why, gx + gw / 2f, gy + gh / 2f, Tok.T3)
         }
         var hovered: Int? = null
         Ui.pushClip(gx - 4f, gy, gw + 8f, gh)
@@ -337,7 +367,7 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             if (tile(list[i], x, y, gy, gy + gh)) hovered = list[i].id
         }
         Ui.popClip()
-        LunarLocker.preview = if (emotesTab) null else hovered
+        LunarLocker.preview = if (emotesTab || panel) null else hovered
         if (hovered == null) hoverTile = -1
         // A thin scroll bar.
         if (scrollMax > 0f) {
@@ -345,6 +375,134 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             val by = gy + (gh - bh) * (sy / scrollMax)
             Ui.box(W - 6.5f, by, 2f, bh, 1f, 0x26FFFFFF)
         }
+        if (panel && !emotesTab) filterPanel(gx, gy, gw, gh)
+    }
+
+    // ---- filters ----
+
+    /** All / Owned / Picked, Newest / A-Z, the Filters button and its chips (not for emotes: they have no tags), Clear. */
+    private fun filterRow(x: Float, y: Float, w: Float) {
+        val h = 15f
+        val shows = LockerFilter.Show.entries
+        val sw = Ui.segWidth(shows.map { it.label })
+        Ui.seg("show", x, y, sw, h, shows.map { it.label }, filter.show.ordinal, plain = true, natural = true) {
+            filter = filter.copy(show = shows[it])
+            scroll = 0f
+        }
+        val sorts = LockerFilter.Sort.entries
+        val ow = Ui.segWidth(sorts.map { it.label })
+        Ui.seg("sort", x + sw + 6f, y, ow, h, sorts.map { it.label }, filter.sort.ordinal, plain = true, natural = true) {
+            filter = filter.copy(sort = sorts[it])
+            scroll = 0f
+        }
+        var bx = x + sw + 6f + ow + 6f
+        if (!emotesTab) {
+            val n = filter.panelCount
+            bx += Ui.button("filters", bx, y, h, if (n > 0) "Filters  $n" else "Filters", "sliders", active = panel || n > 0) { panel = !panel } + 6f
+            // What the panel has set, as chips here too: one click drops it.
+            filter.color?.let { c -> bx += chip("rowColor", bx, y + 1.5f, 12f, LockerFilter.label(c), c) { filter = filter.copy(color = null) } + 4f }
+            filter.style?.let { st -> bx += chip("rowStyle", bx, y + 1.5f, 12f, LockerFilter.label(st), null) { filter = filter.copy(style = null) } + 4f }
+        }
+        if (filter != LockerFilter.Filter() || search.text.isNotEmpty()) {
+            val cw = Type.small.width("Clear") + 9f
+            Ui.button("clearFilters", x + w - cw, y, h, "Clear", null) {
+                filter = LockerFilter.Filter()
+                search.text = ""
+                scroll = 0f
+            }
+        }
+    }
+
+    /** A removable chip: [label] with a dot for [color] (a colour tag) and an x; returns its width. */
+    private fun chip(id: String, x: Float, y: Float, h: Float, label: String, color: String?, remove: () -> Unit): Float {
+        val dot = if (color != null) 9f else 0f
+        val w = Type.chip.width(label) + dot + 18f
+        val over = Ui.hit("chip:$id", x, y, w, h, { if (it == Keys.MOUSE_LEFT) remove() })
+        Ui.box(x, y, w, h, h / 2f, Tok.alpha(Tok.a1, if (over) 0.28f else 0.18f), 0.5f, Tok.alpha(Tok.a1, 0.45f))
+        if (color != null) swatch(color, x + 4f, y + (h - 6f) / 2f, 6f)
+        Ui.text(Type.chip, label, x + 5f + dot, y + h / 2f, Tok.T1)
+        Ui.icon("x", x + w - 10f, y + (h - 5f) / 2f, 5f, if (over) Tok.T1 else Tok.T2)
+        return w
+    }
+
+    private fun swatch(color: String, x: Float, y: Float, d: Float) {
+        val c = LockerFilter.COLORS[color] ?: return
+        if (color == "CHROMA") Ui.dbox(x, y, d, d, d / 2f, 0xFFFF4FD8.toInt(), 0xFF4FC3FF.toInt())
+        else Ui.box(x, y, d, d, d / 2f, c, 0.5f, 0x40FFFFFF)
+    }
+
+    /** The Filters panel over the grid: Lunar's colour tags as swatches, the style tags this tab uses as chips. */
+    private fun filterPanel(x: Float, y: Float, w: Float, h: Float) {
+        // A click anywhere else on the grid closes it.
+        Ui.hit("panelOutside", x - 4f, y, w + 8f, h, { panel = false }, scroll = { true }, pointer = false)
+        val styles = LockerFilter.styles(LunarLocker.all(LunarLocker.tabs[tab]))
+        val pad = 9f
+        val iw = w - pad * 2f
+        // Lay the style chips out first, to size the panel.
+        val chipH = 13f
+        val placed = ArrayList<Triple<String, Float, Float>>()
+        var cx = 0f
+        var cy = 0f
+        for (st in styles) {
+            val cw = Type.small.width(LockerFilter.label(st)) + 12f
+            if (cx > 0f && cx + cw > iw) {
+                cx = 0f
+                cy += chipH + 4f
+            }
+            placed += Triple(st, cx, cy)
+            cx += cw + 4f
+        }
+        val stylesH = if (styles.isEmpty()) 12f else cy + chipH
+        val ph = min(h, pad + 10f + 18f + 10f + 10f + stylesH + pad)
+        Ui.glow(x, y + 4f, w, ph, 8f, 16f, 0x99000000.toInt())
+        Ui.box(x, y, w, ph, 8f, 0xF5141219.toInt(), 0.5f, Tok.LINE2)
+        Ui.block("panel", x, y, w, ph)
+        // Colours.
+        var yy = y + pad
+        Ui.text(Type.status, "COLOUR", x + pad, yy + 3f, Tok.T3)
+        yy += 10f
+        val d = 14f
+        val step = min(24f, iw / LockerFilter.COLORS.size)
+        for ((i, c) in LockerFilter.COLORS.keys.withIndex()) {
+            val sx = x + pad + i * step
+            val on = filter.color == c
+            val over = Ui.hit("swatch:$c", sx, yy, d + 4f, d + 4f, { b ->
+                if (b == Keys.MOUSE_LEFT) {
+                    filter = filter.copy(color = if (on) null else c)
+                    scroll = 0f
+                }
+            })
+            if (on) Ui.box(sx - 0.5f, yy - 0.5f, d + 5f, d + 5f, (d + 5f) / 2f, 0, 1.2f, Tok.a1)
+            else if (over) Ui.box(sx, yy, d + 4f, d + 4f, (d + 4f) / 2f, 0, 0.5f, Tok.LINE2)
+            swatch(c, sx + 2f, yy + 2f, d)
+        }
+        // The hovered (else the picked) colour's name, beside the label.
+        val named = LockerFilter.COLORS.keys.firstOrNull { Ui.hot("swatch:$it") } ?: filter.color
+        if (named != null) Ui.text(Type.status, LockerFilter.label(named), x + pad + Type.status.width("COLOUR") + 6f, y + pad + 3f, Tok.T1)
+        yy += 18f + 10f
+        // Styles.
+        Ui.text(Type.status, "STYLE", x + pad, yy + 3f, Tok.T3)
+        yy += 10f
+        if (styles.isEmpty()) Ui.text(Type.small, "This tab has no style tags", x + pad, yy + 6f, Tok.T4)
+        Ui.pushClip(x, y, w, ph)
+        for ((st, ox, oy) in placed) {
+            val label = LockerFilter.label(st)
+            val cw = Type.small.width(label) + 12f
+            val bx = x + pad + ox
+            val by = yy + oy
+            if (by > y + ph) break
+            val on = filter.style == st
+            val over = Ui.hit("style:$st", bx, by, cw, chipH, { b ->
+                if (b == Keys.MOUSE_LEFT) {
+                    filter = filter.copy(style = if (on) null else st)
+                    scroll = 0f
+                }
+            })
+            if (on) Ui.dbox(bx, by, cw, chipH, chipH / 2f, Tok.a1, Tok.a2)
+            else Ui.box(bx, by, cw, chipH, chipH / 2f, if (over) Tok.FILL2 else Tok.FILL, 0.5f, if (over) Tok.LINE2 else Tok.LINE)
+            Ui.textC(Type.small, label, bx + cw / 2f, by + chipH / 2f, if (on) Tok.WHITE else if (over) Tok.T1 else Tok.T2)
+        }
+        Ui.popClip()
     }
 
     /** One tile; returns whether the mouse is over it. */
@@ -471,6 +629,7 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
         val f = Ui.focused
         if (key == Keys.ESCAPE) {
             when {
+                panel -> panel = false
                 f === search && search.text.isNotEmpty() -> { search.text = ""; scroll = 0f }
                 f != null -> Ui.focused = null
                 else -> onClose()

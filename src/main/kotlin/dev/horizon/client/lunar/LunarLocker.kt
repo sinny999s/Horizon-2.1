@@ -143,11 +143,12 @@ object LunarLocker {
     }
 
     /** The cosmetics a tab lists, filtered by [search] (name, case-insensitive), newest first as in Lunar's index. */
-    fun list(tab: Tab, search: String): List<LunarCosmeticIndex.Entry> {
+    fun list(tab: Tab, search: String, filter: LockerFilter.Filter = LockerFilter.Filter()): List<LunarCosmeticIndex.Entry> =
+        LockerFilter.apply(all(tab), search, filter, { kind(it) == Kind.OWNED }, ::isEquipped)
+
+    /** Everything a tab holds: not ones whose files aren't on Lunar's CDN (some index lines name models never released). */
+    fun all(tab: Tab): List<LunarCosmeticIndex.Entry> {
         val index = LunarAssets.index ?: return emptyList()
-        val q = search.trim().lowercase()
-        // Not ones whose files aren't on Lunar's CDN (some index lines name models that were never released).
-        return index.values.filter { it.type in tab.types && (q.isEmpty() || q in it.name.lowercase()) && (!it.gek || LunarAssets.has(it.assetPath)) }
-            .sortedByDescending { it.id }
+        return index.values.filter { it.type in tab.types && (!it.gek || LunarAssets.has(it.assetPath)) }
     }
 }
