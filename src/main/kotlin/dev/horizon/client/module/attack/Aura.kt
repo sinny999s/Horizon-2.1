@@ -49,7 +49,7 @@ import kotlin.random.Random
  * the attack timer, sprint handling and the ray (or line of sight) allow.
  *
  * Extended with ViaFabricPlus 1.8.x auto-detection ([combatMode]), millisecond-paced humanized 1.8 clicking, 1.8
- * swing-before-attack packet order, and tunable [LegitRotation] mouse-spring parameters.
+ * swing-before-attack packet order, and tunable [LegitRotation] aim (a mouse spring, or human submovements: [HumanAim]).
  */
 class Aura : Module("aura", Categories.ATTACK) {
     enum class Point { CENTER, EYES, CLOSEST, ROAMING, RUST }
@@ -60,8 +60,11 @@ class Aura : Module("aura", Categories.ATTACK) {
     enum class FilterLowDeltas { REMOVE, REPLACE, OFF }
     enum class RotationMode { SNAP, DEFAULT, NONE, VULCAN, HVH, POLAR_SEP_25, GRIM_SILENT, ADVANCED, CUSTOM, LEGIT }
     enum class LegitSpot { WANDER, CLOSEST, CHEST, HEAD }
+    /** Not in the original: LEGIT's aim, a mouse spring (SPRING, the default) or human submovements ([HumanAim], HUMAN). */
+    enum class AimModel { SPRING, HUMAN }
     enum class CombatMode { AUTO, COOLDOWN, LEGACY }
-    enum class AutoBlock { OFF, BLOCK_HIT, HOLD }
+    /** BLOCK_HIT / HOLD: sword blocking around Aura's hits. LEGIT (not in the original): block-hits with the use key (see ShieldHook). */
+    enum class AutoBlock { OFF, BLOCK_HIT, HOLD, LEGIT }
     enum class AutoWeapon { NORMAL, NONE, SILENT }
     enum class WhileShielding { PAUSE, IGNORE, UNPRESS, LEGIT }
     enum class RandomizeDelay { OFF, VULCAN, DEFAULT, LEGIT }
@@ -70,7 +73,13 @@ class Aura : Module("aura", Categories.ATTACK) {
     @Suppress("EnumEntryName")
     enum class Sort { Distance, Health, FOV }
 
+    /** How far targets are looked for and tracked; hits only land within [reach]. */
     val range = float("range", 3.0f, 3.0f..6.0f)
+    /**
+     * Not in the original (whose `range` was also its reach): how far a hit may land, vanilla's 3 by default, so a long
+     * `range` only finds and follows targets from further away. Ghost Mode holds it at 3.
+     */
+    val reach = float("reach", 3.0f, 3.0f..6.0f)
     val ignoreWalls = bool("ignore-walls", true)
     val fov = int("fov", 180, 1..180).also { ValueLabels.register("fov", 1, "trigger") }
     /** Not in the original: no attacks in a Bedwars lobby or waiting room, back to it when the match starts ([Bedwars]). */
@@ -140,6 +149,7 @@ class Aura : Module("aura", Categories.ATTACK) {
     val rotationMode = enum("rotation-mode", RotationMode.DEFAULT)
     val priorityManual = bool("priority-manual", true) { rotationMode.value == RotationMode.SNAP }
     val legit = group("legit") { rotationMode.value == RotationMode.LEGIT }.also { it.value.opened = true }
+    val aimModel = enum("aim-model", AimModel.SPRING, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     val aimSpot = enum("aim-spot", LegitSpot.WANDER, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     val minAimSpeed = float("min-aim-speed", 240.0f, 20.0f..720.0f, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     val maxAimSpeed = float("max-aim-speed", 420.0f, 20.0f..720.0f, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
@@ -150,6 +160,19 @@ class Aura : Module("aura", Categories.ATTACK) {
     val reactionMax = int("reaction-max", 85, 0..300, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     val tremor = float("tremor", 0.35f, 0.0f..2.0f, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     val requireClick = bool("require-click", false, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
+    /**
+     * Not in the original: the same hand turns a look only the server gets (sent like the other silent modes) and
+     * leaves your camera alone. Losing the target, it turns back to your camera rather than snapping. Use it with
+     * Move Fix so you walk the way the server sees you face.
+     */
+    val silent = bool("silent", false, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
+    // HUMAN only (see HumanAim): how late you see the target move, how often a flick lands past it, how far off it
+    // lands, how much a path bows. `tracking` (both models): how well you keep up with a strafing target.
+    val perceptionDelay = int("perception-delay", 100, 0..300, parent = legit.value) { isHumanAim() }
+    val overshoot = int("overshoot", 20, 0..100, parent = legit.value) { isHumanAim() }
+    val aimError = int("aim-error", 6, 0..25, parent = legit.value) { isHumanAim() }
+    val curve = int("curve", 6, 0..30, parent = legit.value) { isHumanAim() }
+    val tracking = int("tracking", 80, 0..100, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     val autoWeapon = enum("auto-weapon", AutoWeapon.NONE)
     val onlyWeapon = bool("only-weapon", false)
     val combatMode = enum("combat-mode", CombatMode.AUTO)
@@ -282,6 +305,8 @@ class Aura : Module("aura", Categories.ATTACK) {
         sprintHook.resetting = false
     }
 
+    fun isHumanAim() = rotationMode.value == RotationMode.LEGIT && aimModel.value == AimModel.HUMAN
+
     /** The original's `jv.O()`: Aura is fighting someone with a weapon. */
     fun isAttacking(): Boolean = enabled && target != null && weapon.gate()
 
@@ -320,6 +345,13 @@ class Aura : Module("aura", Categories.ATTACK) {
         rotation = Rotation(p.yRot, p.xRot)
     }
 
+    /** Not in the original: with no target, `silent`'s hidden look is still sent while it turns back to the camera. */
+    private fun silentReturn() {
+        if (effectiveRotation() !== LegitRotation || !LegitRotation.silentActive) return
+        rotation = Rotation(LegitRotation.silentYaw, LegitRotation.silentPitch)
+        RotationManager.rotate(rotation, 130)
+    }
+
     /** The original's `jv.S`. */
     private fun tick() {
         val p = mc.player ?: return
@@ -327,6 +359,7 @@ class Aura : Module("aura", Categories.ATTACK) {
             target = null
             shield.releaseAutoBlock()
             lookBack(p)
+            silentReturn()
             for (h in hooks) h.tick()
             return
         }
@@ -342,24 +375,34 @@ class Aura : Module("aura", Categories.ATTACK) {
         if (t == null) {
             shield.releaseAutoBlock()
             lookBack(p)
+            silentReturn()
             return
         }
         if (autoWeapon.value == AutoWeapon.NORMAL) weapon.selectBest()
         val attackReady = sprintHook.gate(timer.ready(0))
         val mode = effectiveRotation()
+        if (mode === LegitRotation && LegitRotation.silentActive) {
+            // Not in the original: `silent`. The hand turned the hidden look; it is sent like the other silent modes,
+            // and the same check as below applies to it (the last look sent and this one both on the target).
+            rotation = Rotation(LegitRotation.silentYaw, LegitRotation.silentPitch)
+            val sentOnTarget = rayHitsTarget(t, Rotation(Rotation.lastYaw, Rotation.lastPitch), reach.value, true)
+            val canHit = sentOnTarget && rayHitsTarget(t, rotation, reach.value, true)
+            RotationManager.queue(InstantRequest(rotation, 130) { onRotated(attackReady, canHit) })
+            return
+        }
         if (mode === LegitRotation) {
             // The camera itself turns (LegitRotation, every frame): nothing silent is sent, and a hit lands only where
             // the crosshair is, never through a wall.
             rotation = Rotation(p.yRot, p.xRot)
             // The hit reaches the server before this tick's look does, so it is judged by the last look sent: hit only
             // when that one is on the target too (turning hard up close, it can still point past it: NCP's direction).
-            val sentOnTarget = rayHitsTarget(t, Rotation(Rotation.lastYaw, Rotation.lastPitch), range.value, true)
-            onRotated(attackReady, sentOnTarget && rayHitsTarget(t, rotation, range.value, true))
+            val sentOnTarget = rayHitsTarget(t, Rotation(Rotation.lastYaw, Rotation.lastPitch), reach.value, true)
+            onRotated(attackReady, sentOnTarget && rayHitsTarget(t, rotation, reach.value, true))
             return
         }
         rotation = if (fov.value == 1) Rotation(p.yRot, p.xRot) else mode.rotate(this, t, rotation, attackReady)
-        val inHitRange = PlayerState.eye.distanceTo(mode.aimPoint(this, t)) <= range.value
-        val canHit = if (mode.needsRaycast(this)) rayHitsTarget(t, rotation, range.value, !ignoreWalls.value)
+        val inHitRange = PlayerState.eye.distanceTo(mode.aimPoint(this, t)) <= reach.value
+        val canHit = if (mode.needsRaycast(this)) rayHitsTarget(t, rotation, reach.value, !ignoreWalls.value)
         else inHitRange && (p.hasLineOfSight(t) || ignoreWalls.value)
         RotationManager.queue(InstantRequest(rotation, 130) { onRotated(attackReady, canHit) })
     }
@@ -369,6 +412,8 @@ class Aura : Module("aura", Categories.ATTACK) {
         rotated = true
         val t = target ?: return
         if (!attackReady) return
+        // auto-block LEGIT: no hit (nor swing) while the hand is blocking, as in 1.8.
+        if (!shield.allowsHit()) return
         if (!canHit) {
             if (isLegacyCombat() && swingRange.value > 0f && inPreSwingRange(t)) preSwing()
             return
@@ -381,7 +426,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         val p = mc.player ?: return false
         val mode = effectiveRotation()
         val sight = p.hasLineOfSight(t) || (ignoreWalls.value && mode !== LegitRotation)
-        return sight && PlayerState.eye.distanceTo(mode.aimPoint(this, t)) <= range.value + swingRange.value
+        return sight && PlayerState.eye.distanceTo(mode.aimPoint(this, t)) <= reach.value + swingRange.value
     }
 
     /** 1.8 pre-swing / miss-swing while approaching or mid-flick, without sending an out-of-range attack packet. */
@@ -467,14 +512,14 @@ class Aura : Module("aura", Categories.ATTACK) {
         if (backTrack.value) backTracker.receive(e)
     }
 
-    /** The original's `jv.T`: vanilla's crosshair pick, along Aura's rotation and out to its range. */
+    /** The original's `jv.T`: vanilla's crosshair pick, along Aura's rotation and out to its reach (the original's range). */
     private fun overrideCrosshair(e: CrosshairEvent) {
         if (target == null || !overrideCrosshair.value) return
         Profiler.get().pop()
         e.cancel()
         val p = mc.player ?: return
         if (mc.cameraEntity == null || mc.level == null) return
-        val hit = pickAlong(p.blockInteractionRange(), range.value.toDouble(), rotation.yaw, rotation.pitch)
+        val hit = pickAlong(p.blockInteractionRange(), reach.value.toDouble(), rotation.yaw, rotation.pitch)
         mc.hitResult = hit
         mc.crosshairPickEntity = hit.pickedEntity()
     }

@@ -16,8 +16,11 @@ import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.PauseScreen
+import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
+import net.minecraft.client.gui.screens.multiplayer.SafetyScreen
+import net.minecraft.client.gui.screens.CreditsAndAttributionScreen
 import net.minecraft.client.gui.screens.options.OptionsScreen
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
 import net.minecraft.client.input.MouseButtonEvent
@@ -31,8 +34,9 @@ interface MenuScreen {
 
 /**
  * Not in the original: the client's menus in place of vanilla's title screen, world list, server list, options and pause
- * menu, wherever vanilla opens them. All but the title screen wrap the vanilla screen they replace; vanilla code going
- * back to that screen gets the same wrapper again. (A pause screen without its menu, from F3 + Esc, stays vanilla's.)
+ * menu, wherever vanilla opens them (and, out of a world, the multiplayer warning and Credits, as [PanelMenu]s, and the
+ * disconnected screen, as a [DisconnectMenu]). All but the title screen wrap the vanilla screen they replace; vanilla
+ * code going back to that screen gets the same wrapper again. (A pause screen without its menu, from F3 + Esc, stays vanilla's.)
  */
 object Menus {
     private var worlds: WorldsScreen? = null
@@ -48,6 +52,14 @@ object Menus {
                 // Closing a screen out of a world: setScreen makes vanilla's title screen itself, after this event.
                 screen == null -> if (mc.level == null) MainMenu() else return@on
                 screen.javaClass == TitleScreen::class.java -> MainMenu()
+                // Simple vanilla screens the menus lead to: in the menus' style ([PanelMenu]).
+                mc.level == null && (screen.javaClass == SafetyScreen::class.java || screen.javaClass == CreditsAndAttributionScreen::class.java) ->
+                    PanelMenu(screen)
+                screen is DisconnectedScreen && screen.javaClass == DisconnectedScreen::class.java -> DisconnectMenu(screen)
+                // Add / Edit Server and Direct Connection: [ServerEditMenu].
+                screen.javaClass == net.minecraft.client.gui.screens.ManageServerScreen::class.java ||
+                    screen.javaClass == net.minecraft.client.gui.screens.DirectJoinServerScreen::class.java -> ServerEditMenu(screen)
+                screen is net.minecraft.client.gui.screens.ConnectScreen && screen.javaClass == net.minecraft.client.gui.screens.ConnectScreen::class.java -> ConnectMenu(screen)
                 screen is SelectWorldScreen && screen.javaClass == SelectWorldScreen::class.java ->
                     worlds?.takeIf { it.vanilla === screen } ?: WorldsScreen(screen).also { worlds = it }
                 screen is JoinMultiplayerScreen && screen.javaClass == JoinMultiplayerScreen::class.java ->
@@ -90,7 +102,7 @@ object Menus {
             else -> 0xFF3A3A3A.toInt()
         }
         val outline = when {
-            selected -> Theme.primary
+            selected -> OUTLINE
             hovered -> 0x50FFFFFF
             else -> 0x22FFFFFF
         }
@@ -147,6 +159,15 @@ object Menus {
     fun dots(): String = ".".repeat(1 + (System.currentTimeMillis() % 1200 / 400).toInt())
 
     const val GREY = 0xFF9A9A9A.toInt()
+
+    /**
+     * The menus' accent, in place of the theme's colours: like the title screen and its backdrop, the screens out of a
+     * world are black through white whatever the theme. [ACCENT] for a selection or a hovered arrow, [FILL] for the
+     * filled part of a switch or slider, [OUTLINE] round a selected or hovered pane.
+     */
+    const val ACCENT = 0xFFF0F0F2.toInt()
+    const val FILL = 0xFFD2D2D6.toInt()
+    const val OUTLINE = 0x8CFFFFFF.toInt()
 }
 
 /**
@@ -173,7 +194,7 @@ class MenuButton(var label: String, private val sound: () -> Unit = Menus::open,
         hover.update(if (hovered) 1f else 0f)
         val k = hover.value
         // (Glass, not a plain rect: the rect shader fades its border with a translucent fill.)
-        Menus.glass(x, y, w, h, 5f, Colors.lerp(0xFF4A4A4A.toInt(), 0xFF8C8C8C.toInt(), k), Colors.lerp(0x30FFFFFF, Theme.primary, k))
+        Menus.glass(x, y, w, h, 5f, Colors.lerp(0xFF4A4A4A.toInt(), 0xFF8C8C8C.toInt(), k), Colors.lerp(0x30FFFFFF, Menus.OUTLINE, k))
         val color = if (active) Colors.lerp(0xFFC8C8C8.toInt(), Theme.text, k) else 0x66C8C8C8
         font.drawMiddleCentered(Menus.fit(label, font, w - 8f), x + w / 2f, y + h / 2f, color)
     }

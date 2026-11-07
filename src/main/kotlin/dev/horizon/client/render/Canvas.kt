@@ -325,6 +325,22 @@ object Canvas {
     }
 
     /**
+     * Not in the original: [count] textured quads with any four corners, in one draw: [xy] and [uv] 8 floats per quad
+     * (corners in order), [tints] one colour per quad (the locker's 3D cosmetic thumbnails).
+     */
+    fun texturedQuads(texture: GpuTextureView, xy: FloatArray, uv: FloatArray, tints: IntArray, count: Int) {
+        if (count == 0) return
+        val vc = begin(Pipelines.COLORED_TEXTURE, null, texture) ?: return
+        for (q in 0 until count) {
+            val c = tints[q]
+            for (k in 0 until 4) {
+                val o = q * 8 + k * 2
+                vc.at(pose, xy[o], xy[o + 1]).setUv(uv[o], uv[o + 1]).color(c)
+            }
+        }
+    }
+
+    /**
      * One glyph quad in the text's scaled pose [m] (pixel units). Consecutive glyphs with the same texture and scissor
      * merge into one draw, like the original's one draw per glyph page. [argb] is the already-truncated text colour.
      */

@@ -35,8 +35,11 @@ class NameProtect : Module("name-protect", Categories.MISC) {
     companion object {
         private var instance: NameProtect? = null
 
-        /** For the text hooks; unchanged before the module exists. */
+        /** For the text hooks; unchanged before the module exists. (Not in the original: an Apollo server's nick for you first.) */
         @JvmStatic
-        fun protect(text: String): String = instance?.protectText(text) ?: text
+        fun protect(text: String): String {
+            val t = dev.horizon.client.lunar.ApolloFeatures.hideNick(text)
+            return instance?.protectText(t) ?: t
+        }
     }
 }

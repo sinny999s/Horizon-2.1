@@ -22,7 +22,7 @@ class ElytraFreeze : Module("elytra-freeze", Categories.RAGE) {
         if (!p.isFallFlying) return false
         val aura = Modules.get<Aura>()
         val t = aura.target ?: return false
-        return t.distanceTo(p) - aura.range.value < 0.0f
+        return t.distanceTo(p) - aura.reach.value < 0.0f
     }
 
     private fun inGame() = mc.player != null && mc.level != null

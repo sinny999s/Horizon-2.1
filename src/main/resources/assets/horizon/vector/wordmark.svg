@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="76 32 834 196" width="834" height="196">
+  <defs>
+    <clipPath id="horizonSliceClip">
+      <rect x="0" y="0" width="986" height="127"/>
+      <rect x="0" y="133" width="986" height="127"/>
+    </clipPath>
+  </defs>
+  <g fill="#FFFFFF" clip-path="url(#horizonSliceClip)">
+    <rect x="80" y="70" width="20" height="120"/>
+    <rect x="148" y="70" width="20" height="120"/>
+    <rect x="99" y="120" width="50" height="20"/>
+    <path fill-rule="evenodd" d="M 262 70 A 60 60 0 1 0 262 190 A 60 60 0 1 0 262 70 Z M 262 90 A 40 40 0 1 1 262 170 A 40 40 0 1 1 262 90 Z"/>
+    <path fill-rule="evenodd" d="M 356 70 H 413.5 A 34.5 34.5 0 0 1 413.5 139 H 394 L 448 190 H 424.4 L 375 139 H 376 V 190 H 356 Z M 376 90 V 119 H 413.5 A 14.5 14.5 0 0 0 413.5 90 Z"/>
+    <rect x="482" y="70" width="20" height="120"/>
+    <path d="M 536 70 H 624 V 90 L 559.6 170 H 624 V 190 H 536 V 170 L 600.4 90 H 536 Z"/>
+    <path fill-rule="evenodd" d="M 718 70 A 60 60 0 1 0 718 190 A 60 60 0 1 0 718 70 Z M 718 90 A 40 40 0 1 1 718 170 A 40 40 0 1 1 718 90 Z"/>
+    <path d="M 699.6 125 A 18.4 18.4 0 0 1 736.4 125 Z"/>
+    <rect x="648" y="134" width="140" height="5.6" rx="2.8"/>
+    <path d="M 812 70 H 833.6 L 886 157 V 70 H 906 V 190 H 884.4 L 832 103 V 190 H 812 Z"/>
+  </g>
+</svg>

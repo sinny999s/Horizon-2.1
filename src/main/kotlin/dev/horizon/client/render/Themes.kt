@@ -66,7 +66,11 @@ data class ThemeData(
             preset("Amber", 0xFFFF6A3D.toInt(), 0xFFFFB547.toInt()),
             preset("Aurora", 0xFF3DF5A0.toInt(), 0xFF3DA0FF.toInt()),
             preset("Frost", 0xFFE9F0FF.toInt(), 0xFF8FA2C0.toInt()),
+            monochrome(),
         )
+
+        /** Not in the original: black through white only, matching the title screen and the menus: light grey into mid grey. */
+        fun monochrome() = preset("Monochrome", 0xFFBEBEC4.toInt(), 0xFF5E5E66.toInt())
 
         private fun preset(id: String, primary: Int, secondary: Int): ThemeData {
             fun tint(grey: Int, t: Float) = Colors.lerp(0xFF000000.toInt() or (grey * 0x010101), secondary, t)
@@ -102,11 +106,18 @@ object Themes {
             dev.horizon.client.HorizonClient.LOG.warn("Themes are not loaded from file for some reasons.", e)
             list.clear()
         }
+        // Not in the original: Monochrome came later, so it's added once on its own for lists that already had the rest
+        // (before the current theme is looked up, so it can be the one picked).
+        if (Storage.shared.themePresets && !Storage.shared.themeMonochrome) {
+            if (list.none { it.id == "Monochrome" }) list += ThemeData.monochrome()
+            Storage.shared.themeMonochrome = true
+        }
         current = list.firstOrNull { it.id == Storage.shared.themeConfig } ?: ThemeData.default().also { list += it }
         // Not in the original: the redesign's themes, added once (one removed later stays removed).
         if (!Storage.shared.themePresets) {
             for (p in ThemeData.presets()) if (list.none { it.id == p.id }) list += p
             Storage.shared.themePresets = true
+            Storage.shared.themeMonochrome = true
             save()
         }
     }

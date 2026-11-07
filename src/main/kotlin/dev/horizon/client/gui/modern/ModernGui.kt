@@ -189,7 +189,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
     // ---- title bar ----
 
     private const val SEARCH_W = 260f
-    private val tools = listOf("Windows" to "windows", "HUD" to "layout", "Theme" to "theme")
+    private val tools = listOf("Lunar" to "lunar", "Windows" to "windows", "HUD" to "layout", "Theme" to "theme")
     private fun toolW(label: String) = Type.sub.width(label) + 22.5f
 
     /** The search box's left: centred between the brand (98 wide) and the tools, as the mockup's flex row. */
@@ -226,15 +226,18 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
             val run: () -> Unit = when (label) {
                 "Theme" -> { { popover = if (popover is ThemeMenu) null else ThemeMenu(x0("Theme"), BAR + 4f) } }
                 "HUD" -> { { mc.gui.setScreen(ModernHudEditor) } }
+                "Lunar" -> { { popover = if (popover is LunarMenu) null else LunarMenu(x0("Lunar") - 150f, BAR + 4f) } }
                 else -> { { mc.gui.setScreen(ModernWindows) } }
             }
             val w = toolW(label)
             x -= w
             toolX[label] = x
             val o = Ui.hit("tool:$label", x, 6.25f, w, 17f, { if (it == Keys.MOUSE_LEFT) run() })
-            val on = label == "Theme" && popover is ThemeMenu
+            val on = (label == "Theme" && popover is ThemeMenu) || (label == "Lunar" && popover is LunarMenu)
             if (o || on) Ui.box(x, 6.25f, w, 17f, 5f, Tok.FILL2)
-            Ui.icon(icon, x + 5.5f, 10.75f, 8f, if (o || on) Tok.T1 else Tok.T2)
+            // Not in the original: Lunar's own logo for its menu.
+            if (icon == "lunar") dev.horizon.client.lunar.LunarNameTag.canvasLogo(x + 5f, 10.25f, 9f, if (o || on) Tok.T1 else Tok.T2, 0)
+            else Ui.icon(icon, x + 5.5f, 10.75f, 8f, if (o || on) Tok.T1 else Tok.T2)
             Ui.text(Type.sub, label, x + 17f, 14.75f, if (o || on) Tok.T1 else Tok.T2)
             x -= 2f
         }

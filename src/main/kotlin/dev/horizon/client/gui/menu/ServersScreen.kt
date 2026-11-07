@@ -141,7 +141,7 @@ class ServersScreen(vanilla: JoinMultiplayerScreen) : ListMenu<ServerSelectionLi
         Via.server(data)?.let {
             val own = "as " + Via.name(it)
             val ow = Fonts.medium65.width(own)
-            Fonts.medium65.draw(own, right - ow, y + 28f, Theme.primary)
+            Fonts.medium65.draw(own, right - ow, y + 28f, Menus.FILL)
             motdRight = minOf(motdRight, right - ow - 8f)
         }
 

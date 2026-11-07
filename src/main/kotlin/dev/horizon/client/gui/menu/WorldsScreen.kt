@@ -89,8 +89,8 @@ class WorldsScreen(vanilla: SelectWorldScreen) : ListMenu<WorldSelectionList.Ent
         if (icon != null) {
             Menus.image(icon.textureView, x + 5f, y + 5f, 32f, 32f, 5f)
         } else {
-            val a = Colors.withAlpha(Theme.primary, 0.55f)
-            val b = Colors.withAlpha(Theme.secondary, 0.55f)
+            val a = 0x8C5A5A62.toInt()
+            val b = 0x8C2A2A30.toInt()
             Menus.rect(x + 5f, y + 5f, 32f, 32f, 5f, a, b, b, a)
             Fonts.bold12.drawMiddleCentered(summary.levelName.take(1).uppercase(), x + 21f, y + 21f, -1)
         }

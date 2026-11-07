@@ -10,7 +10,8 @@ import dev.horizon.client.module.attack.Aura
  * Not in the original: one switch for playing on a server that watches (Hypixel). While it's on, the blatant modules
  * (all of Rage and Attack but Aura and Legacy Clicker, and the packet / silent-rotation ones elsewhere, [BLATANT]) are
  * turned off and can't be turned on, and Aura is held to what a player could do: its LEGIT rotations (the real camera,
- * turned like a mouse), no hits through walls, no back-track and vanilla's 3 block reach. Turning it off turns back on
+ * turned like a mouse; its `silent`, the same hand on a look only the server gets, is left to the config), no hits through walls, no back-track and vanilla's 3 block reach (its `reach`; its `range`, how
+ * far it looks for targets, is left alone). Turning it off turns back on
  * what it turned off and gives Aura its own settings back. Its on/off is saved with the config, and the sidebar's
  * config menu has a switch for it.
  */
@@ -33,7 +34,7 @@ object GhostMode : Module("ghost-mode", Categories.LEGIT, listOf("ghost", "legit
     /** Aura's own settings from before, to give back. */
     private var auraBefore: AuraSettings? = null
 
-    private class AuraSettings(val mode: Aura.RotationMode, val range: Float, val walls: Boolean, val backTrack: Boolean)
+    private class AuraSettings(val mode: Aura.RotationMode, val reach: Float, val walls: Boolean, val backTrack: Boolean)
 
     fun isBlatant(m: Module): Boolean = m !== this && m.id !in ALLOWED &&
         (m.subCategory === Categories.RAGE || m.subCategory === Categories.ATTACK || m.id in BLATANT)
@@ -58,7 +59,7 @@ object GhostMode : Module("ghost-mode", Categories.LEGIT, listOf("ghost", "legit
         auraBefore?.let { b ->
             val a = aura()
             a.rotationMode.value = b.mode
-            a.range.value = b.range
+            a.reach.value = b.reach
             a.ignoreWalls.value = b.walls
             a.backTrack.value = b.backTrack
         }
@@ -86,7 +87,7 @@ object GhostMode : Module("ghost-mode", Categories.LEGIT, listOf("ghost", "legit
     private fun snapshotAura() {
         if (auraBefore != null) return
         val a = aura()
-        auraBefore = AuraSettings(a.rotationMode.value, a.range.value, a.ignoreWalls.value, a.backTrack.value)
+        auraBefore = AuraSettings(a.rotationMode.value, a.reach.value, a.ignoreWalls.value, a.backTrack.value)
     }
 
     init {
@@ -97,7 +98,7 @@ object GhostMode : Module("ghost-mode", Categories.LEGIT, listOf("ghost", "legit
     private fun holdAura() {
         val a = aura()
         if (a.rotationMode.value != Aura.RotationMode.LEGIT) a.rotationMode.value = Aura.RotationMode.LEGIT
-        if (a.range.value > 3.0f) a.range.value = 3.0f
+        if (a.reach.value > 3.0f) a.reach.value = 3.0f
         if (a.ignoreWalls.value) a.ignoreWalls.value = false
         if (a.backTrack.value) a.backTrack.value = false
     }

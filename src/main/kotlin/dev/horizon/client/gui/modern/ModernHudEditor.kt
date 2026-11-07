@@ -74,7 +74,8 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
 
     /** hud.js's names: The original lists the ids ("Fps Widget", "Coord Widget"). */
     private val NAMES = mapOf("coord-widget" to "Coords", "fps-widget" to "FPS", "tps-widget" to "TPS", "keybinds-widget" to "Key Binds",
-        "pvp-resources-widget" to "PvP Resources", "array-list-widget" to "ArrayList", "keystrokes-widget" to "Keystrokes")
+        "pvp-resources-widget" to "PvP Resources", "array-list-widget" to "ArrayList", "keystrokes-widget" to "Keystrokes",
+        "hypixel-stats-widget" to "Hypixel Stats")
 
     private val DESC = mapOf(
         "coord-widget" to "Where you are, and in the Nether", "fps-widget" to "Frames per second",
@@ -91,6 +92,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
         "macro-widget" to "Your item macros and their keys", "array-list-widget" to "Every enabled module, with its mode",
         "session-stats-widget" to "Playtime, kills, deaths and K/D; on Hypixel also finals, FKDR, beds and wins",
         "keystrokes-widget" to "WASD, mouse buttons, spacebar and CPS",
+        "hypixel-stats-widget" to "Your Hypixel level and Bedwars stars, FKDR, W/L, finals and wins (^hypixel key)",
     )
 
     /** The widgets without an icon of the original's get one drawn after what they show (assets/horizon/vector/gui). */

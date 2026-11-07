@@ -161,11 +161,15 @@ class AuraTargets(private val aura: Aura) {
         return abs(Mth.wrapDegrees(Math.toDegrees(atan2(e.z - p.z, e.x - p.x)) - 90.0) - Mth.wrapDegrees(p.yRot)).toFloat()
     }
 
-    /** The original's `vt.B` (extended by `swing-range` when 1.8 combat pre-swinging is active). */
+    /**
+     * The original's `vt.B` (extended by `swing-range` when 1.8 combat pre-swinging is active). Its `range` is only how far
+     * to look now; never shorter than the reach (and pre-swing), so anything Aura can hit is found.
+     */
     fun searchRange(): Float {
         val p = mc.player!!
-        val base = if (aura.isLegacyCombat()) aura.range.value + aura.swingRange.value else aura.range.value
-        var r = aura.range.value + 2.0f
+        val scan = max(aura.range.value, aura.reach.value)
+        val base = if (aura.isLegacyCombat()) max(scan, aura.reach.value + aura.swingRange.value) else scan
+        var r = scan + 2.0f
         if (p.isFallFlying || Modules.get<MaceElytraTarget>().enabled) r += 64.0f
         return if (aura.effectiveRotation().extendsSearch(aura)) max(r, base) else base
     }

@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS picks (
+  uuid TEXT PRIMARY KEY,
+  picks TEXT NOT NULL,
+  updated INTEGER NOT NULL
+);

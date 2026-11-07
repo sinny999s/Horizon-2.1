@@ -281,8 +281,6 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
             marker.update(y)
             val my = marker.value
             Menus.rect(sx, my, sw, 17f, 4f, 0x24FFFFFF)
-            val stretch = minOf(10f, abs(y - my) * 0.25f)
-            Menus.rect(sx + 3f, my + 4.5f - stretch / 2f, 2f, 8f + stretch, 1f, Theme.primary)
         }
         for ((p, y) in at) {
             if (p.section) {
@@ -383,7 +381,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
             }
             is Link -> {
                 label(r.title.removeSuffix("...").trimEnd(), x, cy, w - 30f, true)
-                Fonts.medium75.drawSymbolCentered(">", x + w - 12f + if (hovered) 2f else 0f, cy, if (hovered) Theme.primary else Menus.GREY)
+                Fonts.medium75.drawSymbolCentered(">", x + w - 12f + if (hovered) 2f else 0f, cy, if (hovered) Menus.ACCENT else Menus.GREY)
                 if (hovered) Cursor.request(CursorTypes.POINTING_HAND)
                 hit(x, y, x + w, y + h, top, bottom, { b -> if (b == Keys.MOUSE_LEFT) { Menus.open(); r.action() } })
             }
@@ -471,7 +469,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
             }
             SodiumOptions.Kind.BUTTON -> {
                 val open = o.open
-                Fonts.medium75.drawSymbolCentered(">", x + w - 12f + if (hovered) 2f else 0f, cy, if (hovered) Theme.primary else Menus.GREY)
+                Fonts.medium75.drawSymbolCentered(">", x + w - 12f + if (hovered) 2f else 0f, cy, if (hovered) Menus.ACCENT else Menus.GREY)
                 if (enabled && open != null) hit(x, y, x + w, y + 24f, top, bottom, { b -> if (b == Keys.MOUSE_LEFT) { Menus.open(); open.accept(this) } })
             }
             SodiumOptions.Kind.OTHER -> {}
@@ -490,15 +488,15 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         }
         val over = mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + 14f
         if (over) Cursor.request(CursorTypes.POINTING_HAND)
-        Menus.glass(bx, by, bw, 14f, 4f, if (over) 0xFF5A5A5A.toInt() else 0xFF3A3A3A.toInt(), if (waiting === k) Theme.primary else 0x30FFFFFF)
+        Menus.glass(bx, by, bw, 14f, 4f, if (over) 0xFF5A5A5A.toInt() else 0xFF3A3A3A.toInt(), if (waiting === k) Menus.OUTLINE else 0x30FFFFFF)
         val color = when {
-            waiting === k -> Theme.primary
+            waiting === k -> Menus.ACCENT
             conflict -> 0xFFF87171.toInt()
             k.isDefault -> 0xFFE0E0E0.toInt()
             else -> Theme.text
         }
         Fonts.medium75.drawMiddleCentered(Menus.fit(text, Fonts.medium75, bw - 8f), bx + bw / 2f, cy, color)
-        if (!k.isDefault && waiting !== k) Fonts.medium65.draw("*", bx - 8f, cy - 3f, Theme.primary)
+        if (!k.isDefault && waiting !== k) Fonts.medium65.draw("*", bx - 8f, cy - 3f, Menus.FILL)
         hit(bx, by, bx + bw, by + 14f, top, bottom, { b ->
             when (b) {
                 Keys.MOUSE_LEFT -> {
@@ -531,9 +529,10 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         val anim = knobs.getOrPut(key) { Animation(Easing.OUT_CUBIC, 160).also { it.value = target; it.update(target) } }
         anim.update(target)
         val t = anim.value
-        val track = Colors.lerp(0x30FFFFFF, Theme.primary, t)
+        // On: a light track with a dark knob (the menus have no colour to fill it with).
+        val track = Colors.lerp(0x30FFFFFF, Menus.FILL, t)
         Menus.rect(x, cy - 6f, 24f, 12f, 6f, if (enabled) track else Colors.withAlpha(track, Colors.alphaF(track) * 0.4f))
-        val knob = Colors.lerp(0xFFB4B4B4.toInt(), -1, t)
+        val knob = Colors.lerp(0xFFB4B4B4.toInt(), 0xFF1C1C20.toInt(), t)
         Menus.rect(x + 2f + 12f * t, cy - 4f, 8f, 8f, 4f, if (enabled) knob else 0x80FFFFFF.toInt())
     }
 
@@ -557,7 +556,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         val k = t.coerceIn(0f, 1f)
         Fonts.medium75.drawMiddle(Menus.fit(value, Fonts.medium75, vw - 4f), x, cy, if (enabled) 0xFFE0E0E0.toInt() else 0xFF707070.toInt())
         Menus.rect(tx, cy - 1.5f, tw, 3f, 1.5f, 0x40FFFFFF)
-        Menus.rect(tx, cy - 1.5f, tw * k, 3f, 1.5f, if (enabled) Theme.primary else 0x60FFFFFF)
+        Menus.rect(tx, cy - 1.5f, tw * k, 3f, 1.5f, if (enabled) Menus.FILL else 0x60FFFFFF)
         Menus.rect(tx + tw * k - 4f, cy - 4f, 8f, 8f, 4f, if (enabled) -1 else 0x80FFFFFF.toInt())
         if (!enabled) return
         val toT = { mx: Float -> ((mx - tx) / tw).coerceIn(0f, 1f) }

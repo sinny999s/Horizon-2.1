@@ -1,0 +1,39 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.dragon_wings.flap": {
+      "loop": true,
+      "animation_length": 2,
+      "bones": {
+        "right_wing": {
+          "rotation": [
+            "(-0.125 - math.cos(query.anim_time * 180) * 0.2) * 57.29577951308232",
+            42.97183463481174,
+            "(math.sin(query.anim_time * 180) + 0.125) * 0.8 * 57.29577951308232"
+          ]
+        },
+        "right_wing_tip": {
+          "rotation": [
+            0,
+            0,
+            "(math.sin(query.anim_time * 180 + 114.59155902616465) + 0.5) * 0.75 * 57.29577951308232"
+          ]
+        },
+        "left_wing": {
+          "rotation": [
+            "(-0.125 - math.cos(query.anim_time * 180) * 0.2) * 57.29577951308232",
+            -42.97183463481174,
+            "-(math.sin(query.anim_time * 180) + 0.125) * 0.8 * 57.29577951308232"
+          ]
+        },
+        "left_wing_tip": {
+          "rotation": [
+            0,
+            0,
+            "-(math.sin(query.anim_time * 180 + 114.59155902616465) + 0.5) * 0.75 * 57.29577951308232"
+          ]
+        }
+      }
+    }
+  }
+}

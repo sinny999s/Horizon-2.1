@@ -20,10 +20,12 @@ import dev.horizon.client.module.attack.AnchorAura
 import dev.horizon.client.module.equip.AutoDrop
 import dev.horizon.client.module.world.ChestAura
 import dev.horizon.client.module.misc.PartyProtect
+import dev.horizon.client.module.misc.LunarSpoof
 import dev.horizon.client.module.misc.DiscordAlerts
 import dev.horizon.client.module.player.AutoMount
 import dev.horizon.client.module.world.HighwayBuilder
 import dev.horizon.client.module.rage.EntityControl
+import dev.horizon.client.module.cosmetic.BetterChat
 import dev.horizon.client.module.cosmetic.Ambience
 import dev.horizon.client.module.protect.ArmorAlert
 import dev.horizon.client.module.basic.AntiKnockBack
@@ -434,5 +436,7 @@ object HorizonModules {
         Modules.register(BedBreaker())
         Modules.register(PartyProtect())
         Modules.register(NoHitDelay())
+        Modules.register(LunarSpoof())
+        Modules.register(BetterChat)
     }
 }

@@ -9,7 +9,7 @@ import dev.horizon.client.module.Module
 /**
  * Not in the original: your Hypixel party counts as friends while this is on, so everything that spares friends (Aura,
  * Trigger Bot, Aim Assist, Auto Clicker, the ESPs' friend colour...) spares them too. The party comes from Hypixel's Mod
- * API ([HypixelApi.party]): it needs the "Hypixel Mod API" mod installed. A member is matched through the tab list
+ * API ([HypixelApi.party]). A member is matched through the tab list
  * (their name there to their UUID), so a nicked member, whose UUID in a game isn't their real one, isn't matched.
  */
 class PartyProtect : Module("party-protect", Categories.MISC, listOf("party-friends", "party")) {
@@ -31,7 +31,6 @@ class PartyProtect : Module("party-protect", Categories.MISC, listOf("party-frie
 
     override fun onEnable() {
         told = -1
-        if (!HypixelApi.installed) moduleMessage(name.trim(), "needs the Hypixel Mod API mod installed")
     }
 
     companion object {

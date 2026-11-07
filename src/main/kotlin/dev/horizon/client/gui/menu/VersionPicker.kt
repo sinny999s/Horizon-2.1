@@ -130,7 +130,7 @@ class VersionPicker(
                     Fonts.medium8.drawMiddle(r.label, lx + 8f, y + rh / 2f, if (selected) Theme.text else 0xFFD0D0D0.toInt())
                     if (r.note.isNotEmpty()) {
                         val nw = Fonts.medium65.width(r.note)
-                        Fonts.medium65.drawMiddle(r.note, lx + lw - 8f - nw, y + rh / 2f, if (selected) Theme.primary else 0xFF7A7A7A.toInt())
+                        Fonts.medium65.drawMiddle(r.note, lx + lw - 8f - nw, y + rh / 2f, if (selected) Menus.ACCENT else 0xFF7A7A7A.toInt())
                     }
                 }
             }

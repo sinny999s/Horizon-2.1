@@ -37,6 +37,11 @@ object Storage {
         var rpcAsked: Boolean = false,
         /** Not in the original: the redesign's themes (ThemeData.presets) were added to the list once. */
         var themePresets: Boolean = false,
+        /** Not in the original: the Monochrome theme (added after the redesign's) was added to the list once. */
+        var themeMonochrome: Boolean = false,
+        /** Not in the original: the server last joined (its name and address), for the title screen's Rejoin row. */
+        var lastServerName: String = "",
+        var lastServerIp: String = "",
         var autoUpdate: Boolean = true,
     )
 

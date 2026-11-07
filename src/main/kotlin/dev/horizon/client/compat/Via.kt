@@ -127,6 +127,17 @@ object Via {
         return if (t !== autoDetect) t else null
     }
 
+    /**
+     * The version name [conn] is joined as ("1.8.x", "26.3"...), or null without ViaFabricPlus, or when it doesn't
+     * know (then the game's own version is the one).
+     */
+    fun versionName(conn: Connection): String? {
+        if (!present) return null
+        val ct = connTarget ?: return null
+        val v = call(ct, translation, conn) ?: return null
+        return if (v === autoDetect) null else name(v)
+    }
+
     /** Connected (or set to join) on 1.8.x or older, before 1.9's attack cooldown. */
     fun isLegacyCombat(): Boolean {
         if (!present) return false

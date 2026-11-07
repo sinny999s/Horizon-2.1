@@ -42,7 +42,7 @@ object Commands {
     val dispatcher = CommandDispatcher<ClientSuggestionProvider>()
 
     fun init() {
-        for (c in listOf(FixAllCommand, BindCommand, ConfigCommand, NeofetchCommand, AngleCommand, GpsCommand, FriendCommand, WaypointCommand, WpCommand, CoordsCommand, UpdateCommand)) add(c)
+        for (c in listOf(FixAllCommand, BindCommand, ConfigCommand, NeofetchCommand, AngleCommand, GpsCommand, FriendCommand, WaypointCommand, WpCommand, CoordsCommand, UpdateCommand, HypixelCommand)) add(c)
         EventBus.on<SendMessageEvent>(this) { e ->
             val p = if (e.message.startsWith(prefix)) prefix else if (e.message.startsWith(".")) "." else null
             if (p == null) return@on

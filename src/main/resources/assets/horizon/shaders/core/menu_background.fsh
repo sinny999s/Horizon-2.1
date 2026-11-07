@@ -1,12 +1,12 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: the menu background, in the original's colours, shot like a film. Near-black; a fire just below the screen
-// whose light (the theme's colour, warmed) falls off upwards and rises in shafts through the haze. Smoke at two depths,
-// grey in the dark and lit red-orange where the fire reaches it, brightest on its undersides and along thin wisps.
-// Embers at three depths: tiny far ones, bright mid ones trailing motion streaks, and blurred discs right in front of
-// the lens; hot near the fire, cooling to red as they climb. A slow camera drift gives parallax. Graded with a filmic
-// curve, cool shadows, a heavy vignette and film grain.
+// Not in the original: the menu background, in black through white only (no hue, whatever the theme). Near-black; a
+// horizon just under the middle with a soft white light rising from it, brightest to the right of the menu's column, a
+// thin bright line along it and a faint reflection below. Fog at two depths drifts sideways along the horizon, grey in
+// the dark and lit where the light reaches it. Dust hangs in the air at two depths, catching the light near the horizon,
+// and a few out-of-focus motes float right in front of the lens. A slow camera drift gives parallax. Graded with a filmic
+// curve, a vignette and film grain.
 
 layout(std140) uniform Globals {
     ivec3 CameraBlockPos;
@@ -25,7 +25,7 @@ layout(std140) uniform DynamicTransforms {
 };
 
 layout(location = 0) in vec2 params;  // x: seconds, y: 0 for the title screen, 1 for the other menus (calmer, darker)
-layout(location = 1) in vec4 accent;  // the accent colour; alpha is the opacity
+layout(location = 1) in vec4 accent;  // the theme's colour (unused: the backdrop is grey); alpha is the opacity
 
 layout(location = 0) out vec4 fragColor;
 
@@ -74,56 +74,47 @@ float dither(vec2 frag) {
     return fract(52.9829189 * fract(dot(frag, vec2(0.06711056, 0.00583715))));
 }
 
-// ---- smoke ----
+// ---- fog ----
 
-// One depth of smoke, rising at `speed` and curled by a slow noise field. Returns its soft body, the thin bright wisps
-// along two of its folds (fading in and out along their length), and how lit its underside is (density here against
-// just below: the edges facing the fire).
-vec3 smoke(vec2 p, float t, float scale, float speed, float seed) {
-    vec2 q = p * scale + vec2(seed, -t * speed);
-    vec2 w = vec2(fbm(q * 0.7 + vec2(0.0, t * 0.05)), fbm(q * 0.7 + vec2(5.2, 1.3 - t * 0.04)));
-    vec2 r = q + w * 1.7 + vec2(t * 0.03, 0.0);
-    float n = fbm(r);
-    float below = fbm(r - vec2(0.0, 0.05 * scale));
-    float body = smoothstep(-0.12, 0.45, n);
-    float wisps = exp(-pow((n - 0.16) / 0.028, 2.0)) + 0.6 * exp(-pow((n + 0.04) / 0.022, 2.0));
-    wisps *= smoothstep(-0.25, 0.2, w.x);
-    float lit = clamp((n - below) * 7.0, 0.0, 1.0);
-    return vec3(body, wisps, lit);
+// One depth of fog, stretched along the horizon and drifting sideways at `speed`, curled by a slow noise field. Returns
+// its soft body and the thin brighter wisps along one of its folds.
+vec2 fog(vec2 p, float t, float scale, float speed, float seed) {
+    vec2 q = p * vec2(scale * 0.55, scale * 1.5) + vec2(seed + t * speed, seed * 0.37);
+    vec2 w = vec2(fbm(q * 0.6 + vec2(0.0, t * 0.02)), fbm(q * 0.6 + vec2(5.2, 1.3 - t * 0.015)));
+    float n = fbm(q + w * 1.4);
+    float body = smoothstep(-0.1, 0.5, n);
+    float wisps = exp(-pow((n - 0.18) / 0.03, 2.0)) * smoothstep(-0.25, 0.2, w.x);
+    return vec2(body, wisps);
 }
 
-// ---- embers ----
+// ---- dust ----
 
-// One depth of embers: a grid of cells rising at `speed`, swaying; `share` of the cells hold a spark somewhere near
-// their middle. A spark is a hot core trailing a short streak below it (its motion over a film frame) inside a glow;
-// faded out before its cell's edge so it is never cut off. Returns (core, glow).
-vec2 embers(vec2 p, float scale, float speed, float share, float streak, float t, float seed) {
+// One depth of dust: a grid of cells drifting up at `speed` and swaying; `share` of the cells hold a mote somewhere near
+// their middle, a tiny core inside a soft glow, slowly brightening and dimming as it turns; faded out before its cell's
+// edge so it is never cut off. Returns (core, glow).
+vec2 dust(vec2 p, float scale, float speed, float share, float t, float seed) {
     vec2 q = p * scale;
     q.y -= t * speed;
-    q.x += sin(q.y * 0.45 + seed + t * 0.25) * 0.45;
+    q.x += sin(q.y * 0.35 + seed + t * 0.12) * 0.4 + t * speed * 0.6;
     vec2 cell = floor(q);
     float h = hash12(cell + seed);
     if (h < 1.0 - share) return vec2(0.0);
     vec2 local = fract(q) - 0.5;
     vec2 at = (vec2(hash12(cell + seed + 1.3), hash12(cell + seed + 2.7)) - 0.5) * 0.4;
     vec2 d = local - at;
-    // Distance to the streak: a segment from the spark down to where it was.
-    float len = streak * mix(0.6, 1.4, hash12(cell + seed + 4.1));
-    float s = clamp(-d.y / max(len, 1e-4), 0.0, 1.0);
-    vec2 off = d + vec2(0.0, s * len);
-    float r2 = dot(off, off);
-    float size = mix(0.6, 1.3, hash12(cell + seed + 5.9));
-    float flicker = 0.55 + 0.45 * sin(t * (3.0 + 5.0 * h) + h * 60.0);
+    float r2 = dot(d, d);
+    float size = mix(0.5, 1.3, hash12(cell + seed + 5.9));
+    float turn = 0.45 + 0.55 * (0.5 + 0.5 * sin(t * (0.6 + 1.2 * h) + h * 60.0));
     float inside = smoothstep(0.5, 0.36, max(abs(local.x), abs(local.y)));
-    float k = flicker * inside * (1.0 - s * 0.6);
-    return vec2(exp(-r2 / (0.00035 * size)), exp(-r2 / (0.006 * size)) * 0.35) * k;
+    float k = turn * inside;
+    return vec2(exp(-r2 / (0.00030 * size)), exp(-r2 / (0.005 * size)) * 0.3) * k;
 }
 
-// Out-of-focus embers right in front of the lens: soft discs with a slightly brighter rim.
+// Out-of-focus motes right in front of the lens: soft discs with a slightly brighter rim.
 float bokeh(vec2 p, float scale, float speed, float share, float t, float seed) {
     vec2 q = p * scale;
     q.y -= t * speed;
-    q.x += sin(q.y * 0.3 + seed + t * 0.15) * 0.3;
+    q.x += sin(q.y * 0.3 + seed + t * 0.1) * 0.3;
     vec2 cell = floor(q);
     float h = hash12(cell + seed);
     if (h < 1.0 - share) return 0.0;
@@ -131,7 +122,7 @@ float bokeh(vec2 p, float scale, float speed, float share, float t, float seed) 
     float r = mix(0.10, 0.17, hash12(cell + seed + 3.3));
     float d = length(fract(q) - 0.5 - at);
     float disc = smoothstep(r, r * 0.82, d) * (0.75 + 0.25 * smoothstep(r * 0.4, r * 0.9, d));
-    return disc * (0.6 + 0.4 * sin(t * 0.8 + h * 30.0));
+    return disc * (0.6 + 0.4 * sin(t * 0.6 + h * 30.0));
 }
 
 void main() {
@@ -143,53 +134,56 @@ void main() {
     float t = params.x;
     float calm = params.y;
 
-    // The fire's light: the theme's colour warmed a little, coming from just below the screen and falling off upwards.
-    vec3 fire = mix(accent.rgb, vec3(1.0, 0.42, 0.16), 0.35);
-    float light = exp(-(p.y + 0.62) * 1.9);
-    float flick = 0.85 + 0.15 * gnoise(vec2(t * 0.8, 3.7)) + 0.08 * gnoise(vec2(t * 2.3, 9.1));
-
     // A slow drift of the camera; the nearer a layer, the more it moves.
-    vec2 cam = vec2(sin(t * 0.07), cos(t * 0.05)) * 0.02;
+    vec2 cam = vec2(sin(t * 0.06), cos(t * 0.045)) * 0.02;
 
-    // Near-black, a little cool, and the fire's glow along the bottom edge.
-    vec3 col = vec3(0.008, 0.009, 0.012);
-    col += fire * (0.05 * light * light + 0.4 * exp(-(p.y + 0.5) * 8.0)) * flick;
+    // The horizon, just under the middle, and its light: centred right of the middle (clear of the menu on the left),
+    // breathing very slowly.
+    float hy = -0.1 + cam.y * 0.2;
+    float dy = p.y - hy;
+    float sx = 0.18 * aspect;
+    float side = exp(-pow((p.x - sx) / (0.55 * aspect), 2.0));
+    float breathe = 0.93 + 0.07 * sin(t * 0.21) + 0.03 * gnoise(vec2(t * 0.15, 4.2));
 
-    // Shafts of firelight rising through the haze, leaning slightly.
-    float shafts = smoothstep(0.05, 0.55, gnoise(vec2(p.x * 2.6 - p.y * 0.5 + t * 0.02, t * 0.05)));
-    col += fire * shafts * light * 0.07 * flick;
+    // Black at the top lifting to a dim grey over the horizon; under it, darker ground with a faint reflection.
+    vec3 col = vec3(0.006);
+    float sky = exp(-max(dy, 0.0) * 3.4);
+    float ground = exp(-max(-dy, 0.0) * 11.0);
+    col += vec3(0.075) * (dy >= 0.0 ? sky : ground * 0.7) * (0.3 + 0.7 * side) * breathe;
+    // The heart of the light: a wide soft glow and a tighter bright one, flattened along the horizon.
+    float d = length((p - vec2(sx, hy)) * vec2(0.45, 1.7));
+    col += vec3(0.16) * exp(-d * 3.2) * breathe + vec3(0.30) * exp(-d * 13.0) * breathe;
+    // The horizon line itself: a crisp hairline, brightest under the light, fading out towards the sides and gone
+    // before the menu's column on the left.
+    float line = exp(-pow(dy / 0.0016, 2.0)) + 0.35 * exp(-pow(dy / 0.006, 2.0));
+    col += vec3(0.75) * line * (0.08 + 0.92 * side) * smoothstep(0.24, 0.5, uv.x) * breathe;
 
-    // Smoke at two depths: far (broad, slow, dim) and near (finer, quicker). Grey in the dark, red-orange where the
-    // fire reaches it, brightest on its lit undersides and along its wisps; thicker low down.
-    vec3 grey = vec3(0.50, 0.52, 0.58);
-    vec3 far = smoke(p + cam * 0.3, t, 1.1, 0.05, 3.0);
-    vec3 near = smoke(p + cam, t, 2.0, 0.11, 17.0);
-    float lowFar = smoothstep(0.8, -0.5, p.y);
-    float lowNear = smoothstep(0.55, -0.6, p.y);
-    col += (grey * 0.045 * (far.x * 0.6 + far.y * 0.5)
-          + fire * light * flick * (far.x * 0.14 + far.y * 0.30 + far.z * far.x * 0.35)) * lowFar * 0.7;
-    col += (grey * 0.040 * (near.x * 0.6 + near.y * 0.7)
-          + fire * light * flick * (near.x * 0.18 + near.y * 0.55 + near.z * near.x * 0.65)) * lowNear;
+    // Fog at two depths: far (broad, slow) and near (finer, quicker), thickest along the horizon and lit there.
+    float lit = exp(-abs(dy) * 4.5) * (0.35 + 0.65 * side) * breathe;
+    vec2 far = fog(p + cam * 0.3, t, 1.2, 0.018, 3.0);
+    vec2 near = fog(p + cam, t, 2.2, 0.04, 17.0);
+    float bandFar = exp(-pow(dy / 0.45, 2.0));
+    float bandNear = exp(-pow((dy + 0.08) / 0.32, 2.0));
+    col += vec3(1.0) * (far.x * (0.018 + 0.16 * lit) + far.y * 0.10 * lit) * bandFar;
+    col += vec3(1.0) * (near.x * (0.014 + 0.20 * lit) + near.y * 0.18 * lit) * bandNear;
 
-    // Embers: far ones tiny, mid ones bright with streaks, and a few blurred ones right in front. Hot cores going
-    // from near-white low down to deep red as they cool on the way up; their glow tinted by the fire.
-    float heat = smoothstep(0.65, -0.55, p.y);
-    vec3 core = mix(fire * 0.9, vec3(1.0, 0.86, 0.62), heat * 0.8);
-    vec2 e1 = embers(p + cam * 0.4, 24.0, 0.70, 0.07, 0.10, t, 3.0);
-    vec2 e2 = embers(p + cam * 0.8, 11.0, 0.42, 0.10, 0.22, t, 11.0);
-    float b = bokeh(p + cam * 1.6, 3.2, 0.14, 0.12, t, 23.0);
-    col += (core * (e1.x * 0.6 + e2.x * 1.6) + fire * (e1.y * 0.5 + e2.y * 1.2)) * (0.25 + 0.75 * heat);
-    col += fire * b * 0.10 * (0.4 + 0.6 * heat);
+    // Dust: tiny far motes and brighter mid ones, catching the light near the horizon; a few blurred ones in front.
+    float catchLight = 0.25 + 0.75 * exp(-abs(dy) * 2.5) * (0.4 + 0.6 * side);
+    vec2 d1 = dust(p + cam * 0.4, 26.0, 0.020, 0.06, t, 3.0);
+    vec2 d2 = dust(p + cam * 0.8, 12.0, 0.014, 0.07, t, 11.0);
+    float b = bokeh(p + cam * 1.6, 3.0, 0.035, 0.10, t, 23.0);
+    col += vec3(1.0) * ((d1.x * 0.35 + d2.x * 0.9) + (d1.y * 0.3 + d2.y * 0.6)) * catchLight;
+    col += vec3(1.0) * b * 0.035 * catchLight;
 
-    // Grade: the pages' calmer version, a filmic curve, cool shadows against warm light, a heavy vignette, then film
-    // grain (stronger in the dark) and dither against banding.
-    col *= mix(1.0, 0.65, calm);
+    // Grade: the pages' calmer version, a filmic curve, a vignette, then film grain (stronger in the dark) and dither
+    // against banding. Everything above is grey, so it stays grey.
+    col *= mix(1.0, 0.6, calm);
     col = col * (2.51 * col + 0.03) / (col * (2.43 * col + 0.59) + 0.14);
-    float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
-    col = mix(col * vec3(0.90, 0.97, 1.12), col, smoothstep(0.0, 0.18, luma));
+    float luma = col.g;
     vec2 v = (uv - 0.5) * vec2(aspect * 0.75, 1.0);
-    col *= 1.0 - 0.65 * smoothstep(0.25, 1.05, length(v));
-    col += (hash12(frag + fract(t * 7.13) * 97.0) - 0.5) * 0.022 * (1.0 - 0.6 * luma) + (dither(frag) - 0.5) / 255.0;
+    col *= 1.0 - 0.6 * smoothstep(0.25, 1.05, length(v));
+    float grain = (hash12(frag + fract(t * 7.13) * 97.0) - 0.5) * 0.022 * (1.0 - 0.6 * luma) + (dither(frag) - 0.5) / 255.0;
+    col += vec3(grain);
 
     fragColor = vec4(max(col, 0.0), accent.a) * ColorModulator;
 }

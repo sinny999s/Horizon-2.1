@@ -165,7 +165,8 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
         pose.pushMatrix()
         pose.translate(ox, oy)
         pose.scale(k, k)
-        Ui.ambient(0f, 0f)
+        // From the main menu, no coloured glows: the menus out of a world are black through white.
+        if (only == null || mc.level != null) Ui.ambient(0f, 0f)
         Canvas.alpha = fade
         if (only == null) topNav(inT, 1)
         for (p in order.toList()) if (only == null || p === only) window(p, if (only != null) 0 else panes.indexOf(p), fade)

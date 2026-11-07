@@ -36,6 +36,8 @@ object Configs {
         Config.apply()
         Config.reconcile(null)
         WidgetConfig.apply()
+        // Not in the original: Horizon's Lunar settings (global; carried over from Lunar Spoof's on first start).
+        dev.horizon.client.lunar.LunarSettings.load()
     }
 
     /** The original's `un.j()`: the live settings go into the current configs, then every file is written. */
@@ -43,6 +45,7 @@ object Configs {
         Config.snapshot(Config.current.id)
         WidgetConfig.snapshot(WidgetConfig.current.id)
         Storage.saveShared()
+        dev.horizon.client.lunar.LunarSettings.save()
         WidgetConfig.writeAll()
         Config.writeAll()
         Themes.save()

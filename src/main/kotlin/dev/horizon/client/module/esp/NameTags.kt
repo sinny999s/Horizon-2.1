@@ -9,6 +9,7 @@ import dev.horizon.client.event.MouseButtonEvent
 import dev.horizon.client.event.Render2DEvent
 import dev.horizon.client.event.RenderNameTagEvent
 import dev.horizon.client.hud.ServerInfo
+import dev.horizon.client.lunar.LunarNameTag
 import dev.horizon.client.mixin.esp1.BaseSpawnerAccessor
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
@@ -119,6 +120,10 @@ class NameTags : Module("name-tags", Categories.ESP) {
     private val plates = GlassPlates()
     private val friendPlates = GlassPlates()
 
+    /** Lunar's logo and badge for one of this frame's tags, at the text's [x], the plate's [top], [w] wide. */
+    private class LunarTag(val marks: LunarNameTag.Marks, val x: Float, val top: Float, val w: Float)
+    private val lunarTags = ArrayList<LunarTag>()
+
     /** The player whose tag the mouse is over while a screen is open (the original's `L`), "" if none. */
     private var hovered = ""
 
@@ -155,7 +160,10 @@ class NameTags : Module("name-tags", Categories.ESP) {
             if (p == self && mc.options.cameraType.isFirstPerson) continue
             val v = above(p, if (health.value == Health.Number) 0.4f else 0.55f) ?: continue
             val text = tagText(p)
-            val w = Fonts.bold8.width(text)
+            // Not in the original: room for Lunar's logo and badge (Lunar Spoof), drawn after the plates.
+            val lunar = LunarNameTag.marks(p.uuid)
+            val lead = lunar?.lead ?: 0
+            val w = Fonts.bold8.width(text) + lead + (lunar?.tail ?: 0)
             val x = (v.x + (v.z - v.x).toFloat() / 2.0f - w / 2.0f).toFloat()
             if (x.isNaN()) continue
             var offset = items(p, v.x, v.y)
@@ -163,7 +171,8 @@ class NameTags : Module("name-tags", Categories.ESP) {
             val over = mouseX >= x - 2 && mouseX <= x - 2 + w + 4 && mouseY >= top && mouseY <= top + 12
             if (over && screen != null) hovered = p.gameProfile.name()
             (if (Friends.isFriend(p.gameProfile.name()) || Teams.isEspAlly(p)) friendPlates else plates).add(x - 2, top, w + 4, 12.0f, if (over && screen != null) 0.5f else 1.0f)
-            Fonts.bold8.queue(text, x, v.y.toFloat() - 13.0f, -1)
+            Fonts.bold8.queue(text, x + lead, v.y.toFloat() - 13.0f, -1)
+            if (lunar != null) lunarTags += LunarTag(lunar, x, top, w)
             if (health.value != Health.Number) {
                 pose.pushMatrix()
                 hearts(v.x, v.y, p, p.getAttributeValue(Attributes.MAX_HEALTH).toFloat(), Mth.ceil(p.health), Mth.ceil(p.absorptionAmount))
@@ -188,6 +197,8 @@ class NameTags : Module("name-tags", Categories.ESP) {
         if (entityOwner.value) owners()
         plates.flush(fill.value.rgb, outline.value.rgb)
         friendPlates.flush(friendFill.value.rgb, friendOutline.value.rgb)
+        for (t in lunarTags) LunarNameTag.drawPlate(t.marks, t.x, t.top, t.w)
+        lunarTags.clear()
         Fonts.bold8.flush()
         Fonts.medium75.flush()
     }
@@ -206,7 +217,9 @@ class NameTags : Module("name-tags", Categories.ESP) {
             s += pingColor(ms) + ms + "ms " + ChatFormatting.WHITE
         }
         if (gamemode.value) s += gameModeText(mc.connection?.getPlayerInfo(p.uuid)?.gameMode) + " "
-        val name = when (nameMode.value) {
+        // Not in the original: an Apollo server's own name tag lines replace the name.
+        val apollo = dev.horizon.client.lunar.ApolloFeatures.nametag(p.uuid)
+        val name = if (!apollo.isNullOrEmpty()) apollo.joinToString("  ") else when (nameMode.value) {
             NameMode.FULL -> legacyText(p.displayName)
             NameMode.SEMI -> p.displayName.string
             NameMode.DEFAULT -> p.gameProfile.name()

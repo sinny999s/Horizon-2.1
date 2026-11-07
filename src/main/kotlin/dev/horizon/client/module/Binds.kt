@@ -25,6 +25,8 @@ object Binds {
     private fun onInput(key: Int, action: Int, mouse: Boolean) {
         if (key == -1 || (action != PRESS && action != RELEASE)) return
         val mc = Minecraft.getInstance()
+        // Not in the original: Horizon's Lunar binds (spray, emote) and the Lunar menu's bind capture.
+        if (dev.horizon.client.lunar.LunarSettings.input(key, mouse, action == PRESS)) return
         Macros.input(key, mouse, action == PRESS)
         val ui = Modules.get<ClickGuiModule>()
         if (action == PRESS && ui.bind.key == key && ui.bind.mouse == mouse && mc.gui.screen() == null) mc.gui.setScreen(ui.screen())

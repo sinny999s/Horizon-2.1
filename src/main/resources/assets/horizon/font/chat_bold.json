@@ -1,0 +1,21 @@
+{
+  "providers": [
+    {
+      "type": "space",
+      "advances": {
+        " ": 2.5
+      }
+    },
+    {
+      "type": "ttf",
+      "file": "horizon:inter_extrabold.ttf",
+      "size": 8.0,
+      "oversample": 2.0,
+      "shift": [0.0, 0.0]
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:default"
+    }
+  ]
+}

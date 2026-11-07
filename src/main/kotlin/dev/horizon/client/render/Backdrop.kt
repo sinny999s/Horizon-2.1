@@ -10,8 +10,9 @@ import org.joml.Matrix3x2f
 
 /**
  * Not in the original: the animated backdrop every screen out of a world shows instead of the panorama (MenuPanoramaMixin).
- * One full-screen quad drawn with `shaders/core/menu_background`: red smoke and embers rising over near-black, lit from
- * below, in the theme's primary colour; time goes to the shader in the quad's UVs, the colour in its vertex colour. It
+ * One full-screen quad drawn with `shaders/core/menu_background`: black through white only, a horizon with a soft white
+ * light over it, fog drifting along it and dust in the air; time goes to the shader in the quad's UVs, the theme colour
+ * (unused by the shader now) in its vertex colour. It
  * is a vanilla GUI element, so vanilla's widgets and the client's 2D layer draw over it. Going between the title screen
  * and the others, it eases from one version to the other (about a quarter of a second) instead of switching, and its
  * time is kept here, slowing while calm, so the smoke never jumps.

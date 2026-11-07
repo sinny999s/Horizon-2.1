@@ -60,7 +60,7 @@ class HitFx : Module("hit-fx", Categories.COSMETIC) {
 
     private fun onSend(e: SendPacketEvent) {
         val packet = e.packet as? ServerboundAttackPacket ?: return
-        val range = Modules.get<Aura>().range.value
+        val range = Modules.get<Aura>().reach.value
         fun targetCenter(): Vec3? = mc.level?.getEntity(packet.entityId())?.boundingBox?.center
         var center = rayHit(Rotation.lastYaw, Rotation.lastPitch, range) ?: targetCenter()
         if (center == null) {

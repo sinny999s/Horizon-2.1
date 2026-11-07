@@ -4,7 +4,17 @@
   "package": "dev.horizon.client.mixin.misc2",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "StringDecomposerMixin"
+    "StringDecomposerMixin",
+    "LunarBrandMixin",
+    "LunarTabMixin",
+    "LunarEmoteMixin",
+    "LunarNameTagMixin",
+    "ApolloUpsideDownMixin",
+    "ApolloAvatarUpsideDownMixin",
+    "ApolloSheepMixin",
+    "ApolloArmorMixin",
+    "ApolloPlayerModelMixin",
+    "ApolloFireMixin"
   ],
   "injectors": {
     "defaultRequire": 1

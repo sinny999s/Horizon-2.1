@@ -4,6 +4,7 @@ import dev.horizon.client.combat.PlayerState
 import dev.horizon.client.combat.Rng
 import dev.horizon.client.combat.Rotation
 import net.minecraft.client.Minecraft
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -144,7 +145,7 @@ object SnapRotation : AuraRotation() {
             yaw = p.yRot
             pitch = p.xRot
         }
-        if (aura.priorityManual.value && rayHitsTarget(aura.target!!, prev, aura.range.value, !aura.ignoreWalls.value)) {
+        if (aura.priorityManual.value && rayHitsTarget(aura.target!!, prev, aura.reach.value, !aura.ignoreWalls.value)) {
             return Rotation(camera().yRot(), camera().xRot())
         }
         return Rotation(yaw, pitch)
@@ -265,7 +266,7 @@ object PolarRotation : AuraRotation() {
         val aim = aimPoint(aura, target)
         val yaw: Float
         var pitch = wobble(false) + saved.pitch
-        if (attackReady && p.eyePosition.distanceTo(target.eyePosition) <= aura.range.value + 0.3f) {
+        if (attackReady && p.eyePosition.distanceTo(target.eyePosition) <= aura.reach.value + 0.3f) {
             ticksSinceHit = 0
             val dx = aim.x - p.x
             val dz = aim.z - p.z
@@ -596,6 +597,9 @@ object AdvancedRotation : AuraRotation() {
  * hits when the crosshair is on the target. Tunable through Aura's `legit` group (aim spot, min/max speed, smoothness,
  * pitch-assist scale, hitbox-relax so it stops fighting your mouse once on target, reaction time, tremor, and
  * require-click). Each turn is made in whole mouse counts at your sensitivity, so it is always a turn a mouse could make.
+ * `aim-model` picks how the hand moves: SPRING (a damped spring under a speed cap, the default) or HUMAN ([HumanAim]:
+ * your own movement made up for at once, the target's seen late; Fitts-timed minimum-jerk submovements that undershoot or
+ * overshoot and correct, curved paths, lagging pursuit, noise tremor, and a glide out when the target goes).
  */
 object LegitRotation : AuraRotation() {
     private var target: Entity? = null
@@ -619,18 +623,69 @@ object LegitRotation : AuraRotation() {
     private var tremorPhase = 0.0
     private var clickImpulse = 0.0
 
+    /** SPRING's `tracking`: the target's box centre from your eyes last frame, and how fast that moves (blocks/s). */
+    private var lastSeen: Vec3? = null
+    private var relVel = Vec3.ZERO
+
+    /** aim-model HUMAN's hand (see [HumanAim]); SPRING is the code below it. */
+    private val human = HumanAim(Rng.random)
+
+    /**
+     * Not in the original: Aura's `silent`. While [silentActive], the hand turns this look (what Aura sends) instead of
+     * the camera; it starts from the camera when a target is picked up, and turns back to it when the target goes.
+     */
+    var silentActive = false
+        private set
+    var silentYaw = 0f
+        private set
+    var silentPitch = 0f
+        private set
+
+    private fun lookYaw(p: LocalPlayer) = if (silentActive) silentYaw else p.yRot
+    private fun lookPitch(p: LocalPlayer) = if (silentActive) silentPitch else p.xRot
+
+    /** Vanilla's `Entity.turn` (0.15 degrees a count), on the hidden look while [silentActive], else the camera. */
+    private fun turn(p: LocalPlayer, x: Double, y: Double) {
+        if (!silentActive) return p.turn(x, y)
+        silentYaw += (x * 0.15).toFloat()
+        silentPitch = (silentPitch + (y * 0.15).toFloat()).coerceIn(-90f, 90f)
+    }
+
+    /** `silent` with no target: turn the hidden look back onto the camera, at most max-aim-speed; done within 1 degree. */
+    private fun silentBack(aura: Aura, p: LocalPlayer, dt: Double) {
+        val dYaw = Mth.wrapDegrees(p.yRot - silentYaw).toDouble()
+        val dPitch = (p.xRot - silentPitch).toDouble()
+        if (abs(dYaw) < 1.0 && abs(dPitch) < 1.0) {
+            silentActive = false
+            return
+        }
+        val k = 1.0 - exp(-dt * 10.0)
+        var sy = dYaw * k
+        var sp = dPitch * k
+        val cap = maxOf(aura.minAimSpeed.value, aura.maxAimSpeed.value) * dt
+        val len = hypot(sy, sp)
+        if (len > cap && len > 1e-6) {
+            sy *= cap / len
+            sp *= cap / len
+        }
+        turnBy(doubleArrayOf(sy, sp))
+    }
+
     fun reset() {
+        silentActive = false
         target = null
         vYaw = 0.0
         vPitch = 0.0
         carryX = 0.0
         carryY = 0.0
         clickImpulse = 0.0
+        human.reset()
     }
 
     /** Small organic click micro-vibration when a swing fires. */
     fun onSwing() {
         clickImpulse = 1.0
+        human.click()
     }
 
     override fun aimPoint(aura: Aura, target: Entity): Vec3 {
@@ -639,7 +694,7 @@ object LegitRotation : AuraRotation() {
             val p = mc.player ?: return b.center
             val eye = p.eyePosition
             val dist = eye.distanceTo(b.center)
-            val look = viewVec(p.xRot, p.yRot)
+            val look = viewVec(lookPitch(p), lookYaw(p))
             val rayPt = eye.add(look.scale(dist))
             val mx = b.xsize * 0.18
             val my = b.ysize * 0.12
@@ -656,25 +711,45 @@ object LegitRotation : AuraRotation() {
         return Vec3(b.minX + b.xsize * spot.x, b.minY + b.ysize * spot.y, b.minZ + b.zsize * spot.z)
     }
 
-    /** What Aura sends is where you look. */
-    override fun rotate(aura: Aura, target: Entity, prev: Rotation, attackReady: Boolean) = Rotation(mc.player!!.yRot, mc.player!!.xRot)
+    /** What Aura sends is where you look (or, with `silent`, the hidden look). */
+    override fun rotate(aura: Aura, target: Entity, prev: Rotation, attackReady: Boolean) =
+        Rotation(lookYaw(mc.player!!), lookPitch(mc.player!!))
 
     /** Each frame (MouseTurnEvent), with no screen open. */
     fun frame(aura: Aura) {
         val p = mc.player ?: return
         val now = System.nanoTime()
+        // A hidden look left over from before Aura last stopped calling this (off, another rotation) starts over.
+        if (!aura.silent.value || (last != 0L && now - last > 250_000_000L)) silentActive = false
         val dt = if (last == 0L) 0.0 else ((now - last) / 1e9).coerceIn(0.0, 0.05)
         last = now
         val t = aura.target
+        val humanAim = aura.aimModel.value == Aura.AimModel.HUMAN
+        if (mc.gui.screen() != null) human.reset()
         if (t == null || mc.gui.screen() != null || (aura.requireClick.value && !PlayerState.physical(mc.options.keyAttack))) {
             target = null
             vYaw = 0.0
             vPitch = 0.0
+            if (silentActive) {
+                silentBack(aura, p, dt)
+                return
+            }
+            // A hand doesn't stop dead when the target goes: it glides out.
+            if (humanAim) turnBy(human.release(dt))
             return
+        }
+        if (aura.silent.value && !silentActive) {
+            silentActive = true
+            silentYaw = p.yRot
+            silentPitch = p.xRot
+            carryX = 0.0
+            carryY = 0.0
         }
         if (t !== target) {
             target = t
             acquired = now
+            lastSeen = null
+            relVel = Vec3.ZERO
             val rLo = minOf(aura.reactionMin.value, aura.reactionMax.value) / 1000.0
             val rHi = maxOf(aura.reactionMin.value, aura.reactionMax.value) / 1000.0
             reaction = if (rHi <= 0.0) 0.0 else Rng.double(rLo, rHi)
@@ -685,9 +760,15 @@ object LegitRotation : AuraRotation() {
             spot = pickSpot(aura.aimSpot.value)
             spotTo = spot
             nextSpot = now
+            human.retarget(humanParams(aura))
         }
-        if ((now - acquired) / 1e9 < reaction) return
-        if (now >= nextSpot) {
+        if ((now - acquired) / 1e9 < reaction) {
+            if (humanAim) turnBy(human.release(dt))
+            return
+        }
+        // HUMAN keeps one spot per target: re-aiming at a new spot on someone standing still is a flick for nothing,
+        // and where each flick lands is scattered anyway (aim-error).
+        if (now >= nextSpot && !humanAim) {
             spotTo = pickSpot(aura.aimSpot.value)
             nextSpot = now + (Rng.double(0.35, 0.8) * 1e9).toLong()
         }
@@ -696,13 +777,56 @@ object LegitRotation : AuraRotation() {
         clickImpulse *= exp(-dt * 28.0)
 
         val aim = aimPoint(aura, t)
-        val eye = p.eyePosition
-        val dx = aim.x - eye.x
-        val dz = aim.z - eye.z
-        val wantYaw = deg(atan2(dz, dx)) - 90.0
-        val wantPitch = -deg(atan2(aim.y - eye.y, hypot(dx, dz)))
-        val errYaw = Mth.wrapDegrees(wantYaw - p.yRot)
-        val errPitch = wantPitch - p.xRot
+        if (humanAim) {
+            // Where you and it are this frame, as drawn (positions move once a tick; the frame is between two ticks).
+            val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+            val shift = t.getPosition(pt).subtract(t.position())
+            val c = t.boundingBox.center.add(shift)
+            val spotNow = aim.add(shift)
+            val eyeNow = p.getEyePosition(pt)
+            val eyeVel = p.position().subtract(p.xo, p.yo, p.zo).scale(20.0)
+            val flat = max(hypot(c.x - eyeNow.x, c.z - eyeNow.z), 0.3)
+            val width = deg(2.0 * kotlin.math.atan(t.boundingBox.xsize / 2.0 / flat))
+            val height = deg(2.0 * kotlin.math.atan(t.boundingBox.ysize / 2.0 / flat))
+            val onBox = rayHitsTarget(t, Rotation(lookYaw(p), lookPitch(p)), aura.range.value + 0.75f, true)
+            turnBy(
+                human.step(
+                    now / 1e9, dt, lookYaw(p).toDouble(), lookPitch(p).toDouble(), hv(eyeNow), hv(eyeVel), hv(spotNow), hv(c),
+                    width, height, onBox, humanParams(aura)
+                )
+            )
+            return
+        }
+        // Where you and it are this frame, as drawn (positions move once a tick; the frame is between two ticks).
+        val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val shift = t.getPosition(pt).subtract(t.position())
+        val eyeNow = p.getEyePosition(pt)
+
+        // Not in the original: `tracking`. How its box moves against your eyes (it strafing, you moving), smoothed over
+        // about 0.1 s as a person reads it, turned into how fast the aim point swings across your view. The hand matches
+        // that share of it, so it keeps up with a strafe instead of trailing the spring's lag behind it, and aims that
+        // share of a tick ahead: a hit is judged by the look sent the tick before, so on a strafer a look that is on
+        // them now is a tick behind them by then.
+        val rel = t.boundingBox.center.add(shift).subtract(eyeNow)
+        val seen = lastSeen
+        if (seen != null && dt > 0.0) {
+            val inst = rel.subtract(seen).scale(1.0 / dt)
+            // A jump of more than 2 blocks in a frame is a teleport, not movement.
+            if (inst.lengthSqr() * dt * dt < 4.0) relVel = relVel.add(inst.subtract(relVel).scale(1.0 - exp(-dt / 0.1)))
+        }
+        lastSeen = rel
+        val ff = aura.tracking.value / 100.0
+        val aimNow = aim.add(shift).add(relVel.scale(0.05 * ff))
+        val ax = aimNow.x - eyeNow.x
+        val ay = aimNow.y - eyeNow.y
+        val az = aimNow.z - eyeNow.z
+        val flat2 = max(ax * ax + az * az, 0.09)
+        val flat = sqrt(flat2)
+        val errYaw = Mth.wrapDegrees(deg(atan2(az, ax)) - 90.0 - lookYaw(p))
+        val errPitch = -deg(atan2(ay, flat)) - lookPitch(p)
+        val yawRate = deg((ax * relVel.z - az * relVel.x) / flat2)
+        val flatRate = (ax * relVel.x + az * relVel.z) / flat
+        val pitchRate = -deg((flat * relVel.y - ay * flatRate) / (flat2 + ay * ay))
 
         val smooth = aura.smoothness.value.toDouble().coerceIn(0.05, 1.0)
         val stiffness = (155.0 * (1.0 - smooth * 0.84)) * stiffJitter
@@ -711,18 +835,18 @@ object LegitRotation : AuraRotation() {
         val sHi = maxOf(aura.minAimSpeed.value, aura.maxAimSpeed.value).toDouble()
         val topSpeed = sLo + (sHi - sLo) * speedBias
 
-        val onBox = rayHitsTarget(t, Rotation(p.yRot, p.xRot), aura.range.value + 0.75f, true)
+        val onBox = rayHitsTarget(t, Rotation(lookYaw(p), lookPitch(p)), aura.range.value + 0.75f, true)
         val relax = aura.hitboxRelax.value / 100.0
         val pullScale = if (onBox) 1.0 - relax else 1.0
         val dampBoost = if (onBox) 1.0 + relax * 2.0 else 1.0
         val pitchScale = aura.pitchAssist.value / 100.0
 
         val c = 2.0 * sqrt(stiffness) * damping * dampBoost
-        vYaw += (stiffness * pullScale * errYaw - c * vYaw) * dt
+        vYaw += (stiffness * pullScale * errYaw - c * (vYaw - ff * yawRate)) * dt
         if (pitchScale <= 0.0) {
             vPitch = 0.0
         } else {
-            vPitch += (stiffness * 0.85 * pitchScale * pullScale * errPitch - c * vPitch) * dt
+            vPitch += (stiffness * 0.85 * pitchScale * pullScale * errPitch - c * (vPitch - ff * pitchScale * pitchRate)) * dt
         }
         val speed = hypot(vYaw, vPitch)
         if (speed > topSpeed && speed > 1e-6) {
@@ -745,8 +869,39 @@ object LegitRotation : AuraRotation() {
         val countsY = carryY.toInt()
         carryX -= countsX
         carryY -= countsY
-        if (countsX != 0 || countsY != 0) p.turn(countsX * perCount, countsY * perCount)
+        if (countsX != 0 || countsY != 0) turn(p, countsX * perCount, countsY * perCount)
     }
+
+    /** Turns by [d] (yaw, pitch degrees) in whole mouse counts at your sensitivity, carrying the remainder. */
+    private fun turnBy(d: DoubleArray) {
+        val p = mc.player ?: return
+        val f = mc.options.sensitivity().get() * 0.6 + 0.2
+        val perCount = f * f * f * 8.0
+        val step = perCount * 0.15
+        carryX += d[0] / step
+        carryY += d[1] / step
+        val countsX = carryX.toInt()
+        val countsY = carryY.toInt()
+        carryX -= countsX
+        carryY -= countsY
+        if (countsX != 0 || countsY != 0) turn(p, countsX * perCount, countsY * perCount)
+    }
+
+    private fun hv(v: Vec3) = HumanAim.V(v.x, v.y, v.z)
+
+    private fun humanParams(aura: Aura) = HumanAim.Params(
+        speedLo = aura.minAimSpeed.value.toDouble(),
+        speedHi = aura.maxAimSpeed.value.toDouble(),
+        fittsB = 0.05 + 0.15 * aura.smoothness.value.toDouble().coerceIn(0.05, 1.0),
+        perceptionDelay = aura.perceptionDelay.value / 1000.0,
+        overshoot = aura.overshoot.value / 100.0,
+        aimError = aura.aimError.value / 100.0,
+        curve = aura.curve.value / 100.0,
+        tracking = aura.tracking.value / 100.0,
+        pitchScale = aura.pitchAssist.value / 100.0,
+        relax = aura.hitboxRelax.value / 100.0,
+        tremor = aura.tremor.value.toDouble(),
+    )
 
     private fun pickSpot(mode: Aura.LegitSpot): Vec3 = when (mode) {
         Aura.LegitSpot.WANDER, Aura.LegitSpot.CLOSEST -> Vec3(Rng.double(0.30, 0.70), Rng.double(0.56, 0.86), Rng.double(0.30, 0.70))

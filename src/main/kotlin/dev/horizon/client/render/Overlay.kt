@@ -9,6 +9,7 @@ import dev.horizon.client.gui.modern.ModernGui
 import dev.horizon.client.hud.Hud
 import dev.horizon.client.hud.Notifications
 import dev.horizon.client.hud.WaypointRenderer
+import dev.horizon.client.module.cosmetic.BetterChat
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
@@ -36,6 +37,8 @@ object Overlay {
             Theme.update()
             Blur.capture()
             World3D.composite()
+            // Better Chat's pane, and (chat closed) vanilla's chat over it.
+            BetterChat.renderLayer(graphics)
             EventBus.post(Render2DEvent(graphics))
             WaypointRenderer.render()
             Notifications.render()
@@ -55,6 +58,9 @@ object Overlay {
         Canvas.beginFrame(graphics)
         val screen = mc.gui.screen()
         if (screen === ModernGui) ModernGui.draw()
+        if (screen === dev.horizon.client.gui.modern.LunarLockerScreen) dev.horizon.client.gui.modern.LunarLockerScreen.draw(graphics)
+        if (screen === dev.horizon.client.gui.modern.LunarFriendsScreen) dev.horizon.client.gui.modern.LunarFriendsScreen.draw()
+        if (screen === dev.horizon.client.gui.modern.LunarEmoteWheel) dev.horizon.client.gui.modern.LunarEmoteWheel.draw()
         if (screen === dev.horizon.client.gui.popup.PopupScreen) dev.horizon.client.gui.popup.PopupScreen.draw()
         if (screen === dev.horizon.client.gui.modern.ModernWindows) dev.horizon.client.gui.modern.ModernWindows.draw()
         if (screen === dev.horizon.client.gui.modern.ModernHudEditor) dev.horizon.client.gui.modern.ModernHudEditor.draw()

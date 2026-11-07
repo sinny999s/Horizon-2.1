@@ -3,6 +3,7 @@ package dev.horizon.client.hud
 import dev.horizon.client.hud.widgets.ArmorWidget
 import dev.horizon.client.hud.widgets.ArrayListWidget
 import dev.horizon.client.hud.widgets.SessionStatsWidget
+import dev.horizon.client.hud.widgets.HypixelStatsWidget
 import dev.horizon.client.hud.widgets.ChestCounterWidget
 import dev.horizon.client.hud.widgets.CooldownsWidget
 import dev.horizon.client.hud.widgets.CoordWidget
@@ -54,6 +55,7 @@ object Hud {
             SessionStatsWidget,
             KeystrokesWidget,
             ScoreboardWidget,
+            HypixelStatsWidget,
         )
     }
 

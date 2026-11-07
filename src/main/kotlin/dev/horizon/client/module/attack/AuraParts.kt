@@ -32,6 +32,7 @@ import net.minecraft.tags.ItemTags
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.EquipmentSlotGroup
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.inventory.ContainerInput
@@ -51,6 +52,7 @@ import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.max
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 private val mc get() = Minecraft.getInstance()
 
@@ -65,7 +67,7 @@ interface AuraHook {
 
 /**
  * The original's `sm` (`while-shielding`): lower a raised shield or 1.8 sword block for the hit; UNPRESS raises it again
- * straight after. Extended with 1.8 sword `auto-block` (`BLOCK_HIT` / `HOLD`).
+ * straight after. Extended with 1.8 sword `auto-block` (`BLOCK_HIT` / `HOLD` / `LEGIT`).
  */
 class ShieldHook(private val aura: Aura) : AuraHook {
     private var blocking = false
@@ -75,6 +77,42 @@ class ShieldHook(private val aura: Aura) : AuraHook {
     private var blockHoldTicks = 0
     private var blockHitCounter = 0
 
+    // LEGIT: the use key held for a block-hit, the ticks it has been, and when it was let go (in this hook's ticks).
+    private var legitHold = false
+    private var legitHeld = 0
+    private var legitSawHurt = false
+    private var legitReleaseAt = 2
+    private var legitPending = -1
+    private var ticks = 0
+    private var releasedAt = -10
+
+    /**
+     * Not in the original: `auto-block` LEGIT lets Aura hit only when your hand is free: never while the block is held
+     * or about to be, and not in the tick the key is let go (vanilla sends the unblock at the start of the next tick, so
+     * a hit there would ride on it).
+     */
+    fun allowsHit(): Boolean {
+        if (aura.autoBlock.value != Aura.AutoBlock.LEGIT) return true
+        return !legitHold && legitPending < 0 && ticks - releasedAt >= 2
+    }
+
+    private fun legitPress() {
+        legitHold = true
+        legitHeld = 0
+        legitSawHurt = false
+        // Let go when the target's hurt time is down to this: it can be hurt again about when it reaches 0.
+        legitReleaseAt = 1 + Random.nextInt(3)
+        autoBlocking = true
+        mc.options.keyUse.isDown = true
+    }
+
+    private fun legitRelease() {
+        legitHold = false
+        autoBlocking = false
+        releasedAt = ticks
+        mc.options.keyUse.isDown = PlayerState.physical(mc.options.keyUse)
+    }
+
     private fun canSwordBlock(p: Player): Boolean {
         if (!aura.isLegacyCombat()) return false
         val s = p.mainHandItem
@@ -83,6 +121,8 @@ class ShieldHook(private val aura: Aura) : AuraHook {
     }
 
     fun releaseAutoBlock() {
+        legitPending = -1
+        if (legitHold) return legitRelease()
         if (!autoBlocking) return
         autoBlocking = false
         blockHoldTicks = 0
@@ -91,10 +131,35 @@ class ShieldHook(private val aura: Aura) : AuraHook {
     }
 
     override fun tick() {
+        ticks++
         val p = mc.player ?: return
         val ab = aura.autoBlock.value
         if (!aura.isLegacyCombat() || ab == Aura.AutoBlock.OFF || aura.target == null || !canSwordBlock(p)) {
             releaseAutoBlock()
+            return
+        }
+        if (ab == Aura.AutoBlock.LEGIT) {
+            // You right-clicking yourself: yours, not Aura's.
+            if (PlayerState.physical(mc.options.keyUse)) {
+                legitPending = -1
+                if (legitHold) {
+                    legitHold = false
+                    autoBlocking = false
+                    releasedAt = ticks
+                }
+                return
+            }
+            if (legitHold) {
+                legitHeld++
+                // Blocking while the target can't be hurt anyway (its hurt time, set when your hit lands), let go just
+                // before it can; a hit that didn't land (no hurt time) lets go after 3 ticks, and 9 at the most.
+                val hurt = (aura.target as? LivingEntity)?.hurtTime ?: 0
+                if (hurt > legitReleaseAt + 1) legitSawHurt = true
+                val done = if (legitSawHurt) hurt <= legitReleaseAt else legitHeld >= 3
+                if (done || legitHeld >= 9) legitRelease()
+            } else if (legitPending >= 0) {
+                if (legitPending-- == 0) legitPress()
+            }
             return
         }
         if (ab == Aura.AutoBlock.BLOCK_HIT && autoBlocking) {
@@ -129,6 +194,8 @@ class ShieldHook(private val aura: Aura) : AuraHook {
                 mc.gameMode?.useItem(p, InteractionHand.MAIN_HAND)
                 autoBlocking = true
             }
+            // Not in the original: block from the next tick or the one after (most of the time; a person misses some).
+            Aura.AutoBlock.LEGIT -> if (!legitHold && legitPending < 0 && Random.nextFloat() < 0.85f) legitPending = Random.nextInt(2)
             Aura.AutoBlock.BLOCK_HIT -> {
                 blockHitCounter++
                 if (blockHitCounter >= 2) {

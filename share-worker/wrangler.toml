@@ -1,0 +1,9 @@
+name = "horizon-share"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "horizon-share"
+# Put the id `npx wrangler d1 create horizon-share` prints here.
+database_id = "c869fcb7-b0d6-48c5-a9ca-9755e1e1d8b8"
