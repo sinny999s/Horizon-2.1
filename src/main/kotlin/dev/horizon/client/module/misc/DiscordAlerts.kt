@@ -134,7 +134,7 @@ class DiscordAlerts : Module("discord-alerts", Categories.MISC) {
                 val json = """
                 {
                     "username": "Horizon 2.0 Alerts",
-                    "avatar_url": "https://raw.githubusercontent.com/sinny999s/Horizon-2.0/main/src/main/resources/assets/horizon/icon.png",
+                    "avatar_url": "https://raw.githubusercontent.com/sinny999s/Horizon-2.1/main/src/main/resources/assets/horizon/icon.png",
                     "embeds": [
                         {
                             "title": "${escapeJson(title)}",

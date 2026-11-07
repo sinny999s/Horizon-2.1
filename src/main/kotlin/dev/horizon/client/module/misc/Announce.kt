@@ -119,6 +119,9 @@ class Announce : Module("announce", Categories.MISC) {
         if (!file.exists()) {
             file.parentFile?.mkdirs()
             file.writeText(DEFAULT_ANNOUNCEMENTS)
+        } else if (file.readText().trim() == OLD_DEFAULT.trim()) {
+            // Still the old default, untouched: the new one (the repository moved to Horizon-2.1). Edited files stay.
+            file.writeText(DEFAULT_ANNOUNCEMENTS)
         }
     }
 
@@ -126,6 +129,15 @@ class Announce : Module("announce", Categories.MISC) {
 
     companion object {
         val DEFAULT_ANNOUNCEMENTS = """
+# Horizon 2.0 Announcements (one per line, # for comments)
+Horizon 2.0 is out now! Next-gen Minecraft 26.3 utility client: github.com/sinny999s/Horizon-2.1
+Upgrade to Horizon 2.0 - Fast AutoCrystal, Elytra Autopilot & Modern Glass UI: github.com/sinny999s/Horizon-2.1
+Dominate PvP with Horizon 2.0 for 26.3 | Free & Open Source: github.com/sinny999s/Horizon-2.1
+Hunt stashes and bases with Horizon 2.0 (Hunt Map & BaseFinder): github.com/sinny999s/Horizon-2.1
+        """.trimIndent()
+
+        /** The default before the repository moved (links to Horizon-2.0), to replace in files nobody edited. */
+        private val OLD_DEFAULT = """
 # Horizon 2.0 Announcements (one per line, # for comments)
 Horizon 2.0 is out now! Next-gen Minecraft 26.3 utility client: github.com/sinny999s/Horizon-2.0
 Upgrade to Horizon 2.0 - Fast AutoCrystal, Elytra Autopilot & Modern Glass UI: github.com/sinny999s/Horizon-2.0
