@@ -9,18 +9,23 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.security.SecureRandom
+import java.security.PrivateKey
+import java.security.Signature
 import java.time.Duration
+import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * Not in the original: Horizon users see each other's Lunar locker picks, client-side cosmetics included, through
  * Horizon's own small service (`share-worker/`, a Cloudflare Worker at [LunarSettings.shareUrl]). Lunar players and
  * everyone else see nothing of it.
- * - Signing in: the game joins a Mojang session with a random id (as when joining a server; your token only goes to
- *   Mojang) and the service checks it with Mojang, so only you can set your picks. It hands back a token for a day.
+ * - Signing in: the game's chat-signing key for your account (Mojang signs its public half, the "player certificate")
+ *   signs a fresh challenge; the service checks Mojang's signature and the challenge's, so only you can set your picks.
+ *   Nothing secret leaves the game (the certificate is what every server you chat on sees). It hands back a token for a
+ *   day. (Asking Mojang's hasJoined from the service doesn't work: Mojang answers 403 to Cloudflare Workers.)
  * - Yours: with `share-picks` on, your locker picks go up when they change (and every few hours); off, they're taken down.
  * - Theirs: players around you on a server are looked up (64 at a time, each again after five minutes); a Horizon
  *   user's picks are drawn on them instead of what Lunar says they wear ([LunarCosmetics]).
@@ -136,16 +141,19 @@ object HorizonShare {
         val t = token
         if (t != null && System.currentTimeMillis() < tokenUntil) return t
         val user = mc.user
-        val serverId = ByteArray(20).also { SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
-        val body = JsonObject()
-        try {
-            mc.services().sessionService().joinServer(user.profileId, user.accessToken, serverId)
-            body.addProperty("name", user.name)
-            body.addProperty("serverId", serverId)
+        val pair = try {
+            mc.profileKeyPairManager.prepareKeyPair().get(15, TimeUnit.SECONDS).orElse(null)
         } catch (e: Exception) {
-            // An offline (dev) account can't join a Mojang session; a local test service may take it by uuid.
-            if (!url.startsWith("http://127.0.0.1") && !url.startsWith("http://localhost")) throw e
-            body.addProperty("uuid", user.profileId.toString())
+            null
+        }
+        val body = if (pair != null) {
+            val cert = pair.publicKey().data()
+            authBody(user.profileId, cert.expiresAt().toEpochMilli(), cert.key().encoded, cert.keySignature(), pair.privateKey(),
+                System.currentTimeMillis())
+        } else {
+            // An offline (dev) account has no Mojang key; a local test service may take it by uuid.
+            if (!url.startsWith("http://127.0.0.1") && !url.startsWith("http://localhost")) error("no Mojang chat key for this account")
+            JsonObject().apply { addProperty("uuid", user.profileId.toString()) }
         }
         val out = post("/auth", body)
         val nt = out.get("token")?.asString ?: error("no token")
@@ -153,6 +161,28 @@ object HorizonShare {
         tokenUntil = System.currentTimeMillis() + 20 * 3600_000L
         tokenAccount = user.profileId
         return nt
+    }
+
+    /**
+     * /auth's body: the account's player certificate ([keyDer], Mojang's [keySignature] of it, [expiresAt]) and the
+     * challenge `horizon-share auth <uuid> <time>` signed with [privateKey] (SHA256withRSA, as the game signs chat).
+     * Game-free (share-worker/src/cert.js checks it).
+     */
+    fun authBody(uuid: UUID, expiresAt: Long, keyDer: ByteArray, keySignature: ByteArray, privateKey: PrivateKey, time: Long): JsonObject {
+        val plainUuid = uuid.toString().replace("-", "")
+        val sig = Signature.getInstance("SHA256withRSA").apply {
+            initSign(privateKey)
+            update("horizon-share auth $plainUuid $time".toByteArray(Charsets.UTF_8))
+        }.sign()
+        val b64 = Base64.getEncoder()
+        return JsonObject().apply {
+            addProperty("uuid", plainUuid)
+            addProperty("expiresAt", expiresAt)
+            addProperty("key", b64.encodeToString(keyDer))
+            addProperty("keySignature", b64.encodeToString(keySignature))
+            addProperty("time", time)
+            addProperty("signature", b64.encodeToString(sig))
+        }
     }
 
     private fun upload(ids: List<Int>) {

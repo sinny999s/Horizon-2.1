@@ -85,6 +85,27 @@ class LunarCosmeticsTest {
         println("sky ${sky.width}x${sky.height}, chip ${chip.width}x${chip.height}")
     }
 
+    /**
+     * A tall animated cloak (Lunar+ Cloak (White & Pink), 704×6528, lossless): TwelveMonkeys 3.12 threw "Coordinate out of
+     * bounds!" on its backward references, so ~30 of Lunar's animated cloaks never loaded. Checked against libwebp (PIL):
+     * the CRC32 of every pixel as A,R,G,B bytes, fully transparent pixels counted as 0.
+     */
+    @Test
+    fun tallAnimatedCloak() {
+        val img = WebP.decode(res("lunarpluswhitepink.webp"))
+        assertEquals(704, img.width)
+        assertEquals(6528, img.height)
+        val crc = java.util.zip.CRC32()
+        val px = ByteArray(4)
+        for (y in 0 until img.height) for (x in 0 until img.width) {
+            val argb = img.getRGB(x, y)
+            val v = if (argb ushr 24 == 0) 0 else argb
+            for (i in 0 until 4) px[i] = (v ushr (24 - 8 * i)).toByte()
+            crc.update(px)
+        }
+        assertEquals(0xD4BFCEB8L, crc.value)
+    }
+
     @Test
     fun geometry() {
         // A hat: everything on the head, around the head's top (J y from 24 − 30 = −6 up to 24 − 25 = −1).

@@ -41,8 +41,12 @@ account sign in without Mojang.
 
 ## How it works
 
-- `POST /auth {name, serverId}`: the game joined a Mojang session with `serverId`; the Worker asks Mojang
-  (`hasJoined`) who did, and returns a token for that account (a day, HMAC-signed).
+- `POST /auth {uuid, expiresAt, key, keySignature, time, signature}`: the account's chat-signing key as Mojang signed it
+  (the player certificate) and a fresh challenge signed with it; `src/cert.js` checks both without asking Mojang (Mojang's
+  servers answer 403 to Workers, `hasJoined` included) and returns a token for that account (a day, HMAC-signed).
+  Mojang's certificate keys are in `cert.js`; if Mojang ever changes them, update the list from
+  `https://api.minecraftservices.com/publickeys` (`playerCertificateKeys`) and deploy again.
+  Test: `node test/cert-test.mjs ../build/share-auth-fixture.json` after `./gradlew test` (HorizonShareTest writes it).
 - `POST /picks {token, picks}`: your locker picks (up to 24 cosmetic ids; `[]` removes them).
 - `POST /lookup {token, uuids}`: the picks of those players (up to 64) that are Horizon users with picks shared.
 - Picks not updated for 7 days are ignored. Only signed-in accounts can look anything up.

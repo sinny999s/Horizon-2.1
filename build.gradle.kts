@@ -40,11 +40,12 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:3.25.5")
     include("com.google.protobuf:protobuf-java:3.25.5")
     // WebP pictures (Lunar's cosmetic textures, lunar/WebP.kt): TwelveMonkeys' pure-Java reader and what it needs (BSD).
+    // 3.15+: 3.12 threw "Coordinate out of bounds!" on tall lossless pictures (Lunar's animated cloaks).
     for (lib in listOf("com.twelvemonkeys.imageio:imageio-webp", "com.twelvemonkeys.imageio:imageio-core",
         "com.twelvemonkeys.imageio:imageio-metadata", "com.twelvemonkeys.common:common-lang",
         "com.twelvemonkeys.common:common-io", "com.twelvemonkeys.common:common-image")) {
-        implementation("$lib:3.12.0") { isTransitive = false }
-        include("$lib:3.12.0") { isTransitive = false }
+        implementation("$lib:3.15.3") { isTransitive = false }
+        include("$lib:3.15.3") { isTransitive = false }
     }
     // Kotlin's standard library and kotlinx.serialization come from Fabric Language Kotlin at runtime.
     implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")

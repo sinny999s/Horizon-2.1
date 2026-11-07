@@ -1,8 +1,8 @@
 /**
  * Horizon share: lets Horizon users see each other's Lunar locker picks (client-side cosmetics included).
  *
- * POST /auth   {name, serverId}          -> {token}   (the game first joined a Mojang session with serverId; checked
- *                                                       with Mojang's hasJoined, so only the account's owner gets a token)
+ * POST /auth   {uuid, expiresAt, key, keySignature, time, signature} -> {token}   (the account's Mojang-signed chat key
+ *                                                       and a fresh challenge signed with it: see cert.js)
  * POST /picks  {token, picks: [ids]}     -> {ok}      (your picks; [] removes them)
  * POST /lookup {token, uuids: [uuid...]} -> {picks: {uuid: [ids]}}   (only accounts that shared picks are in it)
  *
@@ -10,6 +10,8 @@
  * without an update. Only signed-in Horizon users can look anything up, at most 64 players a request.
  * DEV_INSECURE=1 (local testing only, never set it when deployed) lets /auth take {uuid} without Mojang.
  */
+import { provenAccount } from "./cert.js";
+
 const TOKEN_TTL = 24 * 3600;
 const PICK_TTL = 7 * 24 * 3600;
 const MAX_PICKS = 24;
@@ -44,19 +46,16 @@ async function check(env, token) {
 }
 
 async function auth(body, env) {
-  if (env.DEV_INSECURE === "1" && body.uuid) {
+  if (env.DEV_INSECURE === "1" && body.uuid && !body.signature) {
     const u = plain(body.uuid);
     if (!uuidRe.test(u)) return json({ error: "bad uuid" }, 400);
     return json({ token: await makeToken(env, u) });
   }
-  const name = body.name, serverId = body.serverId;
-  if (typeof name !== "string" || !/^[A-Za-z0-9_]{1,16}$/.test(name)) return json({ error: "bad name" }, 400);
-  if (typeof serverId !== "string" || !/^-?[0-9a-f]{1,64}$/.test(serverId)) return json({ error: "bad serverId" }, 400);
-  const res = await fetch(`https://sessionserver.mojang.com/session/minecraft/hasJoined?username=${encodeURIComponent(name)}&serverId=${serverId}`);
-  if (res.status !== 200) return json({ error: "not signed in with Mojang" }, 401);
-  const profile = await res.json();
-  const u = plain(profile.id);
-  if (!uuidRe.test(u)) return json({ error: "no profile" }, 401);
+  // Mojang's servers can't be asked from here (they answer 403 to Workers), so the account is proven by its
+  // Mojang-signed chat key instead.
+  const proof = await provenAccount(body);
+  if (proof.error) return json({ error: proof.error }, 401);
+  const u = proof.uuid;
   return json({ token: await makeToken(env, u) });
 }
 
