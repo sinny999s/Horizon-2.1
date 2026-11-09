@@ -463,6 +463,7 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
             bx -= 4f
         }
         if (f != null) headerButton("remove", "Remove", "trash") { LunarFriends.remove(f); selected = null }
+        if (f != null && f.online && f.address != null) headerButton("join", "Join", "play", active = true) { LunarFriends.join(f) }
         if (g != null) {
             headerButton("leave", "Leave", "x") { LunarFriends.leaveGroup(g); selected = null }
             headerButton("rename", "Rename", "config", active = renaming) {

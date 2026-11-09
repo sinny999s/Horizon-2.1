@@ -71,6 +71,20 @@ class LunarFriendsTest {
         assertEquals(alice, LunarFriendWire.uuidPush(LunarFriendWire.uuidRequest(alice)))
     }
 
+    /** The Join button's address: a public server's primary_address; nothing for one without it, or offline. */
+    @Test
+    fun joinAddress() {
+        val hypixel = LunarFriendWire.statusPush(LunarFriendWire.statusPushBytes(
+            LunarFriendWire.friendBytes(alice, "Alice", true, "Hypixel", address = "mc.hypixel.net"), true))!!
+        assertEquals("Hypixel", hypixel.location)
+        assertEquals("mc.hypixel.net", hypixel.address)
+        assertNull(LunarFriendWire.statusPush(LunarFriendWire.statusPushBytes(LunarFriendWire.friendBytes(alice, "Alice", true, "Minemen"), true))!!.address)
+        assertNull(LunarFriendWire.statusPush(LunarFriendWire.statusPushBytes(LunarFriendWire.friendBytes(alice, "Alice", false, null), false))!!.address)
+        // A private server (Location field 2) has no address to join.
+        val private = LunarWire.message { it.writeBytes(2, ByteString.EMPTY) }
+        assertNull(LunarFriendWire.serverAddress(private))
+    }
+
     /** BroadcastLocationChangeRequest as Lunar Client sends it: InboundLocation's server (1) / single_player (2) / in_menus (4), and the trigger. */
     @Test
     fun broadcastLocation() {

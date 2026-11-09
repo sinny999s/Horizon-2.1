@@ -8,6 +8,13 @@ import dev.horizon.client.lunar.LunarFriendWire.Request
 import dev.horizon.client.lunar.LunarFriendWire.Sticker
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.ConnectScreen
+import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.client.multiplayer.ServerList
+import net.minecraft.client.multiplayer.resolver.ServerAddress
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -387,6 +394,20 @@ object LunarFriends {
         }
     }
 
+    /**
+     * Joins [f] on their server, as Lunar's Join button does: only a friend on a public server Lunar knows has an address
+     * ([Friend.address]). Leaves the world you're in first; the server's entry in your list is used when it has one.
+     */
+    fun join(f: Friend) {
+        val ip = f.address ?: return
+        mc.execute {
+            if (mc.level != null) mc.disconnectFromWorld(ClientLevel.DEFAULT_QUIT_MESSAGE)
+            val server = ServerList(mc).also { it.load() }.get(ip) ?: ServerData(f.location ?: ip, ip, ServerData.Type.OTHER)
+            HorizonClient.LOG.info("Lunar friends: joining {} on {}", f.name, ip)
+            ConnectScreen.startConnecting(JoinMultiplayerScreen(TitleScreen()), mc, ServerAddress.parseString(ip), server, false, null)
+        }
+    }
+
     private fun notConnected() = tell("not connected to Lunar (turn on Lunar in the ClickGUI's Lunar menu and join a server)")
 
     private fun tell(text: String) {
@@ -400,8 +421,8 @@ object LunarFriends {
      * For ShotBot (`lunarfriends <spec>`), fed through the same parsing as Lunar's own messages; nothing is sent:
      * `login` (a list as FriendService.Login gives it, Alice pinned, a group chat "Squad", two stickers), `msg <name> <text>`
      * (a message from that friend), `group <text>` (a message in Squad from Alice), `pin` (pins Squad's first message),
-     * `online <name> <server>` / `offline <name>` (status pushes), `open [name]` (the screen, on their conversation),
-     * `send <text>` (writes in the open conversation).
+     * `online <name> <server> [address]` / `offline <name>` (status pushes), `open [name]` (the screen, on their
+     * conversation), `send <text>` (writes in the open conversation), `join <name>` (their Join button).
      */
     @JvmStatic
     fun testSpec(spec: String) {
@@ -414,8 +435,8 @@ object LunarFriends {
                 val now = System.currentTimeMillis()
                 val bytes = LunarWire.message { o ->
                     fun friend(field: Int, b: ByteArray) = o.writeBytes(field, com.google.protobuf.ByteString.copyFrom(b))
-                    friend(11, LunarFriendWire.friendBytes(uuidOf("Alice"), "Alice", true, "Hypixel", logo = 0x00FF55FF, badge = 194))
-                    friend(11, LunarFriendWire.friendBytes(uuidOf("Dave"), "Dave", true, "6b6t.org", logo = 0x0055FFFF, badge = 1))
+                    friend(11, LunarFriendWire.friendBytes(uuidOf("Alice"), "Alice", true, "Hypixel", logo = 0x00FF55FF, badge = 194, address = "mc.hypixel.net"))
+                    friend(11, LunarFriendWire.friendBytes(uuidOf("Dave"), "Dave", true, "6b6t.org", logo = 0x0055FFFF, badge = 1, address = "6b6t.org"))
                     friend(2, LunarWire.message { f ->
                         f.writeBytes(1, com.google.protobuf.ByteString.copyFrom(LunarFriendWire.playerBytes(uuidOf("Bob"), "Bob")))
                         f.writeBytes(2, com.google.protobuf.ByteString.copyFrom(LunarWire.message { it.writeInt64(1, (now - 3 * 3600_000L) / 1000) }))
@@ -434,13 +455,15 @@ object LunarFriends {
                 conversations[squad]?.let { l -> synchronized(l) { l.replaceAll { if (it === first) it.copy(pinned = true) else it } } }
                 pins[squad] = listOf(first.copy(pinned = true))
             }
-            "online" -> push(LunarFriendWire.STATUS_PUSH, LunarFriendWire.statusPushBytes(LunarFriendWire.friendBytes(uuidOf(a[1]), a[1], true, a.getOrNull(2)), true))
+            "online" -> push(LunarFriendWire.STATUS_PUSH, LunarFriendWire.statusPushBytes(
+                LunarFriendWire.friendBytes(uuidOf(a[1]), a[1], true, a.getOrNull(2), address = a.getOrNull(3)), true))
             "offline" -> push(LunarFriendWire.STATUS_PUSH, LunarFriendWire.statusPushBytes(LunarFriendWire.friendBytes(uuidOf(a[1]), a[1], false, null), false))
             "open" -> {
                 dev.horizon.client.gui.modern.LunarFriendsScreen.open()
                 a.getOrNull(1)?.let { dev.horizon.client.gui.modern.LunarFriendsScreen.select(it) }
             }
             "send" -> dev.horizon.client.gui.modern.LunarFriendsScreen.testSend(a.drop(1).joinToString(" "))
+            "join" -> friendMap[uuidOf(a[1])]?.let { join(it) } ?: throw IllegalArgumentException("no friend ${a[1]}")
             else -> throw IllegalArgumentException("lunarfriends $spec")
         }
     }

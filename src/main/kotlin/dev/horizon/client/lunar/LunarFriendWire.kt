@@ -43,10 +43,12 @@ object LunarFriendWire {
     /**
      * A friend: online ([status] > 0) with where they are ([location], null when Lunar doesn't say) and their version,
      * or offline, last seen at [lastSeen] (epoch ms, 0 unknown). Their logo colour, Lunar+ colour and badge as by names.
+     * [address] is the server to join them on, when they're on a public server Lunar knows (its primary address).
      */
     data class Friend(
         val uuid: UUID, val name: String, val status: Int = 0, val location: String? = null, val version: String? = null,
         val lastSeen: Long = 0, val logo: Int = -1, val plus: Int = 0, val badge: Int = 0, val justOnline: Boolean = false,
+        val address: String? = null,
     ) {
         val online get() = status > 0
     }
@@ -106,6 +108,7 @@ object LunarFriendWire {
         var p: Pair<UUID?, String> = null to ""
         var status = ONLINE
         var location: String? = null
+        var address: String? = null
         var version: String? = null
         var logo = -1
         var plusColor = 0
@@ -115,7 +118,11 @@ object LunarFriendWire {
             when (f) {
                 1 -> p = player(i.readBytes().toByteArray())
                 2 -> status = i.readEnum()
-                3 -> location = location(i.readBytes().toByteArray())
+                3 -> {
+                    val b = i.readBytes().toByteArray()
+                    location = location(b)
+                    address = serverAddress(b)
+                }
                 4 -> version = version(i.readBytes().toByteArray())
                 5 -> just = i.readBool()
                 7 -> logo = color(i.readBytes().toByteArray())
@@ -125,7 +132,7 @@ object LunarFriendWire {
             }
         }
         val u = p.first ?: return null
-        return Friend(u, p.second, if (status <= 0) ONLINE else status, location, version, 0, logo, plusColor, badge, just)
+        return Friend(u, p.second, if (status <= 0) ONLINE else status, location, version, 0, logo, plusColor, badge, just, address)
     }
 
     /** OfflineFriend. */
@@ -161,6 +168,17 @@ object LunarFriendWire {
             }
         }
         return id?.takeIf { it.isNotEmpty() } ?: enum?.takeIf { it.isNotEmpty() }?.removePrefix("v")?.replace('_', '.')
+    }
+
+    /** A Location's public server address (PublicServer's primary_address), the one Lunar's Join button connects to. */
+    fun serverAddress(bytes: ByteArray): String? {
+        var out: String? = null
+        fields(bytes) { f, i, t ->
+            if (f == 1) {
+                fields(i.readBytes().toByteArray()) { g, j, u -> if (g == 3) out = j.readString().trim().ifEmpty { null } else j.skipField(u) }
+            } else i.skipField(t)
+        }
+        return out
     }
 
     /** Location, said as Lunar's friends list says it ("Hypixel", "Singleplayer", "In menus"...). */
@@ -565,12 +583,14 @@ object LunarFriendWire {
 
     fun playerBytes(u: UUID, name: String): ByteArray = message { o -> o.writeBytes(1, uuidField(u)); o.writeString(2, name) }
 
-    /** An OnlineFriend on a public server named [server] (or offline when [server] is null and [online] false). */
-    fun friendBytes(u: UUID, name: String, online: Boolean, server: String?, logo: Int = 0, badge: Int = 0): ByteArray = message { o ->
+    /** An OnlineFriend on a public server named [server] at [address] (or offline when [server] is null and [online] false). */
+    fun friendBytes(u: UUID, name: String, online: Boolean, server: String?, logo: Int = 0, badge: Int = 0, address: String? = null): ByteArray = message { o ->
         o.writeBytes(1, ByteString.copyFrom(playerBytes(u, name)))
         if (online) {
             o.writeEnum(2, ONLINE)
-            if (server != null) o.writeBytes(3, ByteString.copyFrom(message { l -> l.writeBytes(1, ByteString.copyFrom(message { it.writeString(2, server) })) }))
+            if (server != null) o.writeBytes(3, ByteString.copyFrom(message { l ->
+                l.writeBytes(1, ByteString.copyFrom(message { ps -> ps.writeString(2, server); if (address != null) ps.writeString(3, address) }))
+            }))
             if (logo != 0) o.writeBytes(7, ByteString.copyFrom(message { it.writeInt32(1, logo) }))
             if (badge != 0) o.writeInt32(15, badge)
         } else {
