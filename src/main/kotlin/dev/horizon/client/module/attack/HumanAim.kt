@@ -136,7 +136,8 @@ class HumanAim(private val rng: Random) {
     /**
      * One frame. [now] is a clock in seconds, [yaw]/[pitch] where the camera looks, [eye] the eye this frame and [eyeVel]
      * its speed, [spot] the aim spot and [center] the target box's centre this frame (all interpolated to the frame, not
-     * the tick), [width]/[height] the box's angular size (deg), [onBox] whether the crosshair is on it.
+     * the tick), [width]/[height] the box's angular size (deg), [onBox] whether the crosshair is on it. [size] is the
+     * target size Fitts's law times a movement by (the width unless given).
      *
      * Your own movement is known at once (you feel it), so it is made up for smoothly and fully; only the target's own
      * movement is seen late and predicted. A target standing still while you strafe round it is followed by a steady
@@ -144,7 +145,7 @@ class HumanAim(private val rng: Random) {
      */
     fun step(
         now: Double, dt: Double, yaw: Double, pitch: Double, eye: V, eyeVel: V, spot: V, center: V,
-        width: Double, height: Double, onBox: Boolean, p: Params,
+        width: Double, height: Double, onBox: Boolean, p: Params, size: Double = width,
     ): DoubleArray {
         if (topSpeed <= 0.0) retarget(p)
         record(now, center)
@@ -208,7 +209,7 @@ class HumanAim(private val rng: Random) {
                 val dw = if (onBox) max(MIN_DEAD, p.relax * width * 0.5) else MIN_DEAD
                 val dh = if (onBox) max(MIN_DEAD, p.relax * height * 0.5 * p.pitchScale) else MIN_DEAD
                 val outside = (errYaw / dw) * (errYaw / dw) + (errPitch / dh) * (errPitch / dh) > 1.0
-                if (outside) sub = plan(errYaw, errPitch, dist, width, p)
+                if (outside) sub = plan(errYaw, errPitch, dist, size, p)
             }
         }
         sub?.let { s ->

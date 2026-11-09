@@ -25,6 +25,7 @@ import dev.horizon.client.module.Esp
 import dev.horizon.client.module.Module
 import dev.horizon.client.module.Modules
 import dev.horizon.client.module.basic.Sprint as SprintModule
+import dev.horizon.client.module.legit.Clutch
 import dev.horizon.client.module.legit.FireballDeflect
 import dev.horizon.client.module.legit.PearlSave
 import dev.horizon.client.module.rage.Blink
@@ -259,8 +260,8 @@ class Aura : Module("aura", Categories.ATTACK) {
         on<CrosshairEvent> { e -> overrideCrosshair(e) }
         on<Render3DEvent> { render() }
         on<MouseTurnEvent> {
-            // A fireball deflect or a pearl throw has the camera meanwhile.
-            if (effectiveRotation() === LegitRotation && !Modules.get<FireballDeflect>().busy && !Modules.get<PearlSave>().busy) {
+            // A fireball deflect, a clutch or a pearl throw has the camera meanwhile.
+            if (effectiveRotation() === LegitRotation && !Modules.get<FireballDeflect>().busy && !savingFall()) {
                 val t = target
                 if (dynamicSwitch.value && t != null && sort.value != Sort.FOV) finder.turnedTo(t)?.let { target = it }
                 LegitRotation.frame(this)
@@ -351,8 +352,24 @@ class Aura : Module("aura", Categories.ATTACK) {
         RotationManager.rotate(rotation, 130)
     }
 
+    /**
+     * Clutch is saving a fall with blocks, or Pearl Save is throwing: the block or the pearl goes where the look the
+     * server has points, so that must be the camera's.
+     */
+    private fun savingFall() = Modules.get<Clutch>().clutching || Modules.get<PearlSave>().busy
+
     private fun tick() {
         val p = mc.player ?: return
+        if (savingFall()) {
+            // No hidden look is sent (dropped at once, not turned back), the camera isn't turned and nothing is hit.
+            target = null
+            shield.releaseAutoBlock()
+            LegitRotation.reset()
+            rotation = Rotation(p.yRot, p.xRot)
+            rotated = false
+            for (h in hooks) h.tick()
+            return
+        }
         if (shouldPause()) {
             target = null
             shield.releaseAutoBlock()
