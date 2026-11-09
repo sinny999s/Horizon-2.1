@@ -8,7 +8,8 @@ import kotlinx.serialization.Serializable
  * Not in the original: the Lunar Client version Lunar Spoof claims to be, after Moonlight's `MoonlightConfig`. Kept in
  * `horizon/lunar-spoof/version.json` with when it was looked up, and looked up again ([LunarJar]) once it's a day old.
  * The version is Lunar's own build data (`lunarBuildData.txt` in its `lunar.jar`), which is the same jar for every
- * Minecraft version Lunar runs on.
+ * Minecraft version Lunar runs on (the launcher API's answers for 1.8.9 and 1.21.10 to 26.3, Lunar and Fabric modules,
+ * all named one `lunar.jar` on 2026-11-08), so one version is claimed on all of them.
  */
 object LunarVersion {
     @Serializable
@@ -37,9 +38,6 @@ object LunarVersion {
     val version: String? get() = cache().lunarVersion
     val gitCommit: String? get() = cache().lunarGitCommit
     val gitBranch: String get() = cache().lunarGitBranch ?: "master"
-
-    /** Lunar's brand for its client: "lunarclient:v<version>". */
-    val brand: String? get() = version?.let(LunarProfile::brand)
 
     /** Unknown, or a day old. */
     val stale: Boolean get() = cache().let { it.lunarVersion == null || it.lunarGitCommit == null || System.currentTimeMillis() - it.fetchedAt > STALE_MS }

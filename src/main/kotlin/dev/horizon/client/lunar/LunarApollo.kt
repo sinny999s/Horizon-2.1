@@ -82,7 +82,8 @@ object LunarApollo {
         moduleMessage(module.name.trim(), when {
             versionId == null -> "not claiming Lunar here: Lunar doesn't run on this Minecraft version"
             version == null -> "Lunar's version isn't known yet: not claiming Lunar until it is"
-            else -> "claiming Lunar Client ${LunarProfile.semver(version)} for ${versionId.removePrefix("v").replace('_', '.')}"
+            else -> "claiming Lunar Client ${LunarProfile.semver(version)} for ${LunarProfile.versionName(versionId)}" +
+                if (module.brand.value && LunarSpoof.fabricBrand(versionId)) " with Fabric" else ""
         })
     }
 

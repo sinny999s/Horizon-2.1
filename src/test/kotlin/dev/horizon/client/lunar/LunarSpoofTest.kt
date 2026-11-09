@@ -48,10 +48,75 @@ class LunarSpoofTest {
         assertNull(LunarProfile.versionId("c0.30"))
     }
 
+    /** Every release name ViaFabricPlus 5.1.2 (ViaVersion 5.12.2) offers, newest last. */
+    private val viaNames = listOf(
+        "1.7.2-1.7.5", "1.7.6-1.7.10", "1.8.x", "1.9", "1.9.1", "1.9.2", "1.9.3-1.9.4", "1.10.x", "1.11", "1.11.1-1.11.2", "1.12",
+        "1.12.1", "1.12.2", "1.13", "1.13.1", "1.13.2", "1.14", "1.14.1", "1.14.2", "1.14.3", "1.14.4", "1.15", "1.15.1", "1.15.2",
+        "1.16", "1.16.1", "1.16.2", "1.16.3", "1.16.4-1.16.5", "1.17", "1.17.1", "1.18-1.18.1", "1.18.2", "1.19", "1.19.1-1.19.2",
+        "1.19.3", "1.19.4", "1.20-1.20.1", "1.20.2", "1.20.3-1.20.4", "1.20.5-1.20.6", "1.21-1.21.1", "1.21.2-1.21.3", "1.21.4",
+        "1.21.5", "1.21.6", "1.21.7-1.21.8", "1.21.9-1.21.10", "1.21.11", "26.1-26.1.2", "26.2", "26.3",
+    )
+
+    @Test
+    fun viaFabricPlusVersions() {
+        // 1.21.11 to 26.3, as ViaFabricPlus names them: each is claimed as a version Lunar's launcher offers.
+        assertEquals("v1_21_11", LunarProfile.versionId("1.21.11"))
+        assertEquals("v26_1_2", LunarProfile.versionId("26.1-26.1.2"))
+        assertEquals("v26_2", LunarProfile.versionId("26.2"))
+        assertEquals("v26_3", LunarProfile.versionId("26.3"))
+        // 1.8.9 and 26.3 as before.
+        assertEquals("v1_8", LunarProfile.versionId("1.8.x"))
+        // A range is claimed as its newest version Lunar's launcher offers (it has no 1.21.2 or 1.19.1).
+        assertEquals("v1_21_10", LunarProfile.versionId("1.21.9-1.21.10"))
+        assertEquals("v1_21_8", LunarProfile.versionId("1.21.7-1.21.8"))
+        assertEquals("v1_21_3", LunarProfile.versionId("1.21.2-1.21.3"))
+        assertEquals("v1_21_1", LunarProfile.versionId("1.21-1.21.1"))
+        assertEquals("v1_20_6", LunarProfile.versionId("1.20.5-1.20.6"))
+        assertEquals("v1_20_1", LunarProfile.versionId("1.20-1.20.1"))
+        assertEquals("v1_19_2", LunarProfile.versionId("1.19.1-1.19.2"))
+        assertEquals("v1_18_1", LunarProfile.versionId("1.18-1.18.1"))
+        assertEquals("v1_16_5", LunarProfile.versionId("1.16.4-1.16.5"))
+        assertEquals("v1_7", LunarProfile.versionId("1.7.6-1.7.10"))
+        // Lunar runs on none of 1.13 to 1.16.4.
+        for (name in listOf("1.13", "1.13.2", "1.14.4", "1.15.2", "1.16", "1.16.3")) assertNull(LunarProfile.versionId(name), name)
+        // Lunar's code knows 1.9 to 1.11, 1.16.1, 1.17 and 1.21.2, but its launcher doesn't offer them: not claimed.
+        for (name in listOf("1.9", "1.9.1", "1.9.2", "1.9.3-1.9.4", "1.10.x", "1.11", "1.11.1-1.11.2", "1.16.1", "1.17", "1.21.2"))
+            assertNull(LunarProfile.versionId(name), name)
+        // Every claim is a version the launcher offers, and every protocol it offers is claimed: the only offered
+        // versions never claimed share their protocol with a newer patch that is.
+        val claimed = viaNames.mapNotNull(LunarProfile::versionId).toSet()
+        assertTrue(LunarProfile.OFFERED.containsAll(claimed))
+        assertEquals(setOf("v1_20_0", "v1_20_3", "v1_20_5", "v1_21_0", "v1_21_7", "v1_21_9", "v26_1", "v26_1_1"), LunarProfile.OFFERED.toSet() - claimed)
+        // Natively (the game's own name), the exact version.
+        assertEquals("v26_1", LunarProfile.versionId("26.1"))
+        assertEquals("v26_1_1", LunarProfile.versionId("26.1.1"))
+    }
+
+    @Test
+    fun offeredVersions() {
+        // What Lunar's launcher offers, and with its Fabric module, are versions Lunar knows.
+        assertTrue(LunarProfile.VERSIONS.containsAll(LunarProfile.OFFERED))
+        assertTrue(LunarProfile.OFFERED.containsAll(LunarProfile.FABRIC_MODULE))
+        for (id in listOf("v1_21_11", "v26_1", "v26_1_1", "v26_1_2", "v26_2", "v26_3")) {
+            assertTrue(id in LunarProfile.OFFERED, id)
+            assertTrue(id in LunarProfile.FABRIC_MODULE, id)
+        }
+        // 1.8 is Lunar's own (or Forge), never Fabric.
+        assertFalse("v1_8" in LunarProfile.FABRIC_MODULE)
+        assertEquals("26.1.2", LunarProfile.versionName("v26_1_2"))
+        assertEquals("26.1", LunarProfile.versionName("v26_1"))
+        assertEquals("1.21", LunarProfile.versionName("v1_21_0"))
+        assertEquals("1.21.10", LunarProfile.versionName("v1_21_10"))
+        assertEquals("1.8", LunarProfile.versionName("v1_8"))
+        assertEquals("1.10", LunarProfile.versionName("v1_10"))
+    }
+
     @Test
     fun brandIsLunars() {
         assertEquals("lunarclient:v2.23.14-2645", LunarProfile.brand("2.23.14-2645"))
         assertEquals("lunarclient:v2.23.14-2645", LunarProfile.brand("v2.23.14-2645"))
+        // Lunar's Fabric module (modern jar's ClientBrandRetriever overwrite).
+        assertEquals("lunarclient:v2.23.14-2645,fabric", LunarProfile.brand("2.23.14-2645", fabric = true))
     }
 
     @Test

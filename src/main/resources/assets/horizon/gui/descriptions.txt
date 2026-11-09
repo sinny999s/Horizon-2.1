@@ -216,5 +216,5 @@ bed-breaker=Digs into an enemy bed like a player: picks the quickest way through
 ghost-mode=Turns off and hides blatant modules, and keeps Aura on legit settings, for servers that watch closely.
 party-protect=Your Hypixel party counts as friends, so Aura and the other combat modules leave them alone.
 no-hit-delay=Removes the half-second after a missed swing when your clicks don't attack (1.8's hit delay), so every click hits.
-lunar-spoof=Passes for Lunar Client on servers, for the version you join as (1.8 through ViaFabricPlus, or 26.3): Lunar's brand, its channels and Apollo handshake when the server asks. Lunar's logos, friends, cosmetics and locker are in the ClickGUI's Lunar menu and work without this.
+lunar-spoof=Passes for Lunar Client on servers, for the version you join as (any Lunar runs on: 1.8.9, 1.21.11, 26.1 or 26.2 through ViaFabricPlus, or 26.3): Lunar's brand, its channels and Apollo handshake when the server asks. Lunar's logos, friends, cosmetics and locker are in the ClickGUI's Lunar menu and work without this.
 better-chat=Chat in the client's font, on one rounded pane, with new lines sliding in; links and hovers still work.
