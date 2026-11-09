@@ -1,5 +1,6 @@
 package dev.horizon.client.module.legit
 
+import dev.horizon.client.combat.Bedwars
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 import dev.horizon.client.module.Modules
@@ -9,14 +10,21 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.Level
 import net.minecraft.world.scores.PlayerTeam
+import java.lang.ref.WeakReference
 import java.util.Optional
+import java.util.UUID
 
 /**
  * Not in the original: universal multi-server teammate detection. Combines scoreboard team membership, scoreboard
  * `TeamColor` / prefix colour (for servers that give every player a unique scoreboard team for nametag health/ranks),
  * tab-list / display-name colour on the username itself, dyed leather armour colour (BedWars / Bridge / WoolWars), and
  * `[TAG]` clan prefixes. Never calls `Entity.getTeamColor()`, which `GlowEsp` overrides.
+ *
+ * A Bedwars teammate who respawns reappears a moment before his armour and team colour do, and the fighting modules
+ * would swing at him in that gap. So [remember] keeps him a teammate while no check can tell ([TeamMemory]), and
+ * [spawnGrace] has them leave anyone who just appeared alone for a few ticks ([isTeammateOrNew]).
  */
 class Teams : Module("teams", Categories.LEGIT, listOf("team-check", "teammates", "allies")) {
     enum class ArmorSlot { HELMET_OR_CHEST, ANY_MATCH, HELMET_ONLY, CHEST_ONLY }
@@ -32,37 +40,57 @@ class Teams : Module("teams", Categories.LEGIT, listOf("team-check", "teammates"
     val armorTolerance = int("armor-tolerance", 16, 0..64) { armorColor.value }
     val ignoreDefaultLeather = bool("ignore-default-leather", true) { armorColor.value }
     val ignoreWhite = bool("ignore-white", true) { teamColor.value || nameColor.value }
+    /** A teammate stays one while no check can tell (no team colour or dyed armour yet), e.g. just after he respawns. */
+    val remember = bool("remember-teammates", true)
+    /**
+     * Ticks Aura, Trigger Bot, Aim Assist, Auto Clicker and the shared targeting leave a player alone after he appears
+     * (spawns or respawns in view), before his armour and team colour arrive. 0 turns it off.
+     */
+    val spawnGrace = int("spawn-grace", 10, 0..40)
     val espAllyColor = bool("esp-ally-color", true)
 
-    fun matches(self: Player, other: Player): Boolean {
-        if (self === other) return true
+    private val memory = TeamMemory<UUID>()
+    private var memoryLevel = WeakReference<Level>(null)
+    private var memoryPhase = Bedwars.Phase.NONE
+
+    /**
+     * What the turned-on checks say about [other]: [TeamMemory.Signal.MATCH] if any finds your team, else
+     * [TeamMemory.Signal.MISMATCH] if a colour or tag check sees two different teams, else [TeamMemory.Signal.UNKNOWN].
+     * Scoreboard teams that aren't allied say nothing either way: some servers give every player a team of his own.
+     */
+    fun evaluate(self: Player, other: Player): TeamMemory.Signal {
+        if (self === other) return TeamMemory.Signal.MATCH
         val noWhite = ignoreWhite.value
+        var differ = false
+        // Whether two colours match; when both are known and don't, the teams differ.
+        fun compare(a: Int?, b: Int?, tolerance: Int = 0, ignoreWhite: Boolean = false): Boolean {
+            if (TeamMatcher.colorsMatch(a, b, tolerance, ignoreWhite)) return true
+            if (a != null && b != null) differ = true
+            return false
+        }
 
         if (scoreboardTeam.value) {
             val st = self.team
             val ot = other.team
-            if (st != null && ot != null && st.isAlliedTo(ot)) return true
+            if (st != null && ot != null && st.isAlliedTo(ot)) return TeamMemory.Signal.MATCH
         }
-        if (teamColor.value) {
-            val sc = rawScoreboardColor(self, noWhite)
-            val oc = rawScoreboardColor(other, noWhite)
-            if (TeamMatcher.colorsMatch(sc, oc, ignoreWhite = noWhite)) return true
+        if (teamColor.value && compare(rawScoreboardColor(self, noWhite), rawScoreboardColor(other, noWhite), ignoreWhite = noWhite)) {
+            return TeamMemory.Signal.MATCH
         }
-        if (nameColor.value) {
-            val sc = displayColor(self, noWhite)
-            val oc = displayColor(other, noWhite)
-            if (TeamMatcher.colorsMatch(sc, oc, ignoreWhite = noWhite)) return true
+        if (nameColor.value && compare(displayColor(self, noWhite), displayColor(other, noWhite), ignoreWhite = noWhite)) {
+            return TeamMemory.Signal.MATCH
         }
-        if (armorColor.value && armorMatches(self, other)) return true
+        if (armorColor.value && armorMatches(self, other, ::compare)) return TeamMemory.Signal.MATCH
         if (prefixTag.value) {
             val st = playerTag(self)
             val ot = playerTag(other)
-            if (st != null && st == ot) return true
+            if (st != null && st == ot) return TeamMemory.Signal.MATCH
+            if (st != null && ot != null) differ = true
         }
-        return false
+        return if (differ) TeamMemory.Signal.MISMATCH else TeamMemory.Signal.UNKNOWN
     }
 
-    private fun armorMatches(self: Player, other: Player): Boolean {
+    private fun armorMatches(self: Player, other: Player, compare: (Int?, Int?, Int, Boolean) -> Boolean): Boolean {
         val tol = armorTolerance.value
         val noPlain = ignoreDefaultLeather.value
         val slots = when (armorSlot.value) {
@@ -74,7 +102,7 @@ class Teams : Module("teams", Categories.LEGIT, listOf("team-check", "teammates"
         for (slot in slots) {
             val sc = dyedSlotColor(self, slot, noPlain) ?: continue
             val oc = dyedSlotColor(other, slot, noPlain) ?: continue
-            if (TeamMatcher.colorsMatch(sc, oc, tolerance = tol)) return true
+            if (compare(sc, oc, tol, false)) return true
         }
         if (armorSlot.value == ArmorSlot.ANY_MATCH) {
             val selfColors = slots.mapNotNull { dyedSlotColor(self, it, noPlain) }
@@ -87,17 +115,39 @@ class Teams : Module("teams", Categories.LEGIT, listOf("team-check", "teammates"
         return false
     }
 
+    /** A new world (another server or game) or a Bedwars match starting or ending: teams from before mean nothing. */
+    private fun forgetOnNewGame() {
+        val level = mc.level
+        val phase = Bedwars.phase
+        if (level !== memoryLevel.get() || phase != memoryPhase) {
+            memory.clear()
+            memoryLevel = WeakReference(level)
+            memoryPhase = phase
+        }
+    }
+
     companion object {
         private val ALL_ARMOR_SLOTS = listOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
         private val module by lazy { Modules.get<Teams>() }
 
-        /** True when [Teams] is enabled and [player] is on the local player's team. */
+        /** True when [Teams] is enabled and [player] is on the local player's team (or was, while nothing shows: [remember]). */
         fun isTeammate(player: Player): Boolean {
             val m = module
             if (!m.enabled) return false
             val self = m.mc.player ?: return false
             if (player === self) return false
-            return m.matches(self, player)
+            m.forgetOnNewGame()
+            return m.memory.verdict(player.uuid, m.evaluate(self, player), m.remember.value)
+        }
+
+        /**
+         * Who the fighting modules leave alone: a teammate, or (with [Teams] on) a player who appeared less than
+         * `spawn-grace` ticks ago. A respawning teammate shows up a moment before his armour and team colour do.
+         */
+        fun isTeammateOrNew(player: Player): Boolean {
+            if (isTeammate(player)) return true
+            val m = module
+            return m.enabled && player !== m.mc.player && player.tickCount < m.spawnGrace.value
         }
 
         /** True when [Teams] is enabled with `esp-ally-color` on and [player] is a teammate. */

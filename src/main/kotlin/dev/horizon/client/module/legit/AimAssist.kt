@@ -188,7 +188,7 @@ class AimAssist : Module("aim-assist", Categories.LEGIT, listOf("aimbot", "smoot
         if (ignoreInvisible.value && e.isInvisible) return false
         if (e is Player) {
             if (e.isCreative || e.isSpectator) return false
-            if (Friends.isFriend(e.gameProfile.name) || Teams.isTeammate(e)) return false
+            if (Friends.isFriend(e.gameProfile.name) || Teams.isTeammateOrNew(e)) return false
             if (ignoreNaked.value && e.armorValue == 0) return false
         } else {
             if (playersOnly.value) return false

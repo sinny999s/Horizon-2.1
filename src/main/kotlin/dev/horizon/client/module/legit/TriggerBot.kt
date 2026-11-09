@@ -181,7 +181,7 @@ class TriggerBot : Module("trigger-bot", Categories.LEGIT, listOf("trigger", "au
         return when (e) {
             is Player -> {
                 if (!players.value || e.isCreative || e.isSpectator) return false
-                if (Friends.isFriend(e.gameProfile.name) || Teams.isTeammate(e)) return false
+                if (Friends.isFriend(e.gameProfile.name) || Teams.isTeammateOrNew(e)) return false
                 !(ignoreNaked.value && e.armorValue == 0)
             }
             is Enemy -> hostiles.value

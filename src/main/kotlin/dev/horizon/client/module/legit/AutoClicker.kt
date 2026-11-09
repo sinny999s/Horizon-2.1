@@ -113,7 +113,7 @@ class AutoClicker : Module("auto-clicker", Categories.LEGIT, listOf("clicker", "
         }
         if (ignoreTeammates.value && hit is EntityHitResult) {
             val target = hit.entity
-            if (target is Player && (Friends.isFriend(target.gameProfile.name) || Teams.isTeammate(target))) return false
+            if (target is Player && (Friends.isFriend(target.gameProfile.name) || Teams.isTeammateOrNew(target))) return false
         }
         return true
     }

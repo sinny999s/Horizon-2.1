@@ -196,7 +196,7 @@ class AuraTargets(private val aura: Aura) {
         if (e is Player) {
             if (e === p) return true
             if (Friends.isFriend(e.gameProfile.name)) return true
-            if (Teams.isTeammate(e)) return true
+            if (Teams.isTeammateOrNew(e)) return true
             if (e.isCreative && aura.ignoreCreative.value) return true
             if (e.armorValue == 0 && aura.ignoreNaked.value) return true
             if (e.isInvisible && aura.ignoreInvisibleEntities.value) return true
