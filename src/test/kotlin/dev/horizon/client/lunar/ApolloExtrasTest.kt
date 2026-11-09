@@ -110,6 +110,78 @@ class ApolloExtrasTest {
     }
 
     @Test
+    fun `server rules`() {
+        val r = ApolloRules()
+        assertNull(r.gamma())
+        assertFalse(r.antiPortalTraps())
+        r.add(listOf(module("server_rule", true, "override-brightness" to bool(true), "brightness" to num(1000.0))))
+        assertEquals(10f, r.gamma())
+        // anti-portal-traps is on unless the server turns it off.
+        assertTrue(r.antiPortalTraps())
+        assertFalse(r.competitiveGame())
+        assertFalse(r.competitiveCommand("/hub"))
+    }
+
+    @Test
+    fun `competitive commands as Lunar matches them`() {
+        val r = ApolloRules()
+        r.add(listOf(module("server_rule", true, "competitive-game" to bool(true))))
+        assertTrue(r.competitiveCommand("/hub"))
+        assertTrue(r.competitiveCommand("/HUB"))
+        assertTrue(r.competitiveCommand("/server lobby"))
+        assertFalse(r.competitiveCommand("/hubs"))
+        assertFalse(r.competitiveCommand("/msg hub"))
+        // The root is the whole text when its first space comes before the third character.
+        val list = ConfigurableSettings.newBuilder().setApolloModule("server_rule").setEnable(true)
+            .putProperties("competitive-commands", Value.newBuilder().setListValue(com.google.protobuf.ListValue.newBuilder()
+                .addValues(Value.newBuilder().setStringValue("/l"))
+                .addValues(Value.newBuilder().setStringValue("/l x"))).build()).build()
+        r.add(listOf(list))
+        assertTrue(r.competitiveCommand("/l x"))
+        assertFalse(r.competitiveCommand("/hub"))
+    }
+
+    @Test
+    fun `crystal optimizer's damage test`() {
+        assertTrue(ApolloRules.crystalHitDamages(null, null, 1.0, 0.0))
+        // Weakness I: w = 4; a hand's 1 doesn't hurt, a diamond sword's attribute 7 (> w + 5? no) plus its modifier does.
+        assertFalse(ApolloRules.crystalHitDamages(0, null, 1.0, 0.0))
+        assertTrue(ApolloRules.crystalHitDamages(0, null, 10.0, 0.0))
+        assertTrue(ApolloRules.crystalHitDamages(0, null, 1.0, 6.0))
+        // Strength II (s = 6) makes up for Weakness I.
+        assertTrue(ApolloRules.crystalHitDamages(0, 1, 1.0, 0.0))
+        assertFalse(ApolloRules.crystalHitDamages(1, 0, 1.0, 0.0))
+    }
+
+    @Test
+    fun `rich status for Lunar friends`() {
+        val rp = ApolloFeatures.RichPresence("Bedwars", "Doubles", "", "", "Lighthouse", "", 1, 2)
+        fun fields(b: ByteArray) = com.google.protobuf.UnknownFieldSet.parseFrom(b)
+        val req = fields(LunarFriendWire.broadcastRichStatus("mc.hypixel.net", rp))
+        assertEquals(5L, req.getField(2).varintList.single())
+        val server = fields(fields(req.getField(1).lengthDelimitedList.single().toByteArray()).getField(1).lengthDelimitedList.single().toByteArray())
+        assertEquals("mc.hypixel.net", server.getField(1).lengthDelimitedList.single().toStringUtf8())
+        val status = fields(server.getField(2).lengthDelimitedList.single().toByteArray())
+        assertEquals("Bedwars", status.getField(1).lengthDelimitedList.single().toStringUtf8())
+        assertEquals("Lighthouse", status.getField(4).lengthDelimitedList.single().toStringUtf8())
+        assertEquals(2L, status.getField(7).varintList.single())
+        assertEquals(1L, status.getField(8).varintList.single())
+        assertEquals("Doubles", status.getField(9).lengthDelimitedList.single().toStringUtf8())
+        // The server's reset: an empty status.
+        val reset = fields(fields(fields(LunarFriendWire.broadcastRichStatus("mc.hypixel.net", null)).getField(1).lengthDelimitedList.single().toByteArray())
+            .getField(1).lengthDelimitedList.single().toByteArray())
+        assertEquals(0, reset.getField(2).lengthDelimitedList.single().size())
+        // A friend's location with a rich status, as Lunar's list shows it.
+        val location = LunarWire.message { l ->
+            l.writeBytes(1, com.google.protobuf.ByteString.copyFrom(LunarWire.message { ps ->
+                ps.writeString(2, "Hypixel")
+                ps.writeBytes(7, com.google.protobuf.ByteString.copyFrom(LunarWire.message { it.writeString(1, "Bedwars") }))
+            }))
+        }
+        assertEquals("Playing Bedwars on Hypixel", LunarFriendWire.location(location))
+    }
+
+    @Test
     fun `rich presence on Discord as Lunar's launcher writes it`() {
         fun rp(game: String, variant: String = "", map: String = "", state: String = "", team: Int = 0, max: Int = 0) =
             ApolloFeatures.RichPresence(game, variant, "", state, map, "", team, max)

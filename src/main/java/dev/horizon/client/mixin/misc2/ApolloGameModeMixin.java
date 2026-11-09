@@ -12,11 +12,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Apollo packet enrichment's attack and item-use messages, where Lunar Client 26.x hooks them (lunar/ApolloEnrichment). */
+/** Apollo packet enrichment's attack and item-use messages and server rules' crystal optimizer, where Lunar Client 26.x hooks them (lunar/ApolloEnrichment). */
 @Mixin(MultiPlayerGameMode.class)
 public abstract class ApolloGameModeMixin {
-	@Inject(method = "attack", at = @At("HEAD"))
+	@Inject(method = "attack", at = @At("HEAD"), cancellable = true)
 	private void horizon$apolloAttack(Player player, Entity target, CallbackInfo ci) {
+		// Server rules' crystal optimizer: a hit that can't hurt the crystal isn't sent.
+		if (ApolloEnrichment.crystalAttack(target)) {
+			ci.cancel();
+			return;
+		}
 		ApolloEnrichment.attack(target);
 	}
 

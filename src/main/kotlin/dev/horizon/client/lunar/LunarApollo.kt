@@ -136,6 +136,7 @@ object LunarApollo {
         val before = blocks.blocked.toSet()
         blocks.add(list)
         ApolloEnrichment.rules.add(list)
+        ApolloEnrichment.applied()
         val added = blocks.blocked - before
         HorizonClient.LOG.info("Lunar Spoof: Apollo settings: blocks {}, sets {}", blocks.blocked, blocks.forced)
         val module = LunarSpoof.instance ?: return

@@ -18,7 +18,12 @@
     "ApolloGameModeMixin",
     "ApolloChatMixin",
     "ApolloScreenMixin",
-    "ApolloCombatMixin"
+    "ApolloCombatMixin",
+    "ApolloRulesMixin",
+    "ApolloPortalMixin",
+    "ApolloChunkReloadMixin",
+    "ApolloCompetitiveMixin",
+    "ApolloCommandMixin"
   ],
   "injectors": {
     "defaultRequire": 1

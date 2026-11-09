@@ -4,12 +4,20 @@ import dev.horizon.client.HorizonClient
 import dev.horizon.client.mixin.MinecraftAccessor
 import dev.horizon.client.module.misc.LunarSpoof
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.ChatScreen
+import net.minecraft.client.gui.screens.ConfirmScreen
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
@@ -23,7 +31,14 @@ import net.minecraft.world.phys.HitResult
  * - Inventory open / close: your own inventory (survival or creative), never a container.
  * - Item use: each use, main hand or offhand. Lunar's 26.x jar never sends the bucket message, and neither does this.
  * Locations carry the world the server last named (UpdatePlayerWorldMessage). Combat: missed swings cost nothing and
- * digging and using combine, when the server allows it. Server rules: the chat box's length.
+ * digging and using combine, when the server allows it. Server rules:
+ * - the chat box's length; brightness (the gamma used, not saved in your options); a portal leaving the chat open
+ *   (only the chat: other screens still close); F3+A doing nothing; Iris's shaders turned off (Lunar turns off its own
+ *   shader pack; Horizon's shaders are Iris's).
+ * - Crystal optimizer: hitting an end crystal removes it on your side at once when the hit can hurt it, and doesn't
+ *   send a hit that can't (Weakness).
+ * - A competitive game: the pause menu's Disconnect, and the server's competitive commands (`/hub`...), ask first
+ *   with Lunar's warning; a confirmed command is sent once more and let through.
  */
 object ApolloEnrichment {
     private val mc: Minecraft get() = Minecraft.getInstance()
@@ -124,4 +139,98 @@ object ApolloEnrichment {
     /** Server rules' chat length on this server (null: vanilla's). */
     @JvmStatic
     fun maxChatLength(): Int? = live()?.maxChatLength()
+
+    /** Server rules' gamma on this server (null: the video setting's). */
+    @JvmStatic
+    fun gamma(): Float? = live()?.gamma()
+
+    /** Server rules' `anti-portal-traps`: the portal doesn't close your screen when it's the chat. */
+    @JvmStatic
+    fun keepInPortal(): Boolean = live()?.antiPortalTraps() == true && mc.gui.screen() is ChatScreen
+
+    /** Server rules' `disable-chunk-reloading`: F3+A does nothing. */
+    @JvmStatic
+    fun noChunkReloading(): Boolean = live()?.noChunkReloading() == true
+
+    /**
+     * MultiPlayerGameMode.attack's start, crystal optimizer: an end crystal the hit can hurt is removed on your side (the
+     * hit still goes); one it can't is not hit (true: cancel the attack).
+     */
+    @JvmStatic
+    fun crystalAttack(target: Entity): Boolean {
+        if (target !is EndCrystal || live()?.crystalOptimizer() != true) return false
+        val p = mc.player ?: return false
+        var item = 0.0
+        p.mainHandItem.get(DataComponents.ATTRIBUTE_MODIFIERS)?.forEach(EquipmentSlot.MAINHAND) { a, m ->
+            if (a == Attributes.ATTACK_DAMAGE) item += m.amount()
+        }
+        val hurts = ApolloRules.crystalHitDamages(p.getEffect(MobEffects.WEAKNESS)?.amplifier, p.getEffect(MobEffects.STRENGTH)?.amplifier,
+            p.getAttributeValue(Attributes.ATTACK_DAMAGE), item)
+        if (!hurts) return true
+        mc.level?.removeEntity(target.id, Entity.RemovalReason.DISCARDED)
+        return false
+    }
+
+    /** Lunar's warning before leaving a competitive game: [then] on "I UNDERSTAND, CONTINUE", back to [back] on Cancel. */
+    private fun competitiveWarning(back: Screen?, then: () -> Unit) {
+        mc.gui.setScreen(ConfirmScreen({ ok -> if (ok) then() else mc.gui.setScreen(back) },
+            Component.literal("WARNING!"),
+            Component.literal("Leaving competitive games can result in penalties.\nYou may be suspended from competitive games if you continue leaving games!"),
+            Component.literal("I UNDERSTAND, CONTINUE"), Component.literal("Cancel")))
+    }
+
+    /** The pause menu's Disconnect (its runnable, from [pause]): in a competitive game, asks first. */
+    @JvmStatic
+    fun disconnectButton(run: Runnable, pause: Screen): Runnable {
+        if (live()?.competitiveGame() != true) return run
+        return Runnable { competitiveWarning(pause) { run.run() } }
+    }
+
+    /** A command let through once, after its warning was confirmed. */
+    @Volatile
+    private var allowOnce: String? = null
+
+    /**
+     * ClientPacketListener.sendCommand / sendUnattendedCommand: a competitive command in a competitive game waits for
+     * the warning (true: not sent now). Confirmed, it's sent again and let through.
+     */
+    @JvmStatic
+    fun holdCommand(command: String, unattended: Screen?, isUnattended: Boolean): Boolean {
+        if (allowOnce == command) {
+            allowOnce = null
+            return false
+        }
+        if (live()?.competitiveCommand("/$command") != true) return false
+        // Next frame: the chat screen sending this closes itself after.
+        dev.horizon.client.combat.Scheduler.ms(0) {
+            competitiveWarning(null) {
+                allowOnce = command
+                mc.gui.setScreen(null)
+                val c = mc.connection ?: return@competitiveWarning
+                if (isUnattended) c.sendUnattendedCommand(command, unattended) else c.sendCommand(command)
+            }
+        }
+        return true
+    }
+
+    /** After the server's settings change: `disable-shaders` turns Iris's shaders off, when Iris is installed. */
+    fun applied() {
+        if (live()?.noShaders() == true) mc.execute { shadersOff() }
+    }
+
+    private fun shadersOff() {
+        try {
+            val api = Class.forName("net.irisshaders.iris.api.v0.IrisApi").getMethod("getInstance").invoke(null)
+            val config = Class.forName("net.irisshaders.iris.api.v0.IrisApi").getMethod("getConfig").invoke(api)
+            val type = Class.forName("net.irisshaders.iris.api.v0.IrisApiConfig")
+            if (type.getMethod("areShadersEnabled").invoke(config) != true) return
+            type.getMethod("setShadersEnabledAndApply", Boolean::class.javaPrimitiveType).invoke(config, false)
+            HorizonClient.LOG.info("Lunar Spoof: this server's Apollo rules turn shaders off; turned Iris's shaders off")
+            LunarSpoof.instance?.let { dev.horizon.client.combat.moduleMessage(it.name.trim(), "this server turns shaders off (as Lunar does)") }
+        } catch (e: ClassNotFoundException) {
+            // No Iris: nothing to turn off.
+        } catch (e: Exception) {
+            HorizonClient.LOG.warn("Lunar Spoof: couldn't turn Iris's shaders off: {}", e.toString())
+        }
+    }
 }
