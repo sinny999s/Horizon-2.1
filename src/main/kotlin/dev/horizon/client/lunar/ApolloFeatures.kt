@@ -119,7 +119,7 @@ object ApolloFeatures {
      * What the server says you're doing, for your Discord status (Apollo's `richpresence`): the game and its variant, the
      * game's and your state, the map, the sub-server, your team's size and its most. Empty strings and 0 are left out.
      */
-    class RichPresence(val game: String, val variant: String, val gameState: String, val playerState: String, val map: String,
+    data class RichPresence(val game: String, val variant: String, val gameState: String, val playerState: String, val map: String,
                        val subServer: String, val teamSize: Int, val teamMax: Int) {
         /**
          * The two Discord lines as Lunar's launcher writes them: "<player state, else Playing> <game> on <server>", then

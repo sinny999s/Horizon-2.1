@@ -93,6 +93,7 @@ object LunarFriends {
     fun connected() {
         if (!enabled) return
         sentLocation = null
+        sentRich = null
         LunarNetwork.request(LunarFriendWire.FRIEND_SERVICE, "Login", ByteArray(0)) { out -> login(LunarFriendWire.login(out)) }
         LunarNetwork.request(LunarFriendWire.CONVERSATION_SERVICE, "Login", ByteArray(0)) { out -> stickers = LunarFriendWire.stickers(out) }
         refreshGroups()
@@ -132,6 +133,7 @@ object LunarFriends {
         stickers = emptyList()
         signedIn = false
         sentLocation = null
+        sentRich = null
     }
 
     /** A push from Lunar; true when it was one of the friend or conversation pushes (any thread). */
@@ -385,11 +387,15 @@ object LunarFriends {
             conn.connection.isMemoryConnection -> "singleplayer"
             else -> mc.currentServer?.ip ?: "menus"
         }
-        if (here == sentLocation) return
+        if (here == sentLocation) {
+            richStatus(here)
+            return
+        }
         val trigger = if (here == "menus") LunarFriendWire.TRIGGER_DISCONNECT else LunarFriendWire.TRIGGER_JOIN
         val bytes = LunarFriendWire.broadcastLocation(here.takeUnless { it == "menus" || it == "singleplayer" }, here == "singleplayer", trigger)
         if (LunarNetwork.request(LunarFriendWire.FRIEND_SERVICE, "BroadcastLocationChange", bytes) { }) {
             sentLocation = here
+            sentRich = null
             HorizonClient.LOG.info("Lunar friends: told Lunar you're {}", if (here == "menus" || here == "singleplayer") "in $here" else "on $here")
         }
     }
@@ -405,6 +411,23 @@ object LunarFriends {
             val server = ServerList(mc).also { it.load() }.get(ip) ?: ServerData(f.location ?: ip, ip, ServerData.Type.OTHER)
             HorizonClient.LOG.info("Lunar friends: joining {} on {}", f.name, ip)
             ConnectScreen.startConnecting(JoinMultiplayerScreen(TitleScreen()), mc, ServerAddress.parseString(ip), server, false, null)
+        }
+    }
+
+    /** The rich presence last told to Lunar for [sentLocation] (null: none). */
+    private var sentRich: ApolloFeatures.RichPresence? = null
+
+    /**
+     * On a server: tells Lunar the Apollo server's rich presence when it changes, as Lunar Client does (only after a
+     * server location, only when it's different; the server's reset is an empty status). Friends see "Playing <game>".
+     */
+    private fun richStatus(here: String) {
+        if (here == "menus" || here == "singleplayer") return
+        val rich = ApolloFeatures.richPresence
+        if (rich == sentRich) return
+        if (LunarNetwork.request(LunarFriendWire.FRIEND_SERVICE, "BroadcastLocationChange", LunarFriendWire.broadcastRichStatus(here, rich)) { }) {
+            sentRich = rich
+            HorizonClient.LOG.info("Lunar friends: told Lunar you're {}", rich?.let { "playing ${it.game} on $here" } ?: "on $here (no game)")
         }
     }
 

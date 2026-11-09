@@ -39,6 +39,7 @@ object LunarFriendWire {
     /** BroadcastLocationChangeRequest.Trigger. */
     const val TRIGGER_JOIN = 1
     const val TRIGGER_DISCONNECT = 2
+    const val TRIGGER_SERVER_RICH_STATUS = 5
 
     /**
      * A friend: online ([status] > 0) with where they are ([location], null when Lunar doesn't say) and their version,
@@ -187,17 +188,20 @@ object LunarFriendWire {
         fields(bytes) { f, i, t ->
             when (f) {
                 1 -> {
-                    // PublicServer: name 2, primary_address 3.
+                    // PublicServer: name 2, primary_address 3, rich_status 7 (its game_name 1, as Lunar's list shows it).
                     var name: String? = null
                     var address: String? = null
+                    var game: String? = null
                     fields(i.readBytes().toByteArray()) { g, j, u ->
                         when (g) {
                             2 -> name = j.readString()
                             3 -> address = j.readString()
+                            7 -> fields(j.readBytes().toByteArray()) { h, k, v -> if (h == 1) game = k.readString() else k.skipField(v) }
                             else -> j.skipField(u)
                         }
                     }
-                    out = name?.takeIf { it.isNotEmpty() } ?: address ?: "A server"
+                    val server = name?.takeIf { it.isNotEmpty() } ?: address ?: "A server"
+                    out = if (game.isNullOrBlank()) server else "Playing $game on $server"
                 }
                 2 -> { i.skipField(t); out = "A private server" }
                 3 -> { i.skipField(t); out = "A local server" }
@@ -499,6 +503,33 @@ object LunarFriendWire {
         }
         out.writeBytes(1, ByteString.copyFrom(location))
         out.writeEnum(2, trigger)
+    }
+
+    /**
+     * BroadcastLocationChangeRequest for an Apollo server's rich presence, as Lunar sends it: InboundServer (its
+     * [server] address 1, rich_status 2) with trigger SERVER_RICH_STATUS. The status (common.v1.ServerRichStatus) is
+     * game_name 1, game_state 2, player_state 3, map_name 4, sub_server 5, team sizes 6 and 7, source 8 (APOLLO, 1),
+     * game_variant_name 9; [rich] null is the server's reset, an empty status.
+     */
+    fun broadcastRichStatus(server: String, rich: ApolloFeatures.RichPresence?): ByteArray = message { out ->
+        val status = message { s ->
+            if (rich != null) {
+                if (rich.game.isNotEmpty()) s.writeString(1, rich.game)
+                if (rich.gameState.isNotEmpty()) s.writeString(2, rich.gameState)
+                if (rich.playerState.isNotEmpty()) s.writeString(3, rich.playerState)
+                if (rich.map.isNotEmpty()) s.writeString(4, rich.map)
+                if (rich.subServer.isNotEmpty()) s.writeString(5, rich.subServer)
+                if (rich.teamSize != 0) s.writeInt32(6, rich.teamSize)
+                if (rich.teamMax != 0) s.writeInt32(7, rich.teamMax)
+                s.writeEnum(8, 1)
+                if (rich.variant.isNotEmpty()) s.writeString(9, rich.variant)
+            }
+        }
+        val location = message { l ->
+            l.writeBytes(1, ByteString.copyFrom(message { it.writeString(1, server); it.writeBytes(2, ByteString.copyFrom(status)) }))
+        }
+        out.writeBytes(1, ByteString.copyFrom(location))
+        out.writeEnum(2, TRIGGER_SERVER_RICH_STATUS)
     }
 
     /** ConversationReference for [friend]'s direct conversation. */
