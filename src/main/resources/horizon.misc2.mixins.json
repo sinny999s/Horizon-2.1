@@ -14,7 +14,11 @@
     "ApolloSheepMixin",
     "ApolloArmorMixin",
     "ApolloPlayerModelMixin",
-    "ApolloFireMixin"
+    "ApolloFireMixin",
+    "ApolloGameModeMixin",
+    "ApolloChatMixin",
+    "ApolloScreenMixin",
+    "ApolloCombatMixin"
   ],
   "injectors": {
     "defaultRequire": 1

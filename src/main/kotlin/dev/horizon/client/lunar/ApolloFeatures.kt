@@ -50,16 +50,20 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * What an Apollo server shows Lunar Client players, drawn with Horizon's own HUD and 3D drawing
- * (Apollo's `waypoint`, `team`, `beam`, `hologram`, `title`, `cooldown`, `border`, `glow`, `notification`, `stopwatch`
- * and `tntcountdown` modules). These come only after Lunar Spoof's Apollo handshake, and are cleared on each join.
+ * What an Apollo server shows Lunar Client players, drawn with Horizon's own HUD and 3D drawing. These come only after
+ * Lunar Spoof's Apollo handshake, and are cleared on each join.
  * - Waypoints: a coloured label with the distance and a line up from the spot. Beacon beams: a coloured beam.
  * - Team view: a coloured marker over each teammate (where the server says they are when they're out of sight).
  * - Holograms: their lines over the spot. Titles: big text mid-screen with its fade times.
  * - Cooldowns: a list on the left with the item and seconds left. Stopwatch: the time at the top.
  * - Borders: the region's edges as coloured lines. Glow: an outline in the server's colour around those players.
  * - Notifications: Horizon toasts. TNT countdown: seconds left over the TNT the server set a fuse for.
- * Off with the Lunar menu's `apollo-features`.
+ * - Name tags: the lines the server sets over players. Coloured fire, hidden armour pieces and body parts, flipped
+ *   entities and rainbow sheep, on the players and entities it names.
+ * - Nick hider: your name as the server hides it. Vignette: its texture over the screen. Ping markers: a marker where a
+ *   player pinged. Live chat: lines the server can change or take back. Staff mods: said in chat.
+ * - Rich presence: what the server says you're doing ([richPresence]), for Discord RPC's status.
+ * Off with the Lunar menu's `apollo-features` (rich presence is kept either way).
  */
 object ApolloFeatures {
     private val mc: Minecraft get() = Minecraft.getInstance()
@@ -111,6 +115,34 @@ object ApolloFeatures {
     /** Live chat lines the server can change or take back, by its id. */
     private val liveChat = ConcurrentHashMap<Int, net.minecraft.network.chat.Component>()
 
+    /**
+     * What the server says you're doing, for your Discord status (Apollo's `richpresence`): the game and its variant, the
+     * game's and your state, the map, the sub-server, your team's size and its most. Empty strings and 0 are left out.
+     */
+    class RichPresence(val game: String, val variant: String, val gameState: String, val playerState: String, val map: String,
+                       val subServer: String, val teamSize: Int, val teamMax: Int) {
+        /**
+         * The two Discord lines as Lunar's launcher writes them: "<player state, else Playing> <game> on <server>", then
+         * "<variant> on <map>", the variant alone, or the Minecraft version; the team's size after it, as Discord shows a
+         * party ("(2 of 4)"). The game and sub-server states aren't shown. Null with no game. Game-free.
+         */
+        fun discord(server: String, version: String): Pair<String, String>? {
+            if (game.isBlank()) return null
+            val first = "${playerState.ifBlank { "Playing" }} $game on $server"
+            var second = when {
+                variant.isNotBlank() && map.isNotBlank() -> "$variant on $map"
+                variant.isNotBlank() -> variant
+                else -> version
+            }
+            if (teamSize > 0 && teamMax > 0) second += " ($teamSize of $teamMax)"
+            return first to second
+        }
+    }
+
+    /** The server's rich presence (null: it hasn't set one). Kept whatever the `apollo-features` setting. */
+    @Volatile
+    var richPresence: RichPresence? = null
+
     /** The stopwatch: started at (ms), stopped at (ms, 0 running), or not shown. */
     @Volatile
     private var stopwatchStart = 0L
@@ -130,6 +162,7 @@ object ApolloFeatures {
         nametags.clear(); fire.clear(); hiddenArmor.clear(); hiddenParts.clear(); flipped.clear(); rainbowSheep.clear(); pings.clear(); liveChat.clear()
         nick = null
         vignette = null
+        richPresence = null
         stopwatchStart = 0L
         stopwatchStop = 0L
     }
@@ -279,6 +312,12 @@ object ApolloFeatures {
                     }
                 any.`is`(com.lunarclient.apollo.chat.v1.RemoveLiveChatMessageMessage::class.java) ->
                     any.unpack(com.lunarclient.apollo.chat.v1.RemoveLiveChatMessageMessage::class.java).let { m -> mc.execute { liveLine(m.messageId, null) } }
+                any.`is`(com.lunarclient.apollo.richpresence.v1.OverrideServerRichPresenceMessage::class.java) ->
+                    any.unpack(com.lunarclient.apollo.richpresence.v1.OverrideServerRichPresenceMessage::class.java).let { m ->
+                        richPresence = RichPresence(m.gameName, m.gameVariantName, m.gameState, m.playerState, m.mapName, m.subServer,
+                            m.teamCurrentSize, m.teamMaxSize)
+                    }
+                any.`is`(com.lunarclient.apollo.richpresence.v1.ResetServerRichPresenceMessage::class.java) -> richPresence = null
                 else -> return false
             }
         } catch (e: Exception) {

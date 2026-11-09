@@ -7,6 +7,7 @@ import dev.horizon.client.event.TickEvent
 import dev.horizon.client.event.TitleScreenInitEvent
 import dev.horizon.client.combat.MsTimer
 import dev.horizon.client.gui.UrlTextures
+import dev.horizon.client.lunar.ApolloFeatures
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 import dev.horizon.client.module.Modules
@@ -26,6 +27,7 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import net.minecraft.SharedConstants
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
@@ -75,19 +77,28 @@ class RPC : Module("RPC", Categories.MISC) {
             if (module.enabled) {
                 if (!timer.passedAndReset(5000)) return
                 Presence.appId = APP_ID
-                val details = details()
+                val (details, state) = details()
                 if (details.isNotEmpty()) Presence.details = details
+                Presence.state = state
                 Presence.large = "main" to "Horizon"
             } else if (Presence.connected) {
                 Presence.disconnect()
             }
         }
 
-        private fun details(): String {
+        /**
+         * The status lines: what an Apollo server says you're doing (its rich presence, through Lunar Spoof), else
+         * "Playing on <ip>"; "Selecting server..." in the server list.
+         */
+        private fun details(): Pair<String, String?> {
             val mc = Minecraft.getInstance()
             val server = mc.connection?.serverData
-            if (mc.connection != null && server != null) return "Playing on " + server.ip
-            return if (mc.gui.screen() is JoinMultiplayerScreen) "Selecting server..." else ""
+            if (mc.connection != null && server != null) {
+                val name = server.name.takeIf { it.isNotBlank() && it != Component.translatable("selectServer.defaultName").string } ?: server.ip
+                ApolloFeatures.richPresence?.discord(name, SharedConstants.getCurrentVersion().name())?.let { return it }
+                return "Playing on " + server.ip to null
+            }
+            return (if (mc.gui.screen() is JoinMultiplayerScreen) "Selecting server..." else "") to null
         }
 
         /** The first title screen ever (per `rpcAsked`) turns these on and asks. */

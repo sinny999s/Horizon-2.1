@@ -78,6 +78,64 @@ object ApolloProto {
         null
     }
 
+    /**
+     * A player as packet enrichment describes them (PlayerInfo): uuid, where (world, position, yaw, pitch), sneaking and
+     * sprinting; with [full] (yourself) also jumping and the movement input's forward and strafe speeds, as Lunar sends.
+     */
+    class Player(val uuid: java.util.UUID, val world: String, val x: Double, val y: Double, val z: Double, val yaw: Float, val pitch: Float,
+                 val sneaking: Boolean, val sprinting: Boolean, val full: Boolean = true, val jumping: Boolean = false,
+                 val forward: Float = 0f, val strafe: Float = 0f)
+
+    private fun info(p: Player): com.lunarclient.apollo.packetenrichment.v1.PlayerInfo {
+        val b = com.lunarclient.apollo.packetenrichment.v1.PlayerInfo.newBuilder()
+            .setPlayerUuid(com.lunarclient.apollo.common.v1.Uuid.newBuilder().setHigh64(p.uuid.mostSignificantBits).setLow64(p.uuid.leastSignificantBits))
+            .setLocation(com.lunarclient.apollo.common.v1.PlayerLocation.newBuilder()
+                .setLocation(com.lunarclient.apollo.common.v1.Location.newBuilder().setWorld(p.world).setX(p.x).setY(p.y).setZ(p.z))
+                .setYaw(p.yaw).setPitch(p.pitch))
+            .setSneaking(p.sneaking).setSprinting(p.sprinting)
+        if (p.full) b.setJumping(p.jumping).setForwardSpeed(p.forward).setStrafeSpeed(p.strafe)
+        return b.build()
+    }
+
+    /** PacketInfo: when the message was made ([atMs], epoch ms, as seconds and nanos). */
+    private fun packet(atMs: Long) = com.lunarclient.apollo.packetenrichment.v1.PacketInfo.newBuilder()
+        .setInstantiationTime(com.google.protobuf.Timestamp.newBuilder().setSeconds(Math.floorDiv(atMs, 1000L)).setNanos((Math.floorMod(atMs, 1000L) * 1_000_000).toInt()))
+        .build()
+
+    /**
+     * PlayerAttackMessage: you ([attacker], full) hitting [target] (uuid, place, sneaking, sprinting). [distance] is what
+     * Lunar on 1.20.5+ puts there: the crosshair hit's squared distance to the target's feet, not the reach.
+     */
+    fun attack(atMs: Long, attacker: Player, target: Player, distance: Double): ByteArray = Any.pack(
+        com.lunarclient.apollo.packetenrichment.v1.PlayerAttackMessage.newBuilder().setPacketInfo(packet(atMs))
+            .setTargetInfo(info(target)).setAttackerInfo(info(attacker)).setDistance(distance).build()).toByteArray()
+
+    /** PlayerChatOpenMessage / PlayerChatCloseMessage. */
+    fun chat(open: Boolean, atMs: Long, player: Player): ByteArray = Any.pack(
+        if (open) com.lunarclient.apollo.packetenrichment.v1.PlayerChatOpenMessage.newBuilder().setPlayerInfo(info(player)).setPacketInfo(packet(atMs)).build()
+        else com.lunarclient.apollo.packetenrichment.v1.PlayerChatCloseMessage.newBuilder().setPlayerInfo(info(player)).setPacketInfo(packet(atMs)).build()
+    ).toByteArray()
+
+    /** PlayerInventoryOpenMessage / PlayerInventoryCloseMessage (your own inventory, not a container). */
+    fun inventory(open: Boolean, atMs: Long, player: Player): ByteArray = Any.pack(
+        if (open) com.lunarclient.apollo.packetenrichment.v1.PlayerInventoryOpenMessage.newBuilder().setPlayerInfo(info(player)).setPacketInfo(packet(atMs)).build()
+        else com.lunarclient.apollo.packetenrichment.v1.PlayerInventoryCloseMessage.newBuilder().setPlayerInfo(info(player)).setPacketInfo(packet(atMs)).build()
+    ).toByteArray()
+
+    /** PlayerUseItemMessage: using the item in the main hand or the offhand. */
+    fun useItem(atMs: Long, player: Player, mainHand: Boolean): ByteArray = Any.pack(
+        com.lunarclient.apollo.packetenrichment.v1.PlayerUseItemMessage.newBuilder().setPacketInfo(packet(atMs)).setPlayerInfo(info(player))
+            .setMainHand(mainHand).build()).toByteArray()
+
+    /** The world name in an UpdatePlayerWorldMessage (packet enrichment's locations carry it), else null. */
+    fun world(data: ByteArray): String? = try {
+        val any = Any.parseFrom(data)
+        if (any.`is`(com.lunarclient.apollo.player.v1.UpdatePlayerWorldMessage::class.java))
+            any.unpack(com.lunarclient.apollo.player.v1.UpdatePlayerWorldMessage::class.java).world else null
+    } catch (e: InvalidProtocolBufferException) {
+        null
+    }
+
     /** A message on [APOLLO_JSON]: only its type ("@type"), which Moonlight logs. */
     fun jsonType(data: ByteArray): String = try {
         val o = JsonParser.parseString(String(data, Charsets.UTF_8)).asJsonObject

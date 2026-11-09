@@ -26,7 +26,8 @@ import net.minecraft.resources.Identifier
  * on `lunar:apollo` if the server has an Apollo channel ([LunarProfile.wantsHandshake]), claiming the Minecraft version
  * the server is joined as. A server that registers none of them gets nothing. Afterwards it answers what the server
  * sends on `lunar:apollo` ([ApolloProto.handle]). What the server's settings override asks of Lunar's mods is kept
- * ([blocks]) and said in chat: the Lunar mods it turns off (Horizon has none of them, so nothing changes here).
+ * ([blocks]) and said in chat: the Lunar mods it turns off (Horizon has none of them, so nothing changes here). What it
+ * turns on in Lunar itself (packet enrichment, combat, server rules) is done by [ApolloEnrichment].
  *
  * The two Apollo channels are custom payload types in both directions, carrying raw bytes ([Raw]). They have no
  * receivers, so Fabric doesn't list them in its own channel registration (a server sees them only from the module, while
@@ -75,6 +76,7 @@ object LunarApollo {
     private fun joined(handler: ClientPacketListener) {
         blocks = ApolloBlocks.Summary()
         ApolloFeatures.clear()
+        ApolloEnrichment.reset()
         val module = LunarSpoof.instance ?: return
         if (!module.enabled || !module.notify.value || handler.connection.isMemoryConnection) return
         val versionId = LunarSpoof.versionId(handler.connection)
@@ -118,6 +120,7 @@ object LunarApollo {
                 HorizonClient.LOG.info("Lunar Spoof: Apollo {}{}", incoming.what, if (incoming.reply != null) ", answered" else "")
                 incoming.reply?.let { send(ApolloProto.APOLLO, it) }
                 ApolloProto.settings(raw.bytes)?.let { settings(it) }
+                ApolloProto.world(raw.bytes)?.let { ApolloEnrichment.world(it) }
                 // What the server shows Lunar players (waypoints, team view, holograms...).
                 try {
                     ApolloFeatures.handle(com.google.protobuf.Any.parseFrom(raw.bytes))
@@ -132,6 +135,7 @@ object LunarApollo {
     fun settings(list: List<com.lunarclient.apollo.configurable.v1.ConfigurableSettings>) {
         val before = blocks.blocked.toSet()
         blocks.add(list)
+        ApolloEnrichment.rules.add(list)
         val added = blocks.blocked - before
         HorizonClient.LOG.info("Lunar Spoof: Apollo settings: blocks {}, sets {}", blocks.blocked, blocks.forced)
         val module = LunarSpoof.instance ?: return
@@ -162,7 +166,7 @@ object LunarApollo {
         ApolloProto.settings(bytes)?.let { settings(it) }
     }
 
-    private fun send(channel: String, bytes: ByteArray) {
+    fun send(channel: String, bytes: ByteArray) {
         mc.connection?.send(ServerboundCustomPayloadPacket(Raw(types.getValue(channel), bytes)))
     }
 }
