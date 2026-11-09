@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's AvatarRendererMixin.renderLabelIfPresent: RenderNameTagEvent for players, cancellable. */
+/** RenderNameTagEvent for players, cancellable. */
 @Mixin(AvatarRenderer.class)
 public abstract class AvatarRendererNameMixin {
 	@Inject(method = "submitNameDisplay(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",

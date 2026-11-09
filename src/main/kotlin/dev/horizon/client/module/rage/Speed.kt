@@ -31,7 +31,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * The original's "speed" (`bl`). NCP / Strict Strafe: the NCP bunny hop (a jump, the 2.149 boost, the 0.66 decay towards the
+ * NCP / Strict Strafe: the NCP bunny hop (a jump, the 2.149 boost, the 0.66 decay towards the
  * base speed, then friction), strafed along the input. Matrix jumps off the ground near blocks and, while falling, runs
  * the timer at 1.088. Old Matrix doubles the move just above a block. Grim Entity pushes the player by [speed] % per
  * entity (or rolled-back player box) within [distance]. Firework puts on an elytra, starts gliding and fires a rocket
@@ -55,13 +55,13 @@ class Speed : Module("speed", Categories.RAGE) {
     val predictTicks = float("predict-ticks", 3.0f, 0.0f..10.0f) { mode.value == Mode.GRIM_ENTITY && boostAngle.value == BoostAngle.PREDICT }
     val rollbackTicks = int("rollback-ticks", 5, 0..30) { mode.value == Mode.GRIM_ENTITY }
 
-    // The original's statics `C` (hop speed), `t` (hop stage), `U` (NCP tick counter and firework cooldown, shared), `a`.
+    // Hop speed, hop stage, NCP tick counter and firework cooldown (shared).
     private var hopSpeed = 0.2873
     private var stage = 1
     private var counter = 0
     private var lastForward = 0f
 
-    /** The original's `hi`: each player's last [rollbackTicks] boxes by entity id (Grim Entity counts those too). */
+    /** Each player's last [rollbackTicks] boxes by entity id (Grim Entity counts those too). */
     private val rollback = LinkedHashMap<Int, ArrayDeque<AABB>>()
 
     override fun onEnable() {
@@ -76,7 +76,6 @@ class Speed : Module("speed", Categories.RAGE) {
         return p.isShiftKeyDown && pauseWhileSneaking.value
     }
 
-    /** The original's `hi.z`. */
     private fun recordRollback() {
         val level = mc.level ?: return
         for (pl in level.players()) {
@@ -122,7 +121,7 @@ class Speed : Module("speed", Categories.RAGE) {
         p.push(dir[0], 0.0, dir[1])
     }
 
-    /** The original's `p2.J`: -2 when an elytra (damage < 430) is worn, else the first such elytra's slot id, else -1. */
+    /** -2 when an elytra (damage < 430) is worn, else the first such elytra's slot id, else -1. */
     private fun elytraSlot(): Int {
         val inv = mc.player?.inventory ?: return -1
         for (i in intArrayOf(39, 38, 37, 36)) {
@@ -136,7 +135,7 @@ class Speed : Module("speed", Categories.RAGE) {
         return -1
     }
 
-    /** The original's elytra swap for the firework: pick the elytra up, click the chest slot, put it back and close. */
+    /** The elytra swap for the firework: pick the elytra up, click the chest slot, put it back and close. */
     private fun swapElytra(slot: Int) {
         containerClick(slot)
         containerClick(6)
@@ -216,7 +215,7 @@ class Speed : Module("speed", Categories.RAGE) {
         }
     }
 
-    /** The NCP / Strict Strafe hop of the original's `bl.A`. */
+    /** The NCP / Strict Strafe hop. */
     private fun ncpHop(e: MoveEvent) {
         val p = mc.player ?: return
         val level = mc.level ?: return

@@ -16,7 +16,7 @@ class BlockBreakProgressEvent(val pos: BlockPos, val direction: Direction) : Eve
 
 /**
  * A block's state as collisions see it (`BlockCollisions.computeNext`); handlers may replace [state]. Only posted while
- * [active] (the original's `GofraState.modifyCollisions`, recomputed every tick in `PlayerState`).
+ * [active] (recomputed every tick in `PlayerState`).
  */
 class CollisionEvent(val pos: BlockPos, var state: BlockState) : Event() {
     companion object {

@@ -35,7 +35,7 @@ import org.joml.Matrix4f
 import kotlin.math.min
 
 /**
- * The original's "projectile-predict" (`eg`): simulates every flying projectile (and item) of the chosen kinds up to 300
+ * Simulates every flying projectile (and item) of the chosen kinds up to 300
  * ticks and draws its path (gradient lines, or glowing dots), a circle where it lands, and for pearls a ghost of the
  * thrower at the landing spot that fills up as the pearl gets there.
  */
@@ -61,7 +61,7 @@ class ProjectilePredict : Module("projectile-predict", Categories.ESP) {
         on<EntityRemoveEvent> { e -> burst(e.entity) }
     }
 
-    /** `eg.o`: which entities are simulated (airborne ones of an enabled kind). */
+    /** Which entities are simulated (airborne ones of an enabled kind). */
     private fun wanted(e: Entity): Boolean = (pearls.value && e is ThrownEnderpearl ||
         arrows.value && e is AbstractArrow && e.isPushedByFluid ||
         tridents.value && e is ThrownTrident && e.isPushedByFluid ||
@@ -79,7 +79,7 @@ class ProjectilePredict : Module("projectile-predict", Categories.ESP) {
         if (lineType.value == LineType.DOT && dots != null) dots.draw(Pipelines.COLORED_TEXTURE_ADDITIVE, false)
     }
 
-    /** `eg.X`: one entity's path. */
+    /** One entity's path. */
     private fun simulate(e: Entity, dots: Esp2.Quads?) {
         val level = mc.level ?: return
         var vel = e.deltaMovement
@@ -125,7 +125,7 @@ class ProjectilePredict : Module("projectile-predict", Categories.ESP) {
     }
 
     /**
-     * `eg.U`: the thrower at the pearl's landing spot, a faint through-walls ghost plus a solid one that shows only
+     * The thrower at the pearl's landing spot, a faint through-walls ghost plus a solid one that shows only
      * below [fill] of its height (an invisible depth-writing box hides the rest).
      */
     private fun landing(pos: Vec3, owner: Player, fill: Float) {
@@ -141,7 +141,7 @@ class ProjectilePredict : Module("projectile-predict", Categories.ESP) {
         Ghost.draw(pos, owner, 1f, true)
     }
 
-    /** `fz.Z` with black on every corner: the 6 faces, skipped when off-screen. */
+    /** The 6 faces with black on every corner, skipped when off-screen. */
     private fun blackBox(vc: VertexConsumer, box: AABB) {
         if (!World3D.isVisible(box)) return
         val cam = World3D.camera
@@ -156,7 +156,7 @@ class ProjectilePredict : Module("projectile-predict", Categories.ESP) {
         v(x0, y0, z0); v(x0, y0, z1); v(x1, y0, z1); v(x1, y0, z0)
     }
 
-    /** `eg.U(EntityRemove)`: 25 glowing particles where a pearl disappears. */
+    /** 25 glowing particles where a pearl disappears. */
     private fun burst(e: Entity?) {
         if (!drawHit.value || e !is ThrownEnderpearl) return
         for (i in 0 until 25) {

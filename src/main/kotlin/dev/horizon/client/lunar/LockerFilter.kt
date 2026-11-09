@@ -1,7 +1,7 @@
 package dev.horizon.client.lunar
 
 /**
- * Not in the original: the locker's filters (`gui/modern/LunarLockerScreen`), apart from the screen so they can be
+ * The locker's filters (`gui/modern/LunarLockerScreen`), apart from the screen so they can be
  * tested. What's listed: everything, what your Lunar account owns, or what you've picked; one of Lunar's colour tags and
  * one of its style tags (the index's last two columns); newest first (Lunar's ids count up) or by name. The search box
  * matches names and style tags ("fire" finds the Fire cloaks). Game-free.

@@ -36,7 +36,7 @@ import net.minecraft.network.chat.Component
 import kotlin.math.floor
 
 /**
- * Not in the original: the client's own title screen ([Menus]). It extends vanilla's, so vanilla's checks for the title
+ * The client's own title screen ([Menus]). It extends vanilla's, so vanilla's checks for the title
  * screen still hold, but draws none of it. Over the animated backdrop (no panel; only the rows sit on a quiet card), a
  * column down the left holds the logo (its letters white, its horizon lines a softer white), a greeting and the
  * menu as the new ClickGUI's sidebar rows (design/clickgui: icon and label, the pill and chevron on hover), under Play

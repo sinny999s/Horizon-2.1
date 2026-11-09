@@ -23,7 +23,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-/** The original's `i4`: a widget's top-left corner as fractions of the GUI-scaled screen. Mutated in place. */
+/** A widget's top-left corner as fractions of the GUI-scaled screen. Mutated in place. */
 @Serializable
 data class Position(var x: Float = 0.5f, var y: Float = 0.5f)
 
@@ -36,11 +36,11 @@ class PositionSetting(id: String, default: Position) : Setting<Position>(id, def
 }
 
 /**
- * The original's HUD widget (`ed`): settings `enabled` and `position`, then the widget's own. Every frame it draws, then
+ * A HUD widget: settings `enabled` and `position`, then the widget's own. Every frame it draws, then
  * sticks to its neighbours (overlap push, 2 units right of a same-row widget within 10, 2 below an aligned one within
  * 10) and hugs the right margin when its right edge is within 55 of the screen edge. In chat a left drag moves it (with
  * white left/right/top guides), any other button opens a popup of its boolean settings.
- * Not in the original: the new HUD editor snaps within 3 units and draws its own guides and settings, and the drawing helpers
+ * The new HUD editor snaps within 3 units and draws its own guides and settings, and the drawing helpers
  * below draw the new look (design/clickgui/hud.css), in CSS px / 2.
  */
 abstract class HudWidget(override val id: String) : SettingsHolder {
@@ -52,7 +52,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
     /** `assets/horizon/vector/<id>.svg`, 10x10, drawn in the theme colour as a CSS mask. */
     val vicon by lazy { VectorIcon(if (id == "armor-widget") "armor" else id, 10f, mask = true) }
 
-    /** Each id part capitalised and followed by a space (the original discards its `trim()`). */
+    /** Each id part capitalised and followed by a space, the last one too (on purpose). */
     val name: String = id.split("-").joinToString("") { it.replaceFirstChar { c -> c.uppercaseChar() } + " " }
 
     var enabled: Boolean
@@ -63,7 +63,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
 
     val pos: Position get() = positionSetting.value
 
-    /** Size set while drawing (the original's `n` and `e`). */
+    /** Size set while drawing. */
     var width = 0f
     var height = 0f
 
@@ -77,13 +77,13 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
     protected val screenW: Int get() = mc.window.guiScaledWidth
     protected val screenH: Int get() = mc.window.guiScaledHeight
 
-    /** Left edge in GUI units (the original's `a()`). */
+    /** Left edge in GUI units. */
     val left: Float get() = pos.x * screenW
 
-    /** Top edge in GUI units (the original's `T()`). */
+    /** Top edge in GUI units. */
     val top: Float get() = pos.y * screenH
 
-    /** Chat or (not in the original) the new HUD editor is open. */
+    /** Chat or the new HUD editor is open. */
     protected val editorMode: Boolean get() = mc.gui.screen().let { it is ChatScreen || it === ModernHudEditor }
 
     /** Being dragged. */
@@ -100,13 +100,13 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
 
     fun hovered(): Boolean = left <= Hud.mouseX && Hud.mouseX <= left + width && top <= Hud.mouseY && Hud.mouseY <= top + height
 
-    /** The original's `x()`: draw, and set the size. */
+    /** Draw, and set the size. */
     abstract fun render()
 
-    /** The original's `k()`: after the plates, dividers and icons of every widget are drawn. */
+    /** After the plates, dividers and icons of every widget are drawn. */
     open fun postRender() {}
 
-    /** The original's `D()`: every player tick. */
+    /** Every player tick. */
     open fun tick() {}
 
     /** A left press grabbed this widget. */
@@ -114,7 +114,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
 
     private fun clamp(v: Float, lo: Float, hi: Float) = if (lo > hi) lo else v.coerceIn(lo, hi)
 
-    /** The original's `Z()`: one frame. */
+    /** One frame. */
     fun frame() {
         render()
         val w = screenW.toFloat()
@@ -196,7 +196,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
         }
     }
 
-    /** The original's `t()`: every mouse button event while in a world, before the screen sees it. */
+    /** Every mouse button event while in a world, before the screen sees it. */
     fun mouse(button: Int, press: Boolean) {
         val newEditor = mc.gui.screen() === ModernHudEditor
         // The new editor's panel, top bar or popover is under the mouse.
@@ -239,7 +239,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
         }
     }
 
-    // ---- drawing helpers (the original's `ed.Q/A/s/v/U/W`) ----
+    // ---- drawing helpers ----
 
     /** A .pl plate ([radius] 3.5 unless a panel's); batched ones are drawn after every widget's [render]. */
     protected fun plate(x: Float, y: Float, w: Float, h: Float, alpha: Float = 1f, batched: Boolean = true, radius: Float = 3.5f) {
@@ -257,7 +257,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
         Hud.icons += Hud.IconDraw(Matrix3x2f(Canvas.pose), x, y, alpha, vicon)
     }
 
-    /** The original's `U(text)`: the one-line widget (icon, divider, text). */
+    /** The one-line widget (icon, divider, text). */
     protected fun simple(s: String) {
         // .pl: 3.5 padding and a hairline, the 10-unit icon, 3 gap, the divider, 3 gap, the text
         val pw = tw(s) + 24.5f
@@ -268,7 +268,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
         size(pw, 13f)
     }
 
-    /** The original's `W(title, scale, alignRight)`: a list header plate, scaled about its centre. */
+    /** A list header plate, scaled about its centre. */
     protected fun header(title: String, scale: Float, alignRight: Boolean) {
         val w = headerWidth(title)
         val hx = left + if (alignRight) width - w else 0f
@@ -286,7 +286,7 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
         pose.popMatrix()
     }
 
-    // ---- Not in the original: the new look's helpers ----
+    // ---- the new look's helpers ----
 
     /** [s]'s width in the new look's text (or [font]). */
     protected fun tw(s: String, font: WebText = HudType.text) = font.width(s)

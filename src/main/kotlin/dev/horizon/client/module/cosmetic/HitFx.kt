@@ -32,7 +32,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * The original's "hit-fx" (`r0`): on every attack packet, a puff of smoke (a 9-frame atlas animation, facing the way the
+ * On every attack packet, a puff of smoke (a 9-frame atlas animation, facing the way the
  * player looked) and a burst of particles at the point the last sent rotation hits (else the target's centre).
  */
 class HitFx : Module("hit-fx", Categories.COSMETIC) {
@@ -46,7 +46,7 @@ class HitFx : Module("hit-fx", Categories.COSMETIC) {
     val horizontalMotion = float("horizontal-motion", 0.25f, 0.01f..2.0f) { particles.value }
     val verticalMotion = float("vertical-motion", 0.5f, 0.01f..2.0f) { particles.value }
 
-    /** The original's `yw`: one smoke puff. */
+    /** One smoke puff. */
     private class Smoke(val pos: Vec3, val yaw: Float, val pitch: Float) {
         val born = System.currentTimeMillis()
     }
@@ -78,7 +78,7 @@ class HitFx : Module("hit-fx", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `kk.p`: where a [range]-long look along [yaw]/[pitch] from the eyes hits a (non-spectator) entity. */
+    /** Where a [range]-long look along [yaw]/[pitch] from the eyes hits a (non-spectator) entity. */
     private fun rayHit(yaw: Float, pitch: Float, range: Float): Vec3? {
         val p = mc.player ?: return null
         val eye = p.position().add(0.0, p.getEyeHeight(p.pose).toDouble(), 0.0)
@@ -112,7 +112,7 @@ class HitFx : Module("hit-fx", Categories.COSMETIC) {
         smokes.removeIf { now - it.born >= 360 }
     }
 
-    /** The original's `h3.c` with a fixed facing: a quad at [pos] turned by [yaw] then [pitch]. */
+    /** A quad at [pos] with a fixed facing, turned by [yaw] then [pitch]. */
     private fun billboard(vc: VertexConsumer, pos: Vec3, yaw: Float, pitch: Float, size: Float, color: Int,
                           u0: Float, v0: Float, u1: Float, v1: Float, tmp: Vector3f) {
         val cam = mc.gameRenderer.mainCamera().position()

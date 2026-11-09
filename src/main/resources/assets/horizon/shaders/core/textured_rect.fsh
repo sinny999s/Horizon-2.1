@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's core/rect/textured_rect.fsh: a texture clipped to a rounded rectangle.
+// A texture clipped to a rounded rectangle.
 uniform sampler2D Sampler0;
 
 layout(std140) uniform UBO {

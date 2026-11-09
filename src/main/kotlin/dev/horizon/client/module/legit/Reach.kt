@@ -5,7 +5,7 @@ import dev.horizon.client.module.Module
 import dev.horizon.client.module.Modules
 
 /**
- * The original's "reach" (`jz`): while on, `Player.blockInteractionRange()` / `entityInteractionRange()` return the settings
+ * While on, `Player.blockInteractionRange()` / `entityInteractionRange()` return the settings
  * outright (PlayerMixin) — for every `Player`, the integrated server's included. No packets.
  */
 class Reach : Module("reach", Categories.LEGIT) {
@@ -15,7 +15,7 @@ class Reach : Module("reach", Categories.LEGIT) {
     companion object {
         private val module by lazy { Modules.get<Reach>() }
 
-        /** The replacement for `blockInteractionRange()`, or null while reach is off (the original's `ReachStateEvent`). */
+        /** The replacement for `blockInteractionRange()`, or null while reach is off. */
         @JvmStatic
         fun blockRange(): Double? = module.takeIf { it.enabled }?.blocksRange?.value?.toDouble()
 

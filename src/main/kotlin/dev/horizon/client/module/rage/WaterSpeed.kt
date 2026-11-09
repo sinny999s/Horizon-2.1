@@ -12,7 +12,7 @@ import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.level.block.LiquidBlock
 
 /**
- * The original's "water-speed" (`be`): DolphinGrace gives the player a client-side Dolphin's Grace while swimming, Vanilla
+ * DolphinGrace gives the player a client-side Dolphin's Grace while swimming, Vanilla
  * sets the swimming move to [speed] blocks a tick along the input, Legit keeps sprint on in (or just above) water.
  */
 class WaterSpeed : Module("water-speed", Categories.RAGE) {

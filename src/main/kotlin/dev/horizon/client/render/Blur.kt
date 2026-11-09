@@ -11,7 +11,7 @@ import net.minecraft.client.renderer.MappableRingBuffer
 import java.util.Optional
 
 /**
- * The original's background blur (`qa`): three Kawase downscale passes (screen -> 1/2 -> 1/4 -> 1/8) and three upscale passes
+ * Background blur: three Kawase downscale passes (screen -> 1/2 -> 1/4 -> 1/8) and three upscale passes
  * back to full size, offset 5 half-texels of each pass's destination, NEAREST sampling. Captured at most once per
  * monitor refresh, before any client 2D is drawn; [Canvas.glass] samples the result under each fragment.
  */
@@ -23,7 +23,7 @@ object Blur {
     private var last = 0L
     private var ubo: MappableRingBuffer? = null
 
-    /** The blurred screen (the original's `qa.y()`). */
+    /** The blurred screen. */
     fun texture(): GpuTextureView {
         if (views[0] == null) create()
         return views[0]!!
@@ -49,7 +49,7 @@ object Blur {
         return mode?.refreshRate?.toInt()?.takeIf { it > 0 } ?: 60
     }
 
-    /** The original's `qa.T()`: called at the start of the client's 2D layer, in a world only. */
+    /** Called at the start of the client's 2D layer, in a world only. */
     fun capture() {
         val now = System.currentTimeMillis()
         if (now - last <= 1000.0 / refreshRate()) return
@@ -77,7 +77,7 @@ object Blur {
         pass(views[1]!!, views[2]!!, Pipelines.KAWASE_UP)
         pass(views[0]!!, views[1]!!, Pipelines.KAWASE_UP)
         ring.rotate()
-        // As the original: a resize is picked up after the passes, so the first frame after it still uses the old sizes.
+        // A resize is picked up after the passes, so the first frame after it still uses the old sizes (on purpose).
         if (main.width != width || main.height != height) {
             width = main.width
             height = main.height

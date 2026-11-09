@@ -11,7 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.gui.screens.ChatScreen
 
 /**
- * The original's "zoom" (`rb`): while [telephoto] is held the FOV is divided by [crop], while [ultraWide] is held by
+ * While [telephoto] is held the FOV is divided by [crop], while [ultraWide] is held by
  * [reversedCrop], easing there and back over 200 ms (OUT_QUINT).
  */
 class Zoom : Module("zoom", Categories.WORLD) {
@@ -21,8 +21,8 @@ class Zoom : Module("zoom", Categories.WORLD) {
     val reversedCrop = float("reversed-crop", 0.75f, 0.1f..1.0f)
 
     /**
-     * The original's `Q`. It starts at 0 like the original's, so the first frame after zoom is first enabled divides the FOV by 0
-     * (a blank frame or two while it eases up to 1); kept as in the original.
+     * It starts at 0, so the first frame after zoom is first enabled divides the FOV by 0
+     * (a blank frame or two while it eases up to 1); kept on purpose.
      */
     private val scale = Animation(Easing.OUT_QUINT, 200)
 
@@ -36,7 +36,7 @@ class Zoom : Module("zoom", Categories.WORLD) {
         }
     }
 
-    /** The original's `qo.a(key)` for a bind: mouse binds from the held-buttons list. */
+    /** Whether [b] is held: mouse binds from the held-buttons list. */
     private fun held(b: Bind): Boolean {
         if (!RenderSystem.isOnRenderThread() || b.key == -1 || mc.gui.screen() is ChatScreen) return false
         return if (b.mouse) b.key in Keys.heldMouse else Keys.down(b.key)

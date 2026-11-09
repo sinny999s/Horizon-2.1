@@ -12,7 +12,7 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Not in the original: your Lunar friends list and chats, as Lunar Client keeps them, over Horizon's Lunar connection
+ * Your Lunar friends list and chats, as Lunar Client keeps them, over Horizon's Lunar connection
  * ([LunarNetwork]). On connecting it signs in to Lunar's FriendService (friends online with where they are or offline,
  * requests, pinned friends, your status) and ConversationService (messages, group chats, sticker packs); afterwards
  * Lunar's pushes keep it current. You can set your status (online, away, busy, invisible), pin friends to the top, turn

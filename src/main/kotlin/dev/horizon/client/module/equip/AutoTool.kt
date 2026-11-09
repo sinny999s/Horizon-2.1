@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 
 /**
- * The original's "auto-tool" (`j7`): while attacking a block, selects the hotbar tool that mines it fastest (efficiency
+ * While attacking a block, selects the hotbar tool that mines it fastest (efficiency
  * level + destroy speed), and 300 ms after attacking stops goes back to the slot held before. Silent mode also mines
  * with the chosen tool's speed whatever is held.
  */
@@ -28,7 +28,7 @@ class AutoTool : Module("auto-tool", Categories.EQUIP) {
     val saveItem = bool("save-item", true)
     val echestSilk = bool("echest-silk", true)
 
-    /** The slot switched to last (the original's `h`); silent mode mines with its stack. */
+    /** The slot switched to last; silent mode mines with its stack. */
     private var tool = 0
     private var switched = false
     private var switchedAt = 0L
@@ -74,14 +74,14 @@ class AutoTool : Module("auto-tool", Categories.EQUIP) {
         if (silent.value) Inventory.selectHotbar(slot) else mc.player?.inventory?.selectedSlot = slot
     }
 
-    /** The original's `j7.h`: destroy speed, plus efficiency² + 1 when the tool is faster than a hand. */
+    /** Destroy speed, plus efficiency² + 1 when the tool is faster than a hand. */
     private fun speed(state: BlockState, stack: ItemStack): Float {
         val s = stack.getDestroySpeed(state).toDouble()
         val eff = level(stack, Enchantments.EFFICIENCY)
         return maxOf(s + (if (s > 1.0) eff * eff + 1.0 else 0.0), 0.0).toFloat()
     }
 
-    /** The original's `j7.n`: the hotbar slot scoring highest above 1 (efficiency level + destroy speed), or -1. */
+    /** The hotbar slot scoring highest above 1 (efficiency level + destroy speed), or -1. */
     private fun best(pos: BlockPos): Int {
         val p = mc.player ?: return -1
         val level = mc.level ?: return -1
@@ -110,13 +110,12 @@ class AutoTool : Module("auto-tool", Categories.EQUIP) {
         return best
     }
 
-    /** The original's `sh.H`. */
     private fun level(stack: ItemStack, key: ResourceKey<Enchantment>): Int {
         val holder = mc.level?.registryAccess()?.lookupOrThrow(Registries.ENCHANTMENT)?.getOrThrow(key) ?: return 0
         return EnchantmentHelper.getItemEnchantmentLevel(holder, stack)
     }
 
-    /** The original's `sh.S`: the enchantment is on the stack (from its crafting enchantments). */
+    /** The enchantment is on the stack (from its crafting enchantments). */
     private fun hasEnchant(stack: ItemStack, key: ResourceKey<Enchantment>): Boolean {
         val holder = mc.level?.registryAccess()?.lookupOrThrow(Registries.ENCHANTMENT)?.getOrThrow(key) ?: return false
         return EnchantmentHelper.getEnchantmentsForCrafting(stack).keySet().contains(holder)

@@ -11,11 +11,10 @@ import net.minecraft.client.Minecraft
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 
 /**
- * The original's "tps-sync" (`ro`): below 18 average TPS the game timer runs at TPS / 20; with kick-protection, once the
+ * Below 18 average TPS the game timer runs at TPS / 20; with kick-protection, once the
  * server has sent other packets but no time packet for over a second, the player tick is skipped (no movement, no
- * movement packet) while on the ground or gliding. The original cancelled `LocalPlayer.tick` at HEAD through the
- * PlayerUpdate event; the port's PlayerUpdate isn't cancellable, so [skipTick] is read by `TpsSyncLocalPlayerMixin`
- * right after HEAD (before anything else in the tick runs).
+ * movement packet) while on the ground or gliding. PlayerUpdate isn't cancellable, so [skipTick] is read by
+ * `TpsSyncLocalPlayerMixin` right after `LocalPlayer.tick`'s HEAD (before anything else in the tick runs).
  */
 class TpsSync : Module("tps-sync", Categories.WORLD) {
     val kickProtection = bool("kick-protection", true)
@@ -51,7 +50,7 @@ class TpsSync : Module("tps-sync", Categories.WORLD) {
 }
 
 /**
- * The original's `ws` packet clock (`B`, `D`), always on: when any packet and when the last time packet arrived, on the
+ * A packet clock, always on: when any packet and when the last time packet arrived, on the
  * network thread. A time packet in the first 20 player ticks (after the first one) updates neither.
  */
 object PacketClock {
@@ -75,6 +74,6 @@ object PacketClock {
         }
     }
 
-    /** The original's `ws.U()`: milliseconds between the last time packet and the last packet. */
+    /** Milliseconds between the last time packet and the last packet. */
     fun sinceTimePacket(): Long = lastPacket - lastTime
 }

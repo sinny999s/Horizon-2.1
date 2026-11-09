@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's MapRendererMixin: a map's contents; only item frames pass `active`, so maps in hand are kept. */
+/** A map's contents; only item frames pass `active`, so maps in hand are kept. */
 @Mixin(MapRenderer.class)
 public abstract class NoRenderMapMixin {
 	@Inject(method = "render", at = @At("HEAD"), cancellable = true)

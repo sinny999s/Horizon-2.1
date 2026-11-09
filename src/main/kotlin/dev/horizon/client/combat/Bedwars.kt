@@ -12,7 +12,7 @@ import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.PlayerTeam
 
 /**
- * Not in the original: where you are in a game of Bedwars, read off the sidebar the way a player reads it. A match's
+ * Where you are in a game of Bedwars, read off the sidebar the way a player reads it. A match's
  * sidebar lists the teams ("R Red: ✔", "B Blue: 2", ...); a lobby's (the Bedwars lobby, a game's waiting room) has a
  * Bedwars title and no team lines. On Hypixel with its Mod API installed ([HypixelApi]), any lobby Hypixel names is a
  * lobby, and so is a Bedwars server in adventure mode (a game's waiting room: the match itself is survival). Anything

@@ -38,10 +38,9 @@ import org.joml.Vector3f
 import java.awt.Color
 
 /**
- * The original's "player-esp" (`eu`). Types: default = the player models as flat shapes (`k7.n`), box = interpolated boxes
- * with a bottom-to-top colour gradient (`oj.t`), frame = 2D screen rectangles (`ek.t`), skeleton = bone lines (`s_.Y`),
- * shader = the players through the original's entity shaders (`fn`); in MIRROR their real models and all armour are hidden,
- * leaving the glass.
+ * Types: default = the player models as flat shapes, box = interpolated boxes with a bottom-to-top colour gradient,
+ * frame = 2D screen rectangles, skeleton = bone lines, shader = the players through the entity shaders; in MIRROR their
+ * real models and all armour are hidden, leaving the glass.
  */
 class PlayerEsp : Module("player-esp", Categories.ESP) {
     val types = group("types", GroupMode.BOOLS)
@@ -82,7 +81,7 @@ class PlayerEsp : Module("player-esp", Categories.ESP) {
     val maxHorizontalDistance = int("max-horizontal-distance", 64, 1..256)
     val maxVerticalDistance = int("max-vertical-distance", 32, 1..256)
 
-    /** The original's `o` (`fn`): the players' chams mask. */
+    /** The players' chams mask. */
     private val mask = Chams.EntityMask()
 
     init {
@@ -101,9 +100,9 @@ class PlayerEsp : Module("player-esp", Categories.ESP) {
                     glowAlphaMultiplier.value, fillAlphaMultiplier.value, saturation.value, brightness.value, alpha.value)
             }
         }
-        // `eu.f`: no player nametags in the mask.
+        // No player nametags in the mask.
         on<RenderNameTagEvent> { e -> if (e.state is AvatarRenderState && shader.value && mask.active) e.cancel() }
-        // `eu.z` / `eu.u`: MIRROR hides what's drawn outside the mask (every humanoid's armour, other players' models).
+        // MIRROR hides what's drawn outside the mask (every humanoid's armour, other players' models).
         on<RenderArmorEvent> { e -> if (mirrorHides()) e.cancel() }
         on<EntityAlphaEvent> { e ->
             if (!mirrorHides()) return@on
@@ -116,7 +115,7 @@ class PlayerEsp : Module("player-esp", Categories.ESP) {
 
     private fun friend(p: Player) = Friends.isFriend(p.gameProfile.name()) || Teams.isEspAlly(p)
 
-    /** The players `oj.t` draws: within the distances of the camera entity, yourself only in third person. */
+    /** The players [boxes] draws: within the distances of the camera entity, yourself only in third person. */
     private fun inRange(): List<Player> {
         val self = mc.player!!
         val cam = (mc.cameraEntity ?: self).position()
@@ -126,7 +125,7 @@ class PlayerEsp : Module("player-esp", Categories.ESP) {
         }
     }
 
-    /** `oj.t`: the player's hitbox at its interpolated position, [fill]/[line] at the bottom and the s-colours at the top. */
+    /** The player's hitbox at its interpolated position, [fill]/[line] at the bottom and the s-colours at the top. */
     private fun boxes() {
         val pt = World3D.partialTick.toDouble()
         for (p in inRange()) {
@@ -144,7 +143,7 @@ class PlayerEsp : Module("player-esp", Categories.ESP) {
     }
 
     /**
-     * `ek.t`: around every player (yourself only in third person) the screen rectangle of its render box's on-screen
+     * Around every player (yourself only in third person) the screen rectangle of its render box's on-screen
      * corners, a half-unit line in [line] (friends [friendLine]) inside a black border.
      */
     private fun frames() {
@@ -158,7 +157,7 @@ class PlayerEsp : Module("player-esp", Categories.ESP) {
     }
 
     /**
-     * `s_.Y`: every player's skeleton in smooth lines (yourself not in first person, unless free-cam is on): spine,
+     * Every player's skeleton in smooth lines (yourself not in first person, unless free-cam is on): spine,
      * shoulders, hips, and head, legs and arms along their model parts' rotations; [extraPart] adds a line from the face.
      * Your own body yaw follows the server rotation and your pitch is the last one sent.
      */
@@ -208,7 +207,7 @@ class PlayerEsp : Module("player-esp", Categories.ESP) {
             point(0.0f, hip, back); point(0.0f, neck, 0.0f)
             point(-0.37f, shoulder, 0.0f); point(0.37f, shoulder, 0.0f)
             point(-0.15f, hip, back); point(0.15f, hip, back)
-            // The original's `s_.v`: a bone along a model part's rotation, then back to the body.
+            // A bone along a model part's rotation, then back to the body.
             fun bone(part: ModelPart, length: Float) {
                 if (part.zRot != 0.0f) stack.rotate(Axis.ZP, part.zRot)
                 if (part.yRot != 0.0f) stack.rotate(Axis.YN, part.yRot)

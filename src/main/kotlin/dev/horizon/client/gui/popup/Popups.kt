@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.Blocks
 import kotlin.math.min
 
 /**
- * The original's popup window (`wp`): a glass panel centred 50 units above the middle, zooming in and out (200 ms OUT_QUINT),
+ * A popup window: a glass panel centred 50 units above the middle, zooming in and out (200 ms OUT_QUINT),
  * with a close button. It takes all input while open and removes itself when its close animation ends.
  */
 abstract class Popup {
@@ -73,7 +73,7 @@ abstract class Popup {
 }
 
 /**
- * The original's searchable picker (`ww`): a search field (shows "Search" while unfocused), All/Selected tabs and a list of
+ * A searchable picker: a search field (shows "Search" while unfocused), All/Selected tabs and a list of
  * icon + name rows; a click toggles the row hovered last frame.
  */
 abstract class ListPopup<T : Any>(private val title: String) : Popup() {
@@ -165,7 +165,7 @@ abstract class ListPopup<T : Any>(private val title: String) : Popup() {
     }
 }
 
-/** The original's "Select Items" (`wq`); lists air too, as the original does. */
+/** "Select Items"; lists air too (on purpose). */
 class ItemsPopup(private val list: MutableList<Item>, private val onClick: (Item) -> Unit) : ListPopup<Item>("Select Items") {
     override fun entries(): List<Item> = BuiltInRegistries.ITEM.toList()
     override fun name(e: Item): String = ItemStack(e).hoverName.string

@@ -24,7 +24,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Not in the original: throws an ender pearl back to safety when a fall can't be saved with a block (knocked too far
+ * Throws an ender pearl back to safety when a fall can't be saved with a block (knocked too far
  * out for [Clutch]). With no ground within [maxFall] blocks below where you left it, it searches throw angles back
  * towards that spot, playing each pearl's flight out with vanilla's projectile physics (your own motion added, and the
  * server's random spread allowed for), and keeps the throws that land on top of a block with room to stand. It turns

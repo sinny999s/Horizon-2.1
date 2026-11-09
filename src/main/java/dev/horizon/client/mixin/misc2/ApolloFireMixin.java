@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Not in the original: a player's fire in the colour an Apollo server set (Apollo's coloredfire module). */
+/** A player's fire in the colour an Apollo server set (Apollo's coloredfire module). */
 @Mixin(FlameFeatureRenderer.class)
 public abstract class ApolloFireMixin {
 	@Unique

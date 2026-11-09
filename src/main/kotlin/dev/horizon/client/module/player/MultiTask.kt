@@ -8,7 +8,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 
 /**
- * The original's "multi-task" (`ac`): while attack and use are both held, it mines the crosshair block or attacks the
+ * While attack and use are both held, it mines the crosshair block or attacks the
  * crosshair entity (cooldown above 0.9) itself, straight through the game mode, so vanilla's "using an item" and
  * "hands busy" gates never apply.
  */
@@ -20,10 +20,10 @@ class MultiTask : Module("multi-task", Categories.PLAYER) {
             val level = mc.level ?: return@on
             val hit = mc.hitResult
             val o = mc.options
-            // Any BlockHitResult counts, MISS included, as in the original.
+            // Any BlockHitResult counts, MISS included (on purpose).
             if (hit is BlockHitResult && o.keyAttack.isDown && o.keyUse.isDown && !level.getBlockState(hit.blockPos).isAir) {
                 if (gm.isDestroying) gm.continueDestroyBlock(hit.blockPos, hit.direction) else gm.startDestroyBlock(hit.blockPos, hit.direction)
-                // The original's swing also sent a swing packet; 26.3 has none.
+                // 26.3 has no swing packet to send with this swing.
                 p.swing(InteractionHand.MAIN_HAND, p.mainHandItem.attackAnimation, false)
             }
             if (mc.hitResult is EntityHitResult && o.keyAttack.isDown && o.keyUse.isDown && p.getAttackStrengthScale(0.5f) - 0.9f > 0) {

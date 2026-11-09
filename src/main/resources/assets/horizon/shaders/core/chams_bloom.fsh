@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's post/bloom/bloom.fsh: one direction of a gaussian glow of the chams mask's alpha (Sampler1).
+// One direction of a gaussian glow of the chams mask's alpha (Sampler1).
 uniform sampler2D Sampler0;
 uniform sampler2D Sampler1;
 

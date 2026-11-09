@@ -20,15 +20,15 @@ import net.minecraft.world.phys.Vec3
 import java.util.UUID
 
 /**
- * The original's "fake-player" (`r1`): a [RemotePlayer] added to the client level, so everything that reads
+ * A [RemotePlayer] added to the client level, so everything that reads
  * `level.players()` (TargetFinder, Aura, AutoCrystal, ESPs) treats it as a real player. It takes crystal damage from
  * explosion packets, pops a totem (a synthetic entity event 35 on the receive-packet bus), regenerates, and can replay
  * a recorded path of the local player.
  */
 class FakePlayer : Module("fake-player", Categories.WORLD) {
-    /** Set while a recording plays back (hides Record). The original's `C`. */
+    /** Set while a recording plays back (hides Record). */
     var playing = false
-    /** Set while recording (hides Play). The original's `s`. */
+    /** Set while recording (hides Play). */
     var recording = false
 
     val recordStop = action("record-/-stop", visible = { !playing }) { recording = !recording }
@@ -36,10 +36,10 @@ class FakePlayer : Module("fake-player", Categories.WORLD) {
     val copyInventory = bool("copy-inventory", true)
     val nameSetting = string("name", "OLD_GOD")
 
-    /** The fake player while the module is on (the original's `R`, `q()`/`J()`). */
+    /** The fake player while the module is on. */
     var player: RemotePlayer? = null
 
-    /** The original's `m_`: one recorded player state. */
+    /** One recorded player state. */
     private class Frame(val x: Double, val y: Double, val z: Double, val yaw: Float, val pitch: Float)
 
     private val frames = ArrayList<Frame>()
@@ -60,7 +60,7 @@ class FakePlayer : Module("fake-player", Categories.WORLD) {
         if (copyInventory.value) {
             fake.setItemInHand(InteractionHand.MAIN_HAND, self.mainHandItem.copy())
             fake.setItemInHand(InteractionHand.OFF_HAND, self.offhandItem.copy())
-            // The original copies indices 35..38: the last main slot, feet, legs and chest (not the helmet at 39).
+            // Indices 35..38 on purpose: the last main slot, feet, legs and chest (not the helmet at 39).
             for (i in 0 until 4) fake.inventory.setItem(35 + i, self.inventory.getItem(35 + i).copy())
             fake.attributes.assignAllValues(self.attributes)
         }
@@ -78,14 +78,14 @@ class FakePlayer : Module("fake-player", Categories.WORLD) {
         frames.clear()
     }
 
-    /** Network thread, as in the original: an explosion hurts the fake player by the crystal damage formula (`qh`). */
+    /** Network thread: an explosion hurts the fake player by the crystal damage formula. */
     private fun receive(e: ReceivePacketEvent) {
         val p = e.packet as? ClientboundExplodePacket ?: return
         val fake = player ?: return
         if (fake.hurtTime != 0) return
         val level = mc.level ?: return
         fake.handleDamageEvent(level.damageSources().generic())
-        // Absorption is read but never lowered (the original's arithmetic).
+        // Absorption is read but never lowered (on purpose).
         fake.health = fake.health + (fake.absorptionAmount - Explosions.damage(p.center(), fake, 0, false, emptyList(), emptyList()))
         if (fake.isDeadOrDying) {
             fake.health = 10f

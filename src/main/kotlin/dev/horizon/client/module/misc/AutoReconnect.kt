@@ -18,10 +18,10 @@ import net.minecraft.network.chat.Component
 import kotlin.math.ceil
 
 /**
- * Not in the original: rejoins the server after you're kicked or lose connection, [delay] seconds after the disconnected
+ * Rejoins the server after you're kicked or lose connection, [delay] seconds after the disconnected
  * screen comes up, and keeps trying while the server is down or refusing. That screen also gets a Reconnect button
  * (DisconnectedScreenMixin), with the module on or off, which shows the countdown (DisconnectMenu, the client's style of
- * that screen, also draws it as a bar); leaving the screen stops it. Auto Leave's own disconnects (reasons starting "[the original]") are never rejoined.
+ * that screen, also draws it as a bar); leaving the screen stops it. Auto Leave's own disconnects (reasons starting "[Horizon]") are never rejoined.
  */
 class AutoReconnect : Module("auto-reconnect", Categories.MISC) {
     val delay = int("delay", 5, 1..120)

@@ -18,14 +18,13 @@ import kotlin.math.abs
 import kotlin.math.ceil
 
 /**
- * The original's "mace-killer" (`jg`): on `ServerboundAttackPacket` against a non-crystal, non-blocking target when a mace
+ * On `ServerboundAttackPacket` against a non-crystal, non-blocking target when a mace
  * is in the hotbar, selects the mace and sends upward + downward `Pos(onGround=false)` packets up to the highest
  * unobstructed point within [height] blocks.
  */
 class MaceKiller : Module("mace-killer", Categories.ATTACK) {
     val height = int("height", 20, 0..200)
 
-    /** The original's `jg.L`. */
     private var prevSlot = -1
 
     init {
@@ -38,7 +37,7 @@ class MaceKiller : Module("mace-killer", Categories.ATTACK) {
             val mace = Inventory.hotbarFind(Items.MACE) ?: return@on
             if (pl.inventory.selectedSlot != mace.slot) {
                 if (mace.slot < 9) Inventory.selectHotbar(mace.slot)
-                // The original's jg.J reads selectedSlot into L after v() has already selected the mace slot.
+                // selectedSlot is read after the mace slot has already been selected (on purpose).
                 prevSlot = pl.inventory.selectedSlot
             }
             val topPos = findTopPos()
@@ -61,7 +60,7 @@ class MaceKiller : Module("mace-killer", Categories.ATTACK) {
         }
     }
 
-    /** The original's `jg.x`: highest unobstructed step (`1.8` blocks per step, `i in 2..height/2`). */
+    /** Highest unobstructed step (`1.8` blocks per step, `i in 2..height/2`). */
     private fun findTopPos(): Vec3 {
         val pl = mc.player ?: return Vec3.ZERO
         var best = pl.position()

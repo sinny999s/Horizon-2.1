@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Remembers the server being joined, for Auto Reconnect (not in the original). */
+/** Remembers the server being joined, for Auto Reconnect. */
 @Mixin(ConnectScreen.class)
 public abstract class ConnectScreenMixin {
 	@Inject(method = "startConnecting", at = @At("HEAD"))

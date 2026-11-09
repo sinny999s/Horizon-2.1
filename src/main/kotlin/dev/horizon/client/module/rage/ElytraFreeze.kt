@@ -10,13 +10,12 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
 
 /**
- * The original's "elytra-freeze" (`bz`): while gliding with Aura's target within Aura's range, the player doesn't move;
+ * While gliding with Aura's target within Aura's range, the player doesn't move;
  * with [cancelPacket] its move and input packets are dropped too.
  */
 class ElytraFreeze : Module("elytra-freeze", Categories.RAGE) {
     val cancelPacket = bool("cancel-packet", false)
 
-    /** The original's `bz.f`. */
     private fun frozen(): Boolean {
         val p = mc.player ?: return false
         if (!p.isFallFlying) return false

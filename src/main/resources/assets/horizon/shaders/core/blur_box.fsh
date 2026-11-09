@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: Canvas.blurBox, the blurred screen in a rounded rectangle with exactly Canvas.box's shape, so a tint
+// Canvas.blurBox, the blurred screen in a rounded rectangle with exactly Canvas.box's shape, so a tint
 // box lies right on it. (blurred_rect comes out a unit too far right and down, and fades over two units.) uSize is the
 // quad's size: the box plus a one-unit margin all round for the anti-aliased edge.
 uniform sampler2D Sampler0;

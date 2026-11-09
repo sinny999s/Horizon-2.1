@@ -61,7 +61,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: finds bases and stashes in the loaded chunks while you travel. Every chunk is scored by the blocks
+ * Finds bases and stashes in the loaded chunks while you travel. Every chunk is scored by the blocks
  * players place and worldgen rarely does (shulker boxes, ender chests, signs, beacons, conduits, lodestones... and,
  * worth less, chests, beds and workstations; portals, obsidian and concrete count only up to a low cap, and vanilla
  * Trial Chambers, Ancient Cities and Villages are filtered out when [ignoreStructures] is on). A chunk scoring

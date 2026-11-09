@@ -20,9 +20,9 @@ import org.joml.Matrix4f
 import java.awt.Color
 
 /**
- * The original's "hand-chams" (`rp`): the first-person hands are also drawn into a mask each frame, and after the hands the
- * mask goes on the screen through the chams shader of [mode]. The original draws the hands itself (vanilla's are skipped
- * once its own were drawn); the port does the same.
+ * The first-person hands are also drawn into a mask each frame, and after the hands the
+ * mask goes on the screen through the chams shader of [mode]. This module draws the hands itself (vanilla's are skipped
+ * once its own were drawn).
  */
 class HandChams : Module("hand-chams", Categories.COSMETIC) {
     val mode = enum("mode", ShaderMode.MIRROR)
@@ -43,14 +43,14 @@ class HandChams : Module("hand-chams", Categories.COSMETIC) {
     val saturation = float("saturation", 0.7f, 0.0f..5.0f) { mode.value == ShaderMode.DOUBLE }
     val brightness = float("brightness", 2.0f, 0.0f..45.0f) { mode.value == ShaderMode.DOUBLE }
 
-    /** The original's `u` (the hands' mask) and `M` (BLOOM's scratch); its third target `C` was cleared but never read. */
+    /** The hands' mask and BLOOM's scratch. */
     private var mask: TextureTarget? = null
     private var secondary: TextureTarget? = null
 
-    /** The original's `r`: drawing into or out of the mask. */
+    /** Drawing into or out of the mask. */
     private var drawing = false
 
-    /** The original's `a`: true once this module drew the hands, so vanilla's are skipped from then on. */
+    /** True once this module drew the hands, so vanilla's are skipped from then on. */
     private var hidden = false
 
     init {
@@ -65,7 +65,7 @@ class HandChams : Module("hand-chams", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `rp.F`: the hands drawn for real (on a cleared depth), then their chams over them. */
+    /** The hands drawn for real (on a cleared depth), then their chams over them. */
     private fun afterHands() {
         val m = mask ?: return
         val s = secondary ?: return
@@ -79,7 +79,7 @@ class HandChams : Module("hand-chams", Categories.COSMETIC) {
         drawing = false
     }
 
-    /** The original's `rp.N`: [drawHandsNow] with the projection restored afterwards. */
+    /** [drawHandsNow] with the projection restored afterwards. */
     private fun drawHands(target: TextureTarget?) {
         RenderSystem.backupProjectionMatrix()
         hidden = false
@@ -89,7 +89,7 @@ class HandChams : Module("hand-chams", Categories.COSMETIC) {
     }
 
     /**
-     * The original's `rp.D`: vanilla's first-person hands (hud projection with a far plane of 100, hurt tilt, view bob) onto
+     * Vanilla's first-person hands (hud projection with a far plane of 100, hurt tilt, view bob) onto
      * [target], or onto the screen when null.
      */
     private fun drawHandsNow(target: TextureTarget?) {

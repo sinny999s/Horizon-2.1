@@ -2,7 +2,7 @@ package dev.horizon.client.combat
 
 import kotlin.math.roundToInt
 
-/** The original's `sp`: the one seeded random generator its combat code draws from. */
+/** The one seeded random generator the combat code draws from. */
 object Rng {
     val random = java.util.Random(88005553535L)
 

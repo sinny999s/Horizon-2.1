@@ -26,7 +26,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.SwingAnimation
 
 /**
- * The original's "no-fall" (`b7`): once a fall would hurt (Calc: by health, Custom: past `fall-distance-val`; GrimOld past 3),
+ * Once a fall would hurt (Calc: by health, Custom: past `fall-distance-val`; GrimOld past 3),
  * Rubberband reports on-ground, Items catches the fall (water bucket, pearl, cobweb or twisting vines, looking down),
  * MatrixOffGround/Vanilla/GRIM_NEW mark every later movement packet off-ground (GRIM_NEW flips it for 11 packets, then
  * jumps once with the keys released), GrimOld sends a position 1e-9 up off-ground and resets the fall.
@@ -47,13 +47,13 @@ class NoFall : Module("no-fall", Categories.RAGE) {
     val twistingVines = bool("twisting-vines", true) { mode.value == Mode.Items }
     val grim = bool("grim", true) { mode.value == Mode.Items }
 
-    /** The original's `B` (GRIM_NEW jump steps), `W` (spoof the on-ground flag), `q` (GRIM_NEW flipped packets), `a` (pick the water up). */
+    /** GRIM_NEW jump steps, spoof the on-ground flag, GRIM_NEW flipped packets, pick the water up. */
     private var jumpStage = 0
     private var spoof = false
     private var flipped = 0
     private var pickUpWater = false
 
-    /** The original's `e`: since the last pearl / placement / successful use. */
+    /** Since the last pearl / placement / successful use. */
     private val useTimer = MsTimer()
 
     init {
@@ -114,7 +114,6 @@ class NoFall : Module("no-fall", Categories.RAGE) {
         spoof = false
     }
 
-    /** The original's `b7.T`. */
     private fun shouldCatch(): Boolean {
         val p = mc.player ?: return false
         if (p.isFallFlying || p.abilities.flying) return false
@@ -151,7 +150,7 @@ class NoFall : Module("no-fall", Categories.RAGE) {
         }
     }
 
-    /** The original's `b7.D`: look straight down, then use the item from its hotbar slot and switch back. */
+    /** Look straight down, then use the item from its hotbar slot and switch back. */
     private fun use(f: Found) {
         val p = mc.player ?: return
         RotationManager.queue(RotationRequest(Rotation(p.yRot, 90.0f), 150) {
@@ -164,7 +163,7 @@ class NoFall : Module("no-fall", Categories.RAGE) {
         })
     }
 
-    /** The original's `b7.T(…, pos)`: place the block at [pos] (priority 200, silent switch). */
+    /** Place the block at [pos] (priority 200, silent switch). */
     private fun place(f: Found, pos: BlockPos) {
         val p = mc.player ?: return
         val req = Placer.place(pos, f.slot, if (grim.value) Interact.GRIM else Interact.Strict, PlaceMode.Normal, IgnoreMode.ALL,
@@ -173,7 +172,7 @@ class NoFall : Module("no-fall", Categories.RAGE) {
         useTimer.reset()
     }
 
-    /** The original's `b7.M`: stop sprinting and let go of the movement and jump keys. */
+    /** Stop sprinting and let go of the movement and jump keys. */
     private fun releaseKeys() {
         mc.player?.isSprinting = false
         val o = mc.options

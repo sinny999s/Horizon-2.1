@@ -9,14 +9,13 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientSuggestionProvider
 import net.minecraft.network.chat.Component
 
-/** The original's `i3`: a client chat command, typed after the prefix ("^name …") and built on Brigadier. */
+/** A client chat command, typed after the prefix ("^name …") and built on Brigadier. */
 abstract class ClientCommand(val name: String) {
     protected val mc: Minecraft get() = Minecraft.getInstance()
 
-    /** `i3.P`: the arguments and executors under the command's literal. */
+    /** The arguments and executors under the command's literal. */
     abstract fun build(builder: LiteralArgumentBuilder<ClientSuggestionProvider>)
 
-    /** `i3.Q`. */
     fun register(dispatcher: CommandDispatcher<ClientSuggestionProvider>) {
         val builder = literal(name)
         build(builder)
@@ -28,10 +27,10 @@ abstract class ClientCommand(val name: String) {
 
     protected fun literal(name: String): LiteralArgumentBuilder<ClientSuggestionProvider> = LiteralArgumentBuilder.literal(name)
 
-    /** `i3.a`: a plain line (legacy colour codes in it apply). */
+    /** A plain line (legacy colour codes in it apply). */
     fun message(text: String) = message(Component.nullToEmpty(text))
 
-    /** `i3.w`: "> " (green, gray), then [c], on the game thread. */
+    /** "> " (green, gray), then [c], on the game thread. */
     fun message(c: Component) {
         val line = Component.empty().append(Component.literal(">").withStyle(ChatFormatting.GREEN))
             .append(Component.literal(" ").withStyle(ChatFormatting.GRAY))

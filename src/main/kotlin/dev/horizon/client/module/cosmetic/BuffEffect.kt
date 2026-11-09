@@ -25,18 +25,18 @@ import java.awt.Color
 import kotlin.math.max
 
 /**
- * The original's "buff-effect" (`ra`): where a splash potion breaks, a glowing ring in the potion's colour spreads on the
+ * Where a splash potion breaks, a glowing ring in the potion's colour spreads on the
  * ground for 30 ticks, with a burst of sparks on its third tick.
  */
 class BuffEffect : Module("buff-effect", Categories.COSMETIC) {
-    /** The original's `z5`: one splash, [age] in ticks. */
+    /** One splash, [age] in ticks. */
     private class Splash(val pos: Vec3, val color: Int) {
         var age = 0
     }
 
     private val splashes = ArrayList<Splash>()
 
-    /** The original's `ra.v`: the colour of the last splash-potion level event (written on the network thread). */
+    /** The colour of the last splash-potion level event (written on the network thread). */
     @Volatile
     private var lastColor = 0
 
@@ -58,7 +58,7 @@ class BuffEffect : Module("buff-effect", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `ra.p`: the sparks on the third tick; done after 30 ticks. */
+    /** The sparks on the third tick; done after 30 ticks. */
     private fun tick(s: Splash): Boolean {
         if (s.age == 3) {
             repeat(25) {
@@ -75,7 +75,7 @@ class BuffEffect : Module("buff-effect", Categories.COSMETIC) {
         return s.age++ > 30
     }
 
-    /** The original's `ra.O`: per splash a faint crack and a growing, then fading circle, flat on the ground. */
+    /** Per splash a faint crack and a growing, then fading circle, flat on the ground. */
     private fun render(e: Render3DEvent) {
         val cam = mc.gameRenderer.mainCamera()
         val modelView = Matrix4f(e.view).rotate(Axis.YP.rotationDegrees(-cam.yRot() + 180.0f)).rotate(Axis.XP.rotationDegrees(-cam.xRot()))
@@ -121,7 +121,7 @@ class BuffEffect : Module("buff-effect", Categories.COSMETIC) {
     }
 
     private companion object {
-        /** The original's atlas cells `v0.FIREFLY`, `v0.CRACK`, `v0.CIRCLE` (u0, v0, u1, v1). */
+        /** Atlas cells (u0, v0, u1, v1). */
         val FIREFLY = floatArrayOf(0.8906f, 0.1875f, 0.9531f, 0.25f)
         val CRACK = floatArrayOf(0.6406f, 0.0f, 0.8906f, 0.25f)
         val CIRCLE = floatArrayOf(0.3906f, 0.0f, 0.6406f, 0.25f)

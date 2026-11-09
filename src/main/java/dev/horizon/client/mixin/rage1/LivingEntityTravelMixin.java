@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Around the local player's `LivingEntity.travel` (the original's Pre/AfterElytraEvent); cancelling moves by the event's vector. */
+/** Around the local player's `LivingEntity.travel` (Pre/AfterElytraEvent); cancelling moves by the event's vector. */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityTravelMixin {
 	@Inject(method = "travel", at = @At("HEAD"), cancellable = true)

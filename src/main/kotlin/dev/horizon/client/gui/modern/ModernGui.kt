@@ -30,11 +30,11 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: the redesigned ClickGUI (UI > Style: New), built from design/clickgui/index.html. One glass window
- * over the blurred world: a sidebar of the original's categories and their tabs, a grid of module cards, and an inspector
- * with the selected module's settings. The original's controls carry over: left click a card toggles it, right click opens
- * its settings, middle click binds it, Ctrl+Shift+click resets it, Alt shows every bind; typing anywhere searches.
- * Windows and HUD still open the original's screens.
+ * The redesigned ClickGUI (UI > Style: New), built from design/clickgui/index.html. One glass window
+ * over the blurred world: a sidebar of the categories and their tabs, a grid of module cards, and an inspector
+ * with the selected module's settings. Controls: left click a card toggles it, right click opens
+ * its settings, middle click binds it, Ctrl+Shift+click resets it, Alt shows every bind; typing anywhere searches.
+ * Windows and HUD open their own screens.
  */
 object ModernGui : Screen(Component.literal("horizon-modern")) {
     // the window, in units (the mockup's px / 2)
@@ -235,7 +235,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
             val o = Ui.hit("tool:$label", x, 6.25f, w, 17f, { if (it == Keys.MOUSE_LEFT) run() })
             val on = (label == "Theme" && popover is ThemeMenu) || (label == "Lunar" && popover is LunarMenu)
             if (o || on) Ui.box(x, 6.25f, w, 17f, 5f, Tok.FILL2)
-            // Not in the original: Lunar's own logo for its menu.
+            // Lunar's own logo for its menu.
             if (icon == "lunar") dev.horizon.client.lunar.LunarNameTag.canvasLogo(x + 5f, 10.25f, 9f, if (o || on) Tok.T1 else Tok.T2, 0)
             else Ui.icon(icon, x + 5.5f, 10.75f, 8f, if (o || on) Tok.T1 else Tok.T2)
             Ui.text(Type.sub, label, x + 17f, 14.75f, if (o || on) Tok.T1 else Tok.T2)
@@ -252,7 +252,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         Categories.ALL.flatMap { c -> c.subCategories.filter { shows(it) }.map { View.Sub(it) } } + listOf(View.Active, View.Fav)
 
     /**
-     * Not in the original: the modules the GUI shows. With Ghost Mode on, the blatant ones it blocks are hidden (and a
+     * The modules the GUI shows. With Ghost Mode on, the blatant ones it blocks are hidden (and a
      * tab left with none, Rage, with them).
      */
     fun shown(): List<Module> = if (GhostMode.enabled) Modules.all.filter { !GhostMode.blocks(it) } else Modules.all
@@ -455,7 +455,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
             val pulse = (0.5f + 0.5f * kotlin.math.sin(System.currentTimeMillis() / 190.0).toFloat())
             Ui.box(x - 1.5f, yy - 1.5f, w + 3f, h + 3f, 9f, 0, 1.5f, Tok.alpha(Tok.a1, 0.25f + 0.35f * pulse))
         }
-        // a wiggle when jumped to (the original's jumpTo)
+        // a wiggle when jumped to
         val shake = shakes[m]?.let { System.currentTimeMillis() - it }?.takeIf { it < 550 }
         val dx = if (shake != null) (kotlin.math.sin(shake / 550.0 * Math.PI * 4) * 5 * (1 - shake / 550.0)).toFloat() else 0f
         val cx = x + dx
@@ -523,7 +523,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
     private fun cardClick(m: Module, button: Int) {
         when {
             button == Keys.MOUSE_LEFT && Keys.down(Keys.LCONTROL) && Keys.down(Keys.LSHIFT) -> {
-                // The original's reset: off, every setting (bind included) back to its default
+                // Reset: off, every setting (bind included) back to its default
                 if (m.enabled) m.disable()
                 m.settings.forEach { it.reset() }
             }
@@ -687,7 +687,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         jumpTo(hit.module, hit.setting)
     }
 
-    /** The original's jumpTo: show the module's tab and select it (it wiggles); a setting opens the module's settings at it. */
+    /** Show the module's tab and select it (it wiggles); a setting opens the module's settings at it. */
     fun jumpTo(m: Module, s: Setting<*>? = null) {
         go(View.Sub(m.subCategory))
         if (filter != Filter.ALL) {

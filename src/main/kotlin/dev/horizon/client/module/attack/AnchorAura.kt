@@ -39,7 +39,7 @@ import kotlin.math.ceil
 import kotlin.math.max
 
 /**
- * Not in the original: autonomous Respawn Anchor combat for Overworld and End PvP. Places anchors near target players,
+ * Autonomous Respawn Anchor combat for Overworld and End PvP. Places anchors near target players,
  * charges them with glowstone, and detonates them with explosion power 5.0, taking into account self damage, target
  * damage, line of sight, and friend protection.
  */

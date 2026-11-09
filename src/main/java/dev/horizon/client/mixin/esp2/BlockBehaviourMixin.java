@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's BlockBehaviourMixin.getShadeBrightnessHook: no ambient-occlusion darkening while x-ray is on. */
+/** No ambient-occlusion darkening while x-ray is on. */
 @Mixin(BlockBehaviour.class)
 public abstract class BlockBehaviourMixin {
 	@Inject(method = "getShadeBrightness", at = @At("HEAD"), cancellable = true)

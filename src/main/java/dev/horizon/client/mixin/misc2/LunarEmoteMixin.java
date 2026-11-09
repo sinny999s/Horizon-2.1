@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * Not in the original: a player using a Lunar emote is drawn as Lunar's emote model instead of their own
+ * A player using a Lunar emote is drawn as Lunar's emote model instead of their own
  * ({@link LunarEmotes}): the body model is swapped for it and the layers (armour, cape, held items, cosmetics) left
  * out, as Lunar Client does. The name tag stays.
  */

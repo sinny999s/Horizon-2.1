@@ -20,7 +20,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 import net.minecraft.resources.Identifier
 
 /**
- * Not in the original: Lunar Spoof's Apollo side, after Moonlight's `ApolloHandler` and its custom payload mixin, but
+ * Lunar Spoof's Apollo side, after Moonlight's `ApolloHandler` and its custom payload mixin, but
  * doing what Lunar Client itself does: when a server (not singleplayer) registers channels, it registers back those of
  * Lunar's the server has ([LunarProfile.channelsFor], in a `minecraft:register` of their own), and sends the handshake
  * on `lunar:apollo` if the server has an Apollo channel ([LunarProfile.wantsHandshake]), claiming the Minecraft version

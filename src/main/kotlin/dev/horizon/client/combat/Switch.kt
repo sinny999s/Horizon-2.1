@@ -8,11 +8,11 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 
 /**
- * The original's shared switch helper (`p2.i` / `p2.F` / `p2.T(Item, uv, …)`) behind every `switch` ([Switch]) setting:
+ * The shared switch helper behind every `switch` ([Switch]) setting:
  * finds a stack where the mode looks, and runs an action with it in the main hand.
  */
 object Switching {
-    /** The original's gui-move flag `bn.d`: set while [run] switches (gui-move's handlers do nothing while it is). */
+    /** Gui-move's flag: set while [run] switches (gui-move's handlers do nothing while it is). */
     var busy: Boolean
         get() = Modules.get<GuiMove>().internalClick
         set(value) {
@@ -20,8 +20,8 @@ object Switching {
         }
 
     /**
-     * The original's `p2.i(searcher, mode)`: NORMAL/SILENT look in the hotbar (a hotbar index), INVENTORY_* in the whole
-     * inventory (a container slot id, `p2.v`), the FULL modes in the hotbar first, then the whole inventory.
+     * NORMAL/SILENT look in the hotbar (a hotbar index), INVENTORY_* in the whole
+     * inventory (a container slot id), the FULL modes in the hotbar first, then the whole inventory.
      */
     fun search(mode: Switch, pred: (ItemStack) -> Boolean): Found? = when (mode) {
         Switch.NORMAL, Switch.SILENT -> Inventory.hotbarFind(pred)
@@ -29,7 +29,7 @@ object Switching {
         Switch.NORMAL_FULL, Switch.SILENT_FULL -> Inventory.hotbarFind(pred) ?: Inventory.find(pred)
     }
 
-    /** The original's `p2.F` / `p2.T(Item, uv, action)`: [search], then [run] with what was found; false if nothing was. */
+    /** [search], then [run] with what was found; false if nothing was. */
     fun run(mode: Switch, pred: (ItemStack) -> Boolean, action: () -> Unit): Boolean {
         val f = search(mode, pred) ?: return false
         run(f.slot, mode, action)
@@ -39,7 +39,7 @@ object Switching {
     fun run(mode: Switch, item: Item, action: () -> Unit): Boolean = run(mode, { it.`is`(item) }, action)
 
     /**
-     * The original's `p2.i(slot, mode, action)`. NORMAL selects [slot] and stays; SILENT selects it and switches back to the
+     * NORMAL selects [slot] and stays; SILENT selects it and switches back to the
      * slot selected before; INVENTORY_NORMAL number-key swaps container slot [slot] with the selected hotbar slot
      * (INVENTORY_SILENT swaps back afterwards; no close packet); the FULL modes take the hotbar way for 0..8, else the
      * inventory way.

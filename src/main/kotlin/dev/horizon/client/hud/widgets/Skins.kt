@@ -12,7 +12,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-/** Skin heads and the original's sprite atlas (`horizon:textures/atlas.png`) for the HUD widgets. */
+/** Skin heads and the sprite atlas (`horizon:textures/atlas.png`) for the HUD widgets. */
 object Skins {
     private val ATLAS: Identifier = Identifier.fromNamespaceAndPath(HorizonClient.ID, "textures/atlas.png")
 
@@ -34,7 +34,7 @@ object Skins {
     }
 
     /**
-     * Not in the original: the face with the hat layer over it at the same size, in a square rounded by [r] (a CSS
+     * The face with the hat layer over it at the same size, in a square rounded by [r] (a CSS
      * border-radius on a skin head), drawn as one-pixel rows; [alpha] fades it.
      */
     fun roundedHead(p: AbstractClientPlayer, x: Float, y: Float, size: Float, r: Float, alpha: Float = 1f) {

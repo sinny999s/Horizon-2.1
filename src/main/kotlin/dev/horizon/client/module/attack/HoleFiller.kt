@@ -16,7 +16,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 
 /**
- * The original's "hole-filler" (`_y`): fills the cached holes in range with obsidian (or cobwebs), optionally only the ones an
+ * Fills the cached holes in range with obsidian (or cobwebs), optionally only the ones an
  * enemy stands next to or is about to reach.
  */
 class HoleFiller : PlacerModule("hole-filler", Categories.ATTACK, 150) {
@@ -26,7 +26,7 @@ class HoleFiller : PlacerModule("hole-filler", Categories.ATTACK, 150) {
     val mode = enum("mode", Mode.AROUND_PLAYERS)
     val prefer = enum("prefer", Prefer.OBBY)
 
-    /** The original's `_y.t`: cobwebs if there's one anywhere in the inventory (placing still only takes from the hotbar). */
+    /** Cobwebs if there's one anywhere in the inventory (placing still only takes from the hotbar). */
     override fun blocks(): List<Block> =
         if (prefer.value == Prefer.WEB && Inventory.find(Items.COBWEB) != null) listOf(Blocks.COBWEB) else super.blocks()
 
@@ -35,7 +35,7 @@ class HoleFiller : PlacerModule("hole-filler", Categories.ATTACK, 150) {
         on<PlayerUpdateEvent> { placeList(holes(), false) }
     }
 
-    /** The original's `_y.w`: every cached hole cell in a cube of `range` around the eye block. */
+    /** Every cached hole cell in a cube of `range` around the eye block. */
     private fun holes(): List<BlockPos> {
         val self = mc.player ?: return emptyList()
         val c = BlockPos.containing(self.eyePosition)
@@ -49,7 +49,7 @@ class HoleFiller : PlacerModule("hole-filler", Categories.ATTACK, 150) {
     }
 
     /**
-     * The original's `_y.b`: holes an enemy's (predicted) feet are within 2 blocks of the centre of, while level with or above
+     * Holes an enemy's (predicted) feet are within 2 blocks of the centre of, while level with or above
      * the hole's top. A hole is listed again for every player and prediction tick that matches.
      */
     private fun aroundPlayers(holes: List<BlockPos>): List<BlockPos> {

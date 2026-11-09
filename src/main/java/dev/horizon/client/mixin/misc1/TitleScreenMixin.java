@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** TitleScreenInitEvent after the title screen's init (the original's TitleScreenMixin, used by the RPC first-start prompt). */
+/** TitleScreenInitEvent after the title screen's init (used by the RPC first-start prompt). */
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenMixin {
 	@Inject(method = "init", at = @At("RETURN"))

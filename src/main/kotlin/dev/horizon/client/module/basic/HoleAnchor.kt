@@ -20,7 +20,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 
 /**
- * The original's "hole-anchor" (`b2`): looking down at least [pitch], it pulls the player to the nearest visible hole below
+ * Looking down at least [pitch], it pulls the player to the nearest visible hole below
  * (one in [prioritizedFov] first). With move-fix on it does that by turning the server rotation to the hole (a FORCE
  * request, so the keys walk towards it); otherwise it overrides the horizontal part of each move.
  */
@@ -56,7 +56,7 @@ class HoleAnchor : Module("hole-anchor", Categories.BASIC) {
         }
     }
 
-    /** The original's `b2.v`: the cell above the chosen hole, or null; standing in a hole may switch the module off. */
+    /** The cell above the chosen hole, or null; standing in a hole may switch the module off. */
     private fun findTarget(): BlockPos? {
         val p = mc.player ?: return null
         val from = p.position()
@@ -96,14 +96,14 @@ class HoleAnchor : Module("hole-anchor", Categories.BASIC) {
         return best
     }
 
-    /** The original's `j4.N`: the yaw difference to [pos], not wrapped again (so 0..360). */
+    /** The yaw difference to [pos], not wrapped again (so 0..360). */
     private fun fovAngle(pos: BlockPos): Float {
         val p = mc.player!!
         val c = Vec3.atCenterOf(pos)
         return abs(Mth.wrapDegrees(Math.toDegrees(atan2(c.z - p.z, c.x - p.x)) - 90.0) - Mth.wrapDegrees(p.yRot)).toFloat()
     }
 
-    /** The original's `b2.n`: blocks per move, slower for a while after the server corrected our position. */
+    /** Blocks per move, slower for a while after the server corrected our position. */
     private fun speed(): Double {
         val base = 0.2873
         return if (Rubberband.sinceLast() < rubberbandTimeout.value * 1000) base * rubberbandSpeed.value else base * maxSpeed.value

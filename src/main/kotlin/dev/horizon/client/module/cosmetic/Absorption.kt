@@ -23,14 +23,14 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * The original's "absorption" (`rz`): a shell of hearts around every other player, one heart per 16/60 of absorption up to
+ * A shell of hearts around every other player, one heart per 16/60 of absorption up to
  * 60, circling and blinking out at random.
  */
 class Absorption : Module("absorption", Categories.COSMETIC) {
     val colorMode = enum("color-mode", ColorMode.CUSTOM)
     val colorSetting = color("color", Color(0xFFFFC800.toInt(), true)) { colorMode.value == ColorMode.CUSTOM }
 
-    /** The original's `zp`: one heart; [angle] in degrees around the player, [pitch] its fixed height angle. */
+    /** One heart; [angle] in degrees around the player, [pitch] its fixed height angle. */
     private class Heart(val rnd: ThreadLocalRandom) {
         var angle = rnd.nextFloat() * 360.0f
         var prevAngle = angle
@@ -44,7 +44,7 @@ class Absorption : Module("absorption", Categories.COSMETIC) {
         var age = 0
     }
 
-    /** The original's `k6`: the hearts of one player, by entity id (never removed, as in the original). */
+    /** The hearts of one player, by entity id (never removed, on purpose). */
     private class Group(val id: Int, val hearts: MutableList<Heart>)
 
     private val groups = ArrayList<Group>()
@@ -56,7 +56,7 @@ class Absorption : Module("absorption", Categories.COSMETIC) {
 
     private fun random() = ThreadLocalRandom.current()
 
-    /** The original's `rz.T`: hearts circle, fade in (and out at random once full), fade out after their age. */
+    /** Hearts circle, fade in (and out at random once full), fade out after their age. */
     private fun tick() {
         for (g in groups) {
             val it = g.hearts.iterator()
@@ -84,7 +84,7 @@ class Absorption : Module("absorption", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `rz.C`: hearts added or aged per player, then all drawn additively (depth-tested) from the atlas. */
+    /** Hearts added or aged per player, then all drawn additively (depth-tested) from the atlas. */
     private fun render(e: Render3DEvent) {
         val level = mc.level ?: return
         val cam = mc.gameRenderer.mainCamera()
@@ -162,7 +162,7 @@ class Absorption : Module("absorption", Categories.COSMETIC) {
     }
 
     private companion object {
-        /** The original's `v0.HEART` on the atlas (u0, v0, u1, v1). */
+        /** The heart's cell on the atlas (u0, v0, u1, v1). */
         val HEART = floatArrayOf(0.4531f, 0.25f, 0.5156f, 0.3125f)
     }
 }

@@ -27,7 +27,7 @@ import java.util.zip.ZipFile
 import javax.imageio.ImageIO
 
 /**
- * Not in the original: the particles of Lunar cosmetics and emotes ([Snowstorm] effects from Lunar's CDN,
+ * The particles of Lunar cosmetics and emotes ([Snowstorm] effects from Lunar's CDN,
  * `particles/schemes/<name>.particle.json`): cosmetics whose index line names an effect (auras, jetpacks, a few hats)
  * emit it while worn, from the feet (auras), the back (backpacks) or above the head (hats); an emote with an effect
  * emits it from its bone while it plays. About half of Lunar's effects draw from Minecraft 1.8's old particle sheet,

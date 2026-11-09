@@ -23,7 +23,7 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 /**
- * The original's "damage-tint" (`r3`): low health darkens the screen edges towards [tintColor] (pulsing at 4 HP or less),
+ * Low health darkens the screen edges towards [tintColor] (pulsing at 4 HP or less),
  * and each hit shows a red arc on a circle around the crosshair pointing at where the hit came from (the explosion,
  * or where the knockback pushed from).
  */
@@ -34,14 +34,14 @@ class DamageTint : Module("damage-tint", Categories.COSMETIC) {
     val tint = bool("tint", true)
     val tintColor = color("tint-color", Color(0xFFFF0000.toInt(), true)) { tint.value }
 
-    /** The original's `mg`: where a hit came from, faded out over a second (OUT_QUINT). */
+    /** Where a hit came from, faded out over a second (OUT_QUINT). */
     private class Hit(val vec: Vec3) {
         val animation = Animation(Easing.OUT_QUINT, 1000)
     }
 
     private val hits = ArrayList<Hit>()
 
-    /** The original's `L` (last explosion centre) and `D` (point the last knockback pushed away from); network thread. */
+    /** The last explosion centre and the point the last knockback pushed away from; network thread. */
     @Volatile
     private var explosion: Vec3? = null
 
@@ -61,7 +61,6 @@ class DamageTint : Module("damage-tint", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `r3.N(Render2DEvent)`. */
     private fun render() {
         val p = mc.player ?: return
         if (p.hurtTime > 0) {
@@ -99,7 +98,7 @@ class DamageTint : Module("damage-tint", Categories.COSMETIC) {
     }
 
     /**
-     * The original's `r3.w`: the vignette multiplying the screen by one minus [tintColor]'s complement, scaled by how far
+     * The vignette multiplying the screen by one minus [tintColor]'s complement, scaled by how far
      * health + absorption is below [max] (times [mult]), plus a pulse at 4 HP or less.
      */
     private fun tint(max: Float, mult: Float) {
@@ -112,7 +111,7 @@ class DamageTint : Module("damage-tint", Categories.COSMETIC) {
         val r = ((1.0f - t.red / 255f) * v * 255).toInt()
         val g = ((1.0f - t.green / 255f) * v * 255).toInt()
         val b = ((1.0f - t.blue / 255f) * v * 255).toInt()
-        // Drawn now, between what the 2D layer recorded before and after it (the original drew it straight away).
+        // Drawn now, between what the 2D layer recorded before and after it.
         Canvas.flush(mc.gameRenderer.mainRenderTarget())
         Chams.pass(VIGNETTE, mc.gameRenderer.mainRenderTarget().colorTextureView!!, mapOf("Sampler0" to Skins.texture(VIGNETTE_TEXTURE))) {
             it.putVec4(r / 255f, g / 255f, b / 255f, 1.0f)
@@ -120,11 +119,11 @@ class DamageTint : Module("damage-tint", Categories.COSMETIC) {
     }
 
     private companion object {
-        /** The original's `colored_texture_alt_blend_2` (`l0.f.b()`): the screen times one minus the colour. */
+        /** The screen times one minus the colour. */
         val VIGNETTE = Chams.post("vignette", false, BlendFunction(BlendFactor.ZERO, BlendFactor.ONE_MINUS_SRC_COLOR, BlendFactor.ONE, BlendFactor.ZERO))
         val VIGNETTE_TEXTURE: Identifier = Identifier.withDefaultNamespace("textures/misc/vignette.png")
 
-        /** The original's `v0.HALO` on the atlas (u0, v0, u1, v1). */
+        /** The halo's cell on the atlas (u0, v0, u1, v1). */
         val HALO = floatArrayOf(0.8906f, 0.25f, 0.9531f, 0.3096f)
     }
 }

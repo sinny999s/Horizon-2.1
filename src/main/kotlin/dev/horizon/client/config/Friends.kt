@@ -6,7 +6,7 @@ import kotlinx.serialization.builtins.serializer
 import java.nio.file.Files
 
 /**
- * The original's friends ("homies", `fo`): `homies.hzn`, a JSON array of names, matched exactly and case-sensitively on the
+ * Friends ("homies"): `homies.hzn`, a JSON array of names, matched exactly and case-sensitively on the
  * profile name. Adding doesn't check for duplicates or blanks.
  */
 object Friends {
@@ -15,7 +15,7 @@ object Friends {
     private val file get() = Storage.root.resolve("homies.hzn")
     private val serializer = ListSerializer(String.serializer())
 
-    /** Not in the original: also your Hypixel party, while Party Protect is on. */
+    /** Also your Hypixel party, while Party Protect is on. */
     fun isFriend(name: String) = names.contains(name) ||
         dev.horizon.client.module.misc.PartyProtect.instance?.covers(name) == true
 

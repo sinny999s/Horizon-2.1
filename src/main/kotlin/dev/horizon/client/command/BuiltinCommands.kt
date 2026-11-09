@@ -25,7 +25,7 @@ import java.util.concurrent.Executors
 
 private typealias Builder = LiteralArgumentBuilder<ClientSuggestionProvider>
 
-/** The original's `i5`: `bind <module> <key>` (none/null clears), `bind list`, `bind clear` / `bind reset`. */
+/** `bind <module> <key>` (none/null clears), `bind list`, `bind clear` / `bind reset`. */
 object BindCommand : ClientCommand("bind") {
     override fun build(builder: Builder) {
         builder.then(argument("module", ModuleArgument).then(argument("key", StringArgumentType.word()).executes { c ->
@@ -57,7 +57,7 @@ object BindCommand : ClientCommand("bind") {
             message("There is no such button")
             return
         }
-        // The original marks it a mouse bind when the word contains an "M" but isn't just "M".
+        // A mouse bind when the word contains an "M" but isn't just "M" (on purpose).
         module.bind = Bind(code, false, key != "M" && key.contains("M"))
         val text = Component.empty().append(Component.literal(module.name).withStyle(ChatFormatting.GREEN))
             .append(Component.literal(" is now binded to ").withStyle(ChatFormatting.WHITE))
@@ -80,7 +80,7 @@ object BindCommand : ClientCommand("bind") {
     }
 }
 
-/** The original's `iw`: `friend add <player>`, `friend remove <friend>`, `friend list`, `friend clear`. */
+/** `friend add <player>`, `friend remove <friend>`, `friend list`, `friend clear`. */
 object FriendCommand : ClientCommand("friend") {
     override fun build(builder: Builder) {
         builder.then(literal("clear").executes {
@@ -114,7 +114,7 @@ object FriendCommand : ClientCommand("friend") {
     }
 }
 
-/** The original's `i7`: module configs — `cfg list`, `cfg folder`, `cfg reset`, `cfg save|load|remove <name>`. */
+/** Module configs — `cfg list`, `cfg folder`, `cfg reset`, `cfg save|load|remove <name>`. */
 object ConfigCommand : ClientCommand("cfg") {
     override fun build(builder: Builder) {
         builder.then(literal("list").executes {
@@ -165,7 +165,7 @@ object ConfigCommand : ClientCommand("cfg") {
     }
 }
 
-/** The original's `ir`: `gps <x> <z>` points the compass arrow there, `gps off` hides it. */
+/** `gps <x> <z>` points the compass arrow there, `gps off` hides it. */
 object GpsCommand : ClientCommand("gps") {
     override fun build(builder: Builder) {
         builder.then(literal("off").executes {
@@ -180,7 +180,7 @@ object GpsCommand : ClientCommand("gps") {
     }
 }
 
-/** The original's `iq`: `angle <yaw> <pitch>` sets the view; "~n" is relative, anything unreadable keeps the current value. */
+/** `angle <yaw> <pitch>` sets the view; "~n" is relative, anything unreadable keeps the current value. */
 object AngleCommand : ClientCommand("angle") {
     override fun build(builder: Builder) {
         builder.then(argument("yaw", StringArgumentType.string()).then(argument("pitch", StringArgumentType.string()).executes { c ->
@@ -196,7 +196,7 @@ object AngleCommand : ClientCommand("angle") {
 }
 
 /**
- * The original's `i0`: `fixall [delay ms]` (100 by default) runs the server's "/fix hand" on the held item, then on every
+ * `fixall [delay ms]` (100 by default) runs the server's "/fix hand" on the held item, then on every
  * armour piece, hotbar item and damaged inventory item in turn, swapping each into the hand, on a background thread.
  */
 object FixAllCommand : ClientCommand("fixall") {
@@ -233,14 +233,14 @@ object FixAllCommand : ClientCommand("fixall") {
         }
     }
 
-    /** A number-key swap of menu slot [slot] with the selected hotbar slot (from the background thread, as in the original). */
+    /** A number-key swap of menu slot [slot] with the selected hotbar slot (from the background thread, on purpose). */
     private fun swap(slot: Int) {
         val p = mc.player!!
         mc.gameMode!!.handleContainerInput(p.containerMenu.containerId, slot, p.inventory.selectedSlot, ContainerInput.SWAP, p)
     }
 }
 
-/** The original's `il`: registered, but its body is empty in the original. */
+/** Registered, but its body is empty. */
 object NeofetchCommand : ClientCommand("neofetch") {
     override fun build(builder: Builder) {
         builder.executes { 1 }
@@ -248,7 +248,7 @@ object NeofetchCommand : ClientCommand("neofetch") {
 }
 
 
-/** Not in the original: copies current position and corresponding dimension coordinates to clipboard. */
+/** Copies current position and corresponding dimension coordinates to clipboard. */
 object CoordsCommand : ClientCommand("coords") {
     override fun build(builder: Builder) {
         builder.executes {
@@ -283,7 +283,7 @@ object CoordsCommand : ClientCommand("coords") {
     }
 }
 
-/** Not in the original: client update status and manual check command. */
+/** Client update status and manual check command. */
 object UpdateCommand : ClientCommand("update") {
     override fun build(builder: Builder) {
         builder.then(literal("check").executes {

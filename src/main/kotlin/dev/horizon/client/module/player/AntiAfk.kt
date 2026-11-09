@@ -9,7 +9,7 @@ import dev.horizon.client.setting.GroupMode
 import net.minecraft.client.gui.screens.DeathScreen
 
 /**
- * Not in the original: keeps a server from kicking you for idling while you're away. Every [interval] seconds (give or take
+ * Keeps a server from kicking you for idling while you're away. Every [interval] seconds (give or take
  * a fifth, so it never runs like clockwork) it does the chosen things the server sees a player do: turn the head a
  * little (left, then right next time, so you keep facing the same way), swap to the next hotbar slot and back, sneak
  * for a moment, jump, or step forward and back to where you were (sneaking, so never off an edge). With [respawn],

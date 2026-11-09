@@ -53,7 +53,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 /**
- * The original's "scaffold" (`br`): every tick (PlayerUpdate priority -10) finds the block under the player (or at the kept
+ * Every tick (PlayerUpdate priority -10) finds the block under the player (or at the kept
  * height) and a neighbour to click, turns to a point on that face and, once the rotation is through ([timing]: queued,
  * instant, or a tick later), places from the hotbar ([switch]) or the offhand. Tower jumps straight up while jump is
  * held standing still, safe-walk sneaks at edges, telly skips placing while jumping, grim-block-fly holds incoming
@@ -79,21 +79,21 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
     val rotate = bool("rotate", true)
     val grimSilent = bool("grim-silent", false)
 
-    /** The original's `_8`: the block to click and the face. */
+    /** The block to click and the face. */
     private class Placement(val pos: BlockPos, val face: Direction)
 
-    /** The original's `zx`: a held-back packet and when it came. */
+    /** A held-back packet and when it came. */
     private class Held(val packet: Packet<*>, val time: Long)
 
     private val towerTimer = MsTimer()
 
-    /** The kept height (the original's `e`, -999 for none). */
+    /** The kept height (-999 for none). */
     private var height = -999
 
-    /** The last rotation to the click point (the original's `s`). */
+    /** The last rotation to the click point. */
     private var lastRotation: Rotation? = null
 
-    /** This module pressed sneak for safe-walk (the original's `j`). */
+    /** This module pressed sneak for safe-walk. */
     private var sneaking = false
 
     private val held = ConcurrentLinkedQueue<Held>()
@@ -108,14 +108,14 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
         flushHeld()
     }
 
-    /** The original's `br.c`: a placeable block that stays (not replaceable, not falling). */
+    /** A placeable block that stays (not replaceable, not falling). */
     private fun placeable(s: ItemStack): Boolean {
         val item = s.item as? BlockItem ?: return false
         if (item.block.defaultBlockState().canBeReplaced()) return false
         return item.block !is FallingBlock
     }
 
-    /** The original's `br.n(slot)`: whether the block in [slot] (-2 offhand, -1 none) is a full cube. */
+    /** Whether the block in [slot] (-2 offhand, -1 none) is a full cube. */
     private fun fullBlock(slot: Int): Boolean {
         val p = mc.player ?: return true
         val level = mc.level ?: return true
@@ -129,8 +129,8 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
     }
 
     /**
-     * The original's `br.U`: the slot to place from: -2 offhand, the selected slot, -1 none. With [doSwitch] it also switches
-     * (Normal/Silent select the hotbar block; Inventory sends the original's swap click with button -1, which the server
+     * The slot to place from: -2 offhand, the selected slot, -1 none. With [doSwitch] it also switches
+     * (Normal/Silent select the hotbar block; Inventory sends a swap click with button -1, which the server
      * ignores).
      */
     private fun blockSlot(doSwitch: Boolean): Int {
@@ -155,7 +155,7 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
         }
     }
 
-    /** The original's `br.j`: switch back after placing (Silent re-selects, Inventory swaps back, Normal stays). */
+    /** Switch back after placing (Silent re-selects, Inventory swaps back, Normal stays). */
     private fun switchBack(slot: Int) {
         val p = mc.player ?: return
         if (slot == -2 || slot == -1) return
@@ -166,7 +166,7 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
         }
     }
 
-    /** The original's `w4.a`: a solid neighbour of [pos] to click, below first. */
+    /** A solid neighbour of [pos] to click, below first. */
     private fun neighbour(pos: BlockPos): Placement? {
         val level = mc.level ?: return null
         for ((face, off) in NEIGHBOURS) {
@@ -176,7 +176,7 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
         return null
     }
 
-    /** The original's `br.g`: a click for [pos] or a nearby spot under the player, when [pos] is free. */
+    /** A click for [pos] or a nearby spot under the player, when [pos] is free. */
     private fun findPlacement(pos: BlockPos): Placement? {
         val level = mc.level ?: return null
         if (!level.getBlockState(pos).canBeReplaced()) return null
@@ -186,7 +186,7 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
 
     private fun tellyPause(): Boolean = mc.options.keyJump.isDown && PlayerState.fallDistance <= 0.0 && telly.value
 
-    /** The original's `br.k`, PlayerUpdate priority -10. */
+    /** Runs at PlayerUpdate priority -10. */
     private fun tick() {
         val p = mc.player ?: return
         val level = mc.level ?: return
@@ -240,7 +240,7 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
         }
     }
 
-    /** The original's `br.q`: the click, run once the rotation is through. */
+    /** The click, run once the rotation is through. */
     private fun place(hit: BlockHitResult) {
         val p = mc.player ?: return
         val level = mc.level ?: return
@@ -255,7 +255,7 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
         val sneak = Placer.isInteractable(level.getBlockState(hit.blockPos).block) && !p.isShiftKeyDown
         if (sneak) PlayerState.setSneak(true)
         val hand = if (slot != -2) InteractionHand.MAIN_HAND else InteractionHand.OFF_HAND
-        // 26.3 has no swing packet: The original's swings below only animate (and its packet after useItemOn is dropped).
+        // 26.3 has no swing packet: the swings below only animate (and the packet after useItemOn is dropped).
         if (airPlace.value && Modules.get<AirPlace>().enabled && Modules.get<AirPlace>().n2b2t.value) {
             mc.gameMode?.useItem(p, hand)
             Packets.sendSequenced { seq -> ServerboundUseItemPacket(hand, seq, Rotation.lastYaw, Rotation.lastPitch) }
@@ -281,7 +281,7 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
         if (rotate.value && grimSilent.value) Packets.sendRotation(p.yRot, p.xRot)
     }
 
-    /** The original's `br.r`: handle every held-back packet now. */
+    /** Handle every held-back packet now. */
     private fun flushHeld() {
         held.removeIf {
             handle(it.packet)
@@ -330,13 +330,13 @@ class Scaffold : Module("scaffold", Categories.RAGE) {
     }
 
     private companion object {
-        /** The original's `w4.K`: face to click → offset of the block clicked. */
+        /** Face to click → offset of the block clicked. */
         val NEIGHBOURS = listOf(
             Direction.UP to BlockPos(0, -1, 0), Direction.DOWN to BlockPos(0, 1, 0), Direction.EAST to BlockPos(-1, 0, 0),
             Direction.WEST to BlockPos(1, 0, 0), Direction.NORTH to BlockPos(0, 0, 1), Direction.SOUTH to BlockPos(0, 0, -1),
         )
 
-        /** The original's `br.F`: spots around the target tried in order. */
+        /** Spots around the target tried in order. */
         val SEARCH = arrayOf(
             BlockPos(0, 0, 0), BlockPos(-1, 0, 0), BlockPos(1, 0, 0), BlockPos(0, 0, 1), BlockPos(0, 0, -1),
             BlockPos(-2, 0, 0), BlockPos(2, 0, 0), BlockPos(0, 0, 2), BlockPos(0, 0, -2), BlockPos(0, -1, 0),

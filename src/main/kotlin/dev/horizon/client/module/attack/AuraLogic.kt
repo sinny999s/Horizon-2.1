@@ -57,9 +57,9 @@ import kotlin.random.Random
 
 private val mc get() = Minecraft.getInstance()
 
-/** The original's `vt`: Aura's target finder. */
+/** Aura's target finder. */
 class AuraTargets(private val aura: Aura) {
-    /** The original's `vt.i`: keeps the previous target while it stays valid (Distance and Health sorts only). */
+    /** Keeps the previous target while it stays valid (Distance and Health sorts only). */
     fun select(previous: Entity?): Entity? {
         val best = findBest()
         if (previous != null && aura.sort.value != Aura.Sort.FOV) {
@@ -82,7 +82,7 @@ class AuraTargets(private val aura: Aura) {
     private fun holding() = System.nanoTime() - lastSwitch < SWITCH_HOLD_MS * 1_000_000L
 
     /**
-     * Not in the original ([Aura.dynamicSwitch]): another valid target under the crosshair, nearer than anything else
+     * [Aura.dynamicSwitch]: another valid target under the crosshair, nearer than anything else
      * it touches: it stepped in front of the held one (Legit can't hit through it), or you put the crosshair on it.
      */
     private fun inFront(current: Entity): Entity? {
@@ -108,7 +108,7 @@ class AuraTargets(private val aura: Aura) {
     }
 
     /**
-     * Not in the original ([Aura.dynamicSwitch]): while your own mouse is moving, another valid target within
+     * [Aura.dynamicSwitch]: while your own mouse is moving, another valid target within
      * [SWITCH_CONE] degrees of the crosshair and clearly nearer to it than the held one, as when you flick onto
      * someone. Aura asks every frame too, before Legit's aim turns the view back towards the held target.
      */
@@ -162,8 +162,8 @@ class AuraTargets(private val aura: Aura) {
     }
 
     /**
-     * The original's `vt.B` (extended by `swing-range` when 1.8 combat pre-swinging is active). Its `range` is only how far
-     * to look now; never shorter than the reach (and pre-swing), so anything Aura can hit is found.
+     * The search range (extended by `swing-range` when 1.8 combat pre-swinging is active). Aura's `range` is only how far
+     * to look; never shorter than the reach (and pre-swing), so anything Aura can hit is found.
      */
     fun searchRange(): Float {
         val p = mc.player!!
@@ -174,7 +174,7 @@ class AuraTargets(private val aura: Aura) {
         return if (aura.effectiveRotation().extendsSearch(aura)) max(r, base) else base
     }
 
-    /** From the cached eyes to the aim point of the rotation-mode setting (not the effective mode, as in the original). */
+    /** From the cached eyes to the aim point of the rotation-mode setting (not the effective mode, on purpose). */
     private fun inRange(e: Entity): Boolean =
         PlayerState.eye.distanceTo(AuraRotation.of(aura.rotationMode.value).aimPoint(aura, e)) - searchRange() <= 0
 
@@ -182,7 +182,6 @@ class AuraTargets(private val aura: Aura) {
         (e is ShulkerBullet || e is LargeFireball) && e.isAlive && PlayerState.eye.distanceTo(e.position()) - searchRange() < 0 &&
             aura.projectiles.value
 
-    /** The original's `vt.T`. */
     fun isInvalid(e: Entity): Boolean {
         val p = mc.player ?: return true
         if (isValidProjectile(e)) return false
@@ -209,7 +208,7 @@ class AuraTargets(private val aura: Aura) {
     }
 
     /**
-     * Not in the original: some part of [e] (head, middle or feet) can be seen from the eyes with no block in the way, glass
+     * Some part of [e] (head, middle or feet) can be seen from the eyes with no block in the way, glass
      * included (the hit's own check stops at block outlines too).
      */
     private fun visible(e: Entity): Boolean {
@@ -258,7 +257,7 @@ class AuraTargets(private val aura: Aura) {
         }
     }
 
-    /** Not in the original: not in the tab list, or an NPC's UUID (version 2, as Hypixel gives its NPCs). */
+    /** Not in the tab list, or an NPC's UUID (version 2, as Hypixel gives its NPCs). */
     private fun tabBot(p: Player) = mc.connection?.getPlayerInfo(p.uuid) == null || p.uuid.version() == 2
 
     /** Full, fresh, unenchanted armour with leather or iron in it, an empty off-hand and something in the main hand. */
@@ -279,12 +278,12 @@ class AuraTargets(private val aura: Aura) {
     }
 }
 
-/** The original's `co`: when Aura may hit next (millisecond-paced via [LegacyClicker] in 1.8 combat). */
+/** When Aura may hit next (millisecond-paced via [LegacyClicker] in 1.8 combat). */
 class AttackTimer(private val aura: Aura) : AuraHook {
     /** Ticks until the next hit. */
     var countdown = 0
 
-    /** The original's `co.E`: the last value [post] gave [countdown] (elytra-target compares the two). */
+    /** The last value [post] gave [countdown] (elytra-target compares the two). */
     var scheduled = 0
     private var counter = 0
     private val clicker = LegacyClicker.State()
@@ -299,7 +298,7 @@ class AttackTimer(private val aura: Aura) : AuraHook {
         countdown -= 1
     }
 
-    /** The original's `co.R(n)`: due within [n] ticks and the crit timing allows it (or 1.8 clicker ready). */
+    /** Due within [n] ticks and the crit timing allows it (or 1.8 clicker ready). */
     fun ready(n: Int): Boolean {
         if (aura.isLegacyCombat()) return clicker.ready(System.nanoTime() / 1_000_000L, n)
         return critGate(n) && countdown - n <= 0
@@ -345,7 +344,7 @@ class AttackTimer(private val aura: Aura) : AuraHook {
         return false
     }
 
-    /** The original's `co.r`: schedule the next hit. */
+    /** Schedule the next hit. */
     override fun post(rotation: Rotation) {
         counter++
         countdown = if (aura.isLegacyCombat()) {
@@ -357,7 +356,7 @@ class AttackTimer(private val aura: Aura) : AuraHook {
         scheduled = countdown
     }
 
-    /** The original's `co.A`: the weapon's cooldown in ticks (at least 10), with the randomize-delay modes. */
+    /** The weapon's cooldown in ticks (at least 10), with the randomize-delay modes. */
     private fun baseDelay(): Int {
         val p = mc.player ?: return 10
         val level = mc.level ?: return 10
@@ -381,7 +380,7 @@ class AttackTimer(private val aura: Aura) : AuraHook {
     }
 
     /**
-     * Not in the original: hits spaced like a person clicking: mostly as the cooldown fills or a tick or two after, now and
+     * Hits spaced like a person clicking: mostly as the cooldown fills or a tick or two after, now and
      * then a little slower, rarely a tick early, and once in a while a longer pause.
      */
     private fun legitDelay(t: Int): Int {
@@ -395,7 +394,7 @@ class AttackTimer(private val aura: Aura) : AuraHook {
     }
 }
 
-/** The original's `h0`: sprint resets around Aura's hits (1.9+ falling-crit reset, or 1.8 post-hit W-tap). */
+/** Sprint resets around Aura's hits (1.9+ falling-crit reset, or 1.8 post-hit W-tap). */
 class SprintHook(private val aura: Aura, private val timer: AttackTimer, private val offhand: OffhandSwapHook) : AuraHook {
     /** A legit sprint reset is running: sprinting is held off. */
     var resetting = false
@@ -403,7 +402,7 @@ class SprintHook(private val aura: Aura, private val timer: AttackTimer, private
 
     private fun swapPending() = !aura.isLegacyCombat() && aura.offhandHitSwap.value && offhand.find() != -1
 
-    /** The original's `h0.U`: may start a legit reset (then this tick doesn't hit). */
+    /** May start a legit reset (then this tick doesn't hit). */
     fun gate(ready: Boolean): Boolean {
         if (aura.isLegacyCombat()) return ready
         val p = mc.player ?: return ready

@@ -6,7 +6,7 @@ import dev.horizon.client.module.Module
 import kotlin.math.roundToInt
 
 /**
- * Not in the original: walks forward for you (holds the forward key, menus open or not), sprinting with [sprint]. [snap]
+ * Walks forward for you (holds the forward key, menus open or not), sprinting with [sprint]. [snap]
  * turns you to the nearest 45° as it's switched on, to follow a highway or an axis; you can still look and steer.
  */
 class AutoWalk : Module("auto-walk", Categories.BASIC) {

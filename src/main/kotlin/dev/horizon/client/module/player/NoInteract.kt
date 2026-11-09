@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.TargetBlock
 import net.minecraft.world.level.block.TrapDoorBlock
 
 /**
- * The original's "no-interact" (`ay`): block clicks on containers, doors, buttons and the like (every block with
+ * Block clicks on containers, doors, buttons and the like (every block with
  * [allBlocks]), and any block click with a player head in that hand, are dropped, so vanilla uses the held item instead.
  * Offhand reads whether it's on.
  */

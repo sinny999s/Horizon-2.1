@@ -6,7 +6,7 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 
 /**
- * Not in the original: Lunar's older cosmetics (hats, bandannas, masks, glasses, ties, belts, backpacks...): a Wavefront
+ * Lunar's older cosmetics (hats, bandannas, masks, glasses, ties, belts, backpacks...): a Wavefront
  * `.obj` per model (`cosmetics/models/<hats|bodywear>/<model>/<model>.obj`), one of several textures (the index's
  * path), and a definition in `indexes/hats.json` or `bodywear.json` saying which body part it rides on and how it's
  * placed. Placed as Lunar Client places them (from its code): the body part's pose, a quarter turn for headwear (hats,

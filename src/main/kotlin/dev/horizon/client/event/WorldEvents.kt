@@ -6,12 +6,12 @@ package dev.horizon.client.event
 
 // ---- server-helper / pearl-chaser / auto-sign ----
 
-/** `AbstractContainerScreen.extractSlot` HEAD (the original's SlotRenderEvent): [slot] is about to be drawn into [graphics]. */
+/** `AbstractContainerScreen.extractSlot` HEAD: [slot] is about to be drawn into [graphics]. */
 class SlotRenderEvent(val slot: net.minecraft.world.inventory.Slot, val graphics: net.minecraft.client.gui.GuiGraphicsExtractor) : Event()
 
 // ---- no-render ----
-// The original's render events that only no-render listens to. Each is posted by a mixin in dev.horizon.client.mixin.world
-// (NoRender*Mixin); cancelling skips the vanilla drawing, as in the original.
+// Render events that only no-render listens to. Each is posted by a mixin in dev.horizon.client.mixin.world
+// (NoRender*Mixin); cancelling skips the vanilla drawing.
 
 /** `AbstractSignRenderer.submitSignText` HEAD: a sign's text at [pos]. */
 class SignTextRenderEvent(val pos: net.minecraft.core.BlockPos) : Event()
@@ -89,12 +89,12 @@ class GetFogModifierEvent : Event()
 
 // ---- free-cam / zoom ----
 
-/** The original's SetupTerrainEvent (`Camera.update` RETURN): cancelling marks the camera detached, so the player is drawn. */
+/** `Camera.update` RETURN: cancelling marks the camera detached, so the player is drawn. */
 class SetupTerrainEvent : Event()
 
 /**
- * The original's BasicProjectionMatrixEvent (`Camera.extractRenderState` RETURN): cancelling rebuilds the level projection
- * from the values below. Like the original's singleton, they keep their last value between frames ([fov] is set to the
+ * `Camera.extractRenderState` RETURN: cancelling rebuilds the level projection
+ * from the values below. They keep their last value between frames ([fov] is set to the
  * camera's FOV before every post). Same definition as the cosmetic1 copy's (aspect uses it): keep one when merging.
  */
 class BasicProjectionMatrixEvent : Event() {

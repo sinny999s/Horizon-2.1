@@ -35,7 +35,7 @@ import kotlin.math.hypot
 import kotlin.random.Random
 
 /**
- * The original's "auto-dripstope" (`j4`): finds a bottom-half trapdoor above a living entity within block reach, places
+ * Finds a bottom-half trapdoor above a living entity within block reach, places
  * pointed dripstone underneath it, and flips the trapdoor to drop the dripstone.
  */
 class AutoDripstope : Module("auto-dripstope", Categories.ATTACK) {
@@ -80,7 +80,6 @@ class AutoDripstope : Module("auto-dripstope", Categories.ATTACK) {
         }
     }
 
-    /** The original's `j4.q`. */
     private fun placeDripstone(pos: BlockPos): Boolean {
         val pl = mc.player ?: return true
         val found = Slots.find(switch.value) { it.`is`(Items.POINTED_DRIPSTONE) }
@@ -105,7 +104,6 @@ class AutoDripstope : Module("auto-dripstope", Categories.ATTACK) {
         return true
     }
 
-    /** The original's `j4.h`. */
     private fun toggleTrapdoor(pos: BlockPos) {
         val p = mc.player ?: return
         val rand = Random.Default.nextDouble() / 10.0 + 0.5
@@ -114,7 +112,6 @@ class AutoDripstope : Module("auto-dripstope", Categories.ATTACK) {
         p.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false)
     }
 
-    /** The original's `j4.N`. */
     private fun fovTo(pos: BlockPos): Float {
         val p = mc.player ?: return 0f
         val c = Vec3.atCenterOf(pos)

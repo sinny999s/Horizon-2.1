@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.random.Random
 
 /**
- * The original's "chest-stealer" (`jp`): shift-clicks the wanted stacks out of an open chest, one per [delay] (FAST: per
+ * Shift-clicks the wanted stacks out of an open chest, one per [delay] (FAST: per
  * frame with a ms delay; ON_TICK: per tick, the tick setting read as ms), optionally closing it once the first 27
  * slots are empty, and optionally opens an ender chest nearby after 3 s without stealing.
  */
@@ -73,9 +73,7 @@ class ChestStealer : Module("chest-stealer", Categories.EQUIP) {
         }
     }
 
-    /** The original's `jp.A`. */
     private fun steal(onTick: Boolean) {
-        // The original sets gui-move's internal-click flag around this.
         val p = mc.player
         if (p == null || mc.level == null || p.containerMenu !is ChestMenu) {
             sinceOpen.reset()
@@ -85,7 +83,7 @@ class ChestStealer : Module("chest-stealer", Categories.EQUIP) {
         val range = 0 until menu.container.containerSize
         for (i in if (randomizeSlots.value) range.shuffled() else range) {
             val slot = menu.getSlot(i)
-            // The original reads the title of a screen it assumes is open (it throws without one).
+            // Reads the title of a screen it assumes is open.
             val title = mc.gui.screen()?.title?.string ?: return
             if (!slot.hasItem() || !wanted(slot.item)) continue
             if (!clickTimer.passedAndReset((if (onTick) tickDelay else msDelay).toLong())) continue
@@ -104,7 +102,7 @@ class ChestStealer : Module("chest-stealer", Categories.EQUIP) {
         Sort.BLACK_LIST -> !itemsSetting.value.contains(s.item)
     }
 
-    /** The original's `jp.u`: only the first 27 slots are looked at (it checks for a 90-slot container to look at 54). */
+    /** Only the first 27 slots are looked at (it checks for a 90-slot container to look at 54). */
     private fun empty(menu: ChestMenu): Boolean {
         for (i in 0 until if (menu.container.containerSize == 90) 54 else 27) if (menu.getSlot(i).hasItem()) return false
         return true
@@ -112,8 +110,8 @@ class ChestStealer : Module("chest-stealer", Categories.EQUIP) {
 
     private companion object {
         /**
-         * The original's title filter for server auction screens: "Аукцион", "покупки" and "ВЫБОР" as they ended up in its
-         * jar, mis-encoded (UTF-8 read as CP1251), so they never match a real title.
+         * A title filter for server auction screens: "Аукцион", "покупки" and "ВЫБОР", mis-encoded (UTF-8 read as
+         * CP1251), so they never match a real title (on purpose).
          */
         val SKIP_TITLES = listOf(
             "РђСѓРєС†РёРѕРЅ",

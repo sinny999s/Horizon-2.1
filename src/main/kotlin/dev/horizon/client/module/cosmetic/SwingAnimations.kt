@@ -14,7 +14,7 @@ import net.minecraft.world.entity.HumanoidArm
 import kotlin.math.sin
 
 /**
- * The original's "swing-animations" (`rc`): every swing lasts [speed] ticks (for every entity), and the right hand's
+ * Every swing lasts [speed] ticks (for every entity), and the right hand's
  * first-person swing is replaced by the [mode]'s own transform (View Model's offset applied around it).
  */
 class SwingAnimations : Module("swing-animations", Categories.COSMETIC) {
@@ -24,7 +24,7 @@ class SwingAnimations : Module("swing-animations", Categories.COSMETIC) {
     val mode = enum("mode", Mode.Default)
     val speed = int("speed", 12, 0..64)
 
-    /** The right hand's last inverse arm height (the original's `p`). */
+    /** The right hand's last inverse arm height. */
     private var equip = 0f
 
     init {
@@ -131,12 +131,12 @@ class SwingAnimations : Module("swing-animations", Categories.COSMETIC) {
         attackRotation(m, arm, sp)
     }
 
-    /** The original's `rc.R`: vanilla's `applyItemArmTransform`. */
+    /** Vanilla's `applyItemArmTransform`. */
     private fun armPos(m: PoseStack, arm: HumanoidArm, height: Float) {
         m.translate((if (arm == HumanoidArm.RIGHT) 1 else -1) * 0.56f, -0.52f + height * -0.6f, -0.72f)
     }
 
-    /** The original's `rc.A`: vanilla's `applyItemArmAttackTransform`. */
+    /** Vanilla's `applyItemArmAttackTransform`. */
     private fun attackRotation(m: PoseStack, arm: HumanoidArm, sp: Float) {
         val i = if (arm == HumanoidArm.RIGHT) 1 else -1
         val ry = sin(sp * sp * Math.PI.toFloat())

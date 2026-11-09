@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity
 import net.minecraft.world.level.block.state.properties.ChestType
 
 /**
- * The original's `e7`: "x  y  z" (two spaces). In the Nether the overworld coordinates follow in brackets; with
+ * "x  y  z" (two spaces). In the Nether the overworld coordinates follow in brackets; with
  * `only-nether` off the other dimension's always do. Grabbing it copies "x y z" to the clipboard.
  */
 object CoordWidget : HudWidget("coord-widget") {
@@ -35,7 +35,7 @@ object CoordWidget : HudWidget("coord-widget") {
     }
 }
 
-/** The original's `er`: the frame rate, sampled every 4 ticks, labelled "v-sync" or "fps". */
+/** The frame rate, sampled every 4 ticks, labelled "v-sync" or "fps". */
 object FpsWidget : HudWidget("fps-widget") {
     private var shown = 0
 
@@ -46,12 +46,12 @@ object FpsWidget : HudWidget("fps-widget") {
     override fun render() = simple("$shown " + if (mc.options.enableVsync().get()) "v-sync" else "fps")
 }
 
-/** The original's `ee`: the local player's latency. */
+/** The local player's latency. */
 object PingWidget : HudWidget("ping-widget") {
     override fun render() = simple("${ServerInfo.ping} ms")
 }
 
-/** The original's `m2`: "20.0 (19.98) t/s", the average reading "--.--" for the first 20 time packets. */
+/** "20.0 (19.98) t/s", the average reading "--.--" for the first 20 time packets. */
 object TpsWidget : HudWidget("tps-widget") {
     override fun render() {
         val avg = if (ServerInfo.warmingUp()) "--.--" else ServerInfo.averageTps().toString()
@@ -59,12 +59,12 @@ object TpsWidget : HudWidget("tps-widget") {
     }
 }
 
-/** The original's `m4`: km/h, or blocks/s with `bps`; 3-D speed while gliding. `mph` (not in the original) shows miles/h. */
+/** km/h, or blocks/s with `bps`; 3-D speed while gliding. `mph` shows miles/h. */
 object SpeedWidget : HudWidget("speed-widget") {
     private val bps = bool("bps", false)
     private val mph = bool("mph", true)
 
-    /** The original's tick-speed multiplier (1 without a Timer module). */
+    /** The tick-speed multiplier (1 without a Timer module). */
     private const val TIMER = 1f
 
     override fun render() {
@@ -82,7 +82,7 @@ object SpeedWidget : HudWidget("speed-widget") {
     }
 }
 
-/** The original's `et`: single and double chests in the loaded chunks around the player. */
+/** Single and double chests in the loaded chunks around the player. */
 object ChestCounterWidget : HudWidget("chest-counter-widget") {
     override fun render() {
         var single = 0
@@ -101,8 +101,8 @@ object ChestCounterWidget : HudWidget("chest-counter-widget") {
 }
 
 /**
- * The original's `e0`: AutoCrystal's crystals per second, place-to-spawn ping, calculation time and damage efficiency.
- * This client has no AutoCrystal, so it reads as the original's does with AutoCrystal off.
+ * AutoCrystal's crystals per second, place-to-spawn ping, calculation time and damage efficiency.
+ * This client has no AutoCrystal, so it reads as with AutoCrystal off.
  */
 object CrystalSpeedWidget : HudWidget("crystal-speed-widget") {
     override fun render() {

@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's `MultiPlayerGameModeMixin.interactBlockHook`: a cancelled block click returns PASS (vanilla then uses the item). */
+/** A cancelled block click returns PASS (vanilla then uses the item). */
 @Mixin(MultiPlayerGameMode.class)
 public abstract class UseItemOnMixin {
 	@Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)

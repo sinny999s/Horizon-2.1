@@ -10,8 +10,8 @@ import net.minecraft.tags.ItemTags
 import net.minecraft.world.level.block.Blocks
 
 /**
- * The original's "soil-ripper" (`rx`): every `delay` ticks, tills the closest grass, dirt or path block with air above it
- * within reach. The original looked for a HoeItem; 26.3 has no such class, so the hoes tag (the same seven items) is used.
+ * Every `delay` ticks, tills the closest grass, dirt or path block with air above it
+ * within reach. 26.3 has no HoeItem class, so hoes are found by the hoes tag.
  */
 class SoilRipper : Module("soil-ripper", Categories.WORLD) {
     val switch = enum("switch", Switch.SILENT_FULL)

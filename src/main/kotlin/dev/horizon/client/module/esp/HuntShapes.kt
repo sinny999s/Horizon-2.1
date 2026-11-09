@@ -1,7 +1,7 @@
 package dev.horizon.client.module.esp
 
 /**
- * Not in the original: the game-free shape logic of [PortalPatternFinder] and [TunnelEsp], for testing without the game.
+ * The game-free shape logic of [PortalPatternFinder] and [TunnelEsp], for testing without the game.
  */
 object HuntShapes {
     data class Cell(val u: Int, val v: Int)

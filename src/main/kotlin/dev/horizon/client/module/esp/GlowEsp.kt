@@ -15,7 +15,7 @@ import net.minecraft.world.entity.player.Player
 import java.awt.Color
 
 /**
- * Not in the original: Minecraft's own glowing outline (a spectral arrow's, seen through walls) on the kinds of entity
+ * Minecraft's own glowing outline (a spectral arrow's, seen through walls) on the kinds of entity
  * chosen, each in its own colour: players (friends apart), hostile mobs, neutral ones (wolves, endermen, piglins,
  * bees, golems...), passive ones (animals, villagers, fish, bats), dropped items, and the rest (boats, carts, armour
  * stands, crystals...); within [range] blocks, never yourself. Cheap: it's vanilla's outline pass.

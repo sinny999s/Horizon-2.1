@@ -41,7 +41,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: autonomous bed combat for Nether and End PvP. Places beds near target players and detonates
+ * Autonomous bed combat for Nether and End PvP. Places beds near target players and detonates
  * them with explosion power 5.0, taking into account self damage, target damage, line of sight, and friend protection.
  */
 class BedAura : Module("bed-aura", Categories.ATTACK) {

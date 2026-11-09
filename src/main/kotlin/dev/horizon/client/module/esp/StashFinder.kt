@@ -42,7 +42,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: Trouser-Streak inspired dedicated high-density storage and stash scanner.
+ * Trouser-Streak inspired dedicated high-density storage and stash scanner.
  * Scans loaded chunks for dense clusters of shulker boxes, chests, barrels, and hoppers,
  * alerting with coordinates, audio cue, automatic waypoint, file logging, and 3D visual boxes with tracers.
  * Each stash chunk is announced once per server and dimension: chunks already in the log file (and, without it, those

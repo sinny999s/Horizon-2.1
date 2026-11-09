@@ -5,7 +5,7 @@ import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 
 /**
- * The original's "name-protect" (`ag`): replaces names in all drawn text (vanilla's, through StringDecomposerMixin, and the
+ * Replaces names in all drawn text (vanilla's, through StringDecomposerMixin, and the
  * client's own font) with [nameSetting]: our own name always, plus friends' or every tab-list name.
  */
 class NameProtect : Module("name-protect", Categories.MISC) {
@@ -18,7 +18,7 @@ class NameProtect : Module("name-protect", Categories.MISC) {
         instance = this
     }
 
-    /** The original's `ag.r`: our name first, then each tab-list entry in its order, every pass on the previous one's output. */
+    /** Our name first, then each tab-list entry in its order, every pass on the previous one's output. */
     fun protectText(text: String): String {
         val p = mc.player ?: return text
         if (mc.level == null || !enabled) return text
@@ -35,7 +35,7 @@ class NameProtect : Module("name-protect", Categories.MISC) {
     companion object {
         private var instance: NameProtect? = null
 
-        /** For the text hooks; unchanged before the module exists. (Not in the original: an Apollo server's nick for you first.) */
+        /** For the text hooks; unchanged before the module exists. (An Apollo server's nick for you first.) */
         @JvmStatic
         fun protect(text: String): String {
             val t = dev.horizon.client.lunar.ApolloFeatures.hideNick(text)

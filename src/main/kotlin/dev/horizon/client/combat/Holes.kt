@@ -14,14 +14,14 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 /**
- * The original's hole cache (`vg`): every tick an async scan around the feet for 1x1, 2x1 and 2x2 holes walled by blast-proof
+ * Hole cache: every tick an async scan around the feet for 1x1, 2x1 and 2x2 holes walled by blast-proof
  * blocks; readers get the last finished scan. Nobody reading for a second stops the scanning (and empties the list).
  */
 object HoleCache {
     enum class Safety { SAFE, UNSAFE }
     enum class Shape { SINGLE, DOUBLE_X, DOUBLE_Z, QUAD }
 
-    /** The original's `vl`: [pos] is the hole's min corner. */
+    /** [pos] is the hole's min corner. */
     class Hole(val pos: BlockPos, val safety: Safety, val shape: Shape)
 
     private val mc get() = Minecraft.getInstance()
@@ -45,7 +45,7 @@ object HoleCache {
 
     private var plugged = false
 
-    /** Plugs the per-tick scan (once). Called at module construction, before any module is plugged, as the original's `vg`. */
+    /** Plugs the per-tick scan (once). Called at module construction, before any module is plugged. */
     fun init() {
         if (plugged) return
         plugged = true
@@ -54,14 +54,13 @@ object HoleCache {
                 if (holes.isNotEmpty()) holes = emptyList()
                 return@on
             }
-            // Deviation: The original drops a finished scan nobody has read yet when it starts the next one, and its readers
-            // only saw holes because its own code was slow enough for the new scan to finish mid-read; keep it.
+            // A finished scan nobody has read yet is kept when the next one starts, not dropped.
             scan?.let { if (it.isDone) holes = it.get() }
             scan = CompletableFuture.supplyAsync({ scan() }, executor).exceptionally { emptyList() }
         }
     }
 
-    /** The original's `vg.m`: keeps the scanning alive, and picks up the latest scan if it has finished. */
+    /** Keeps the scanning alive, and picks up the latest scan if it has finished. */
     fun holes(): List<Hole> {
         idle.reset()
         val s = scan
@@ -69,7 +68,7 @@ object HoleCache {
         return holes
     }
 
-    /** The original's `vg.u`: [pos] is a cell of a cached hole. */
+    /** [pos] is a cell of a cached hole. */
     fun contains(pos: BlockPos): Boolean = holes().any { h ->
         val o = h.pos
         pos == o || when (h.shape) {
@@ -80,7 +79,7 @@ object HoleCache {
         }
     }
 
-    /** The original's `vg.u(x, y, z)`: a block read that works off-thread; air for anything unloaded or failing. */
+    /** A block read that works off-thread; air for anything unloaded or failing. */
     private fun block(x: Int, y: Int, z: Int): BlockState = try {
         val level = mc.level!!
         val chunk = level.getChunk(x shr 4, z shr 4)
@@ -92,7 +91,7 @@ object HoleCache {
         Blocks.AIR.defaultBlockState()
     }
 
-    /** The original's `vg.v`, on a virtual thread. */
+    /** The scan, on a virtual thread. */
     private fun scan(): List<Hole> {
         val out = ArrayList<Hole>()
         val p = BlockPos.containing(mc.player!!.position())
@@ -107,7 +106,7 @@ object HoleCache {
         return out
     }
 
-    /** The original's `vg.E`: the hole whose min corner is (x, y, z), walls counted at hole level only. */
+    /** The hole whose min corner is (x, y, z), walls counted at hole level only. */
     private fun classify(x: Int, y: Int, z: Int): Hole? {
         var r = 0
         var u = 0

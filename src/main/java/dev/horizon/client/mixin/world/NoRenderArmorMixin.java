@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's HumanoidArmorLayerMixin: one armour piece on a humanoid model. */
+/** One armour piece on a humanoid model. */
 @Mixin(HumanoidArmorLayer.class)
 public abstract class NoRenderArmorMixin {
 	@Inject(method = "renderArmorPiece", at = @At("HEAD"), cancellable = true)

@@ -33,7 +33,7 @@ import java.util.OptionalDouble
 import kotlin.math.abs
 
 /**
- * The original's world renderer (`fz`, with `h3`'s frame capture): modules queue boxes, faces and lines during Render3D; at
+ * The world renderer: modules queue boxes, faces and lines during Render3D; at
  * priority −10 the fills, outlines and depth-tested lines go straight onto the screen and the shader boxes into their
  * own target, which the client's 2D layer composites (with lines-mode NEW, the outlines too). All vertices are relative
  * to the camera; the model-view is the camera rotation only.
@@ -41,7 +41,7 @@ import kotlin.math.abs
 object World3D {
     private val mc get() = Minecraft.getInstance()
 
-    /** This frame's level projection and camera rotation (the original's `h3.P`, `sf.U`). */
+    /** This frame's level projection and camera rotation. */
     val projection = Matrix4f()
     val view = Matrix4f()
     var camera: Vec3 = Vec3.ZERO
@@ -77,7 +77,7 @@ object World3D {
         EventBus.on<Render3DEvent>(this, -10) { flush() }
     }
 
-    /** From the GameRenderer hook: capture the frame (the original's `h3.B`, priority 20) and fire Render3D. */
+    /** From the GameRenderer hook: capture the frame and fire Render3D. */
     fun fire(cam: CameraRenderState, proj: Matrix4f) {
         if (mc.player == null || mc.level == null) return
         projection.set(proj)
@@ -88,39 +88,39 @@ object World3D {
         EventBus.post(Render3DEvent(Matrix4f(view), Matrix4f(projection), partialTick))
     }
 
-    // ---- queue (the original's h3 API) ----
+    // ---- queue ----
 
-    /** `h3.S`: a box drawn into the shader target (only [c] is used). */
+    /** A box drawn into the shader target (only [c] is used). */
     fun shaderBox(box: AABB, c: Int) {
         shaderBoxes += Box(box, c, c)
     }
 
-    /** `h3.f`: a translucent box fill, [c] at the bottom and [c2] at the top, through walls. */
+    /** A translucent box fill, [c] at the bottom and [c2] at the top, through walls. */
     fun fill(box: AABB, c: Int, c2: Int = c) {
         fills += Box(box, c, c2)
     }
 
-    /** `h3.w`: a box's 12 edges. */
+    /** A box's 12 edges. */
     fun outline(box: AABB, c: Int, c2: Int = c) {
         outlines += Box(box, c, c2)
     }
 
-    /** `h3.O`: one face filled. */
+    /** One face filled. */
     fun faceFill(box: AABB, side: Direction, c: Int) {
         faceFills += Face(box, c, side)
     }
 
-    /** `h3.i`: one face's 4 edges. */
+    /** One face's 4 edges. */
     fun faceOutline(box: AABB, side: Direction, c: Int) {
         faceOutlines += Face(box, c, side)
     }
 
-    /** `h3.n`: a line drawn with the outlines; unless [noCull], skipped when its end is off-screen. */
+    /** A line drawn with the outlines; unless [noCull], skipped when its end is off-screen. */
     fun line(start: Vec3, end: Vec3, c1: Int, c2: Int = c1, noCull: Boolean = false) {
         lines += Line(start, end, c1, c2, noCull)
     }
 
-    /** `h3.q`: a depth-tested additive line. */
+    /** A depth-tested additive line. */
     fun depthLine(start: Vec3, end: Vec3, c1: Int, c2: Int = c1) {
         depthLines += Line(start, end, c1, c2, false)
     }
@@ -135,7 +135,7 @@ object World3D {
     private fun rel(b: AABB): FloatArray = floatArrayOf((b.minX - camera.x).toFloat(), (b.minY - camera.y).toFloat(),
         (b.minZ - camera.z).toFloat(), (b.maxX - camera.x).toFloat(), (b.maxY - camera.y).toFloat(), (b.maxZ - camera.z).toFloat())
 
-    /** `fz.Z`: 6 quads, [c] on the bottom vertices and [c1] on the top ones; off-screen boxes are skipped. */
+    /** 6 quads, [c] on the bottom vertices and [c1] on the top ones; off-screen boxes are skipped. */
     fun boxFill(vc: VertexConsumer, box: AABB, c: Int, c1: Int) {
         if (!isVisible(box)) return
         val r = rel(box)
@@ -148,7 +148,7 @@ object World3D {
         vc.v(x0, y0, z0, c); vc.v(x0, y0, z1, c); vc.v(x1, y0, z1, c); vc.v(x1, y0, z0, c)
     }
 
-    /** The four corners of a face, in `fz.t`'s order. */
+    /** The four corners of a face. */
     private fun faceCorners(box: AABB, side: Direction): Array<Vector3f> {
         val r = rel(box)
         val x0 = r[0]; val y0 = r[1]; val z0 = r[2]; val x1 = r[3]; val y1 = r[4]; val z1 = r[5]
@@ -162,7 +162,7 @@ object World3D {
         }
     }
 
-    /** `fz.j`: 12 edges, bottom ring in [c], top ring in [c2], verticals from [c] to [c2]. */
+    /** 12 edges, bottom ring in [c], top ring in [c2], verticals from [c] to [c2]. */
     private fun boxOutline(vc: VertexConsumer, box: AABB, c: Int, c2: Int) {
         val r = rel(box)
         val x0 = r[0]; val y0 = r[1]; val z0 = r[2]; val x1 = r[3]; val y1 = r[4]; val z1 = r[5]
@@ -184,7 +184,7 @@ object World3D {
 
     /**
      * One immediate draw with the level projection: onto [color] (with [depth] attached for depth-tested pipelines),
-     * model-view [modelView]. [smooth] brackets it with GL line smoothing, as the original did (OpenGL only).
+     * model-view [modelView]. [smooth] brackets it with GL line smoothing (OpenGL only).
      */
     fun draw(pipeline: RenderPipeline, color: GpuTextureView, depth: GpuTextureView?, modelView: Matrix4f, texture: GpuTextureView? = null,
              smooth: Boolean = false, build: (VertexConsumer) -> Unit) {
@@ -224,7 +224,7 @@ object World3D {
 
     private fun main() = mc.gameRenderer.mainRenderTarget()
 
-    /** The original's `fz.x`/`fz.C`: a target the size of the screen, cleared to transparent before each use. */
+    /** A target the size of the screen, cleared to transparent before each use. */
     private fun ensure(t: TextureTarget?, label: String): TextureTarget {
         val m = main()
         val target = t ?: TextureTarget(label, m.width, m.height, GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT)
@@ -234,7 +234,7 @@ object World3D {
         return target
     }
 
-    /** The original's `fz.r` (Render3D priority −10). */
+    /** Runs at Render3D priority −10. */
     private fun flush() {
         PlaceBoxes.render()
         val main = main()
@@ -270,7 +270,7 @@ object World3D {
         }
         if (shaderBoxes.isNotEmpty()) {
             val t = ensure(shaderTarget, "horizon shader boxes").also { shaderTarget = it }
-            // Only the first colour counts for shader boxes (as in the original).
+            // Only the first colour counts for shader boxes.
             draw(Pipelines.WORLD_SHADER_FILL, t.colorTextureView!!, null, view) { vc ->
                 for (b in shaderBoxes) boxFill(vc, b.box, b.c, b.c)
             }
@@ -285,7 +285,7 @@ object World3D {
         depthLines.clear()
     }
 
-    /** The original's `fz.L`: the shader boxes, then NEW-mode lines, onto the screen (in the 2D layer, after the blur capture). */
+    /** The shader boxes, then NEW-mode lines, onto the screen (in the 2D layer, after the blur capture). */
     fun composite() {
         val p = mc.player ?: return
         val ring = ubo ?: MappableRingBuffer({ "horizon world composite UBO" }, 128 or 2, 256 * 4).also { ubo = it }
@@ -316,7 +316,7 @@ object World3D {
     }
 
     /**
-     * The original's `sf.m`/`sf.d`: a world point in GUI coordinates (x, y), or null when behind the camera or clipped.
+     * A world point in GUI coordinates (x, y), or null when behind the camera or clipped.
      */
     fun project(pos: Vec3): FloatArray? {
         val rel = Vector4f((pos.x - camera.x).toFloat(), (pos.y - camera.y).toFloat(), (pos.z - camera.z).toFloat(), 1f)
@@ -337,7 +337,7 @@ object World3D {
         return floatArrayOf(winX / sc, (h - winY) / sc)
     }
 
-    /** The original's `h3.G` label: centred, bold 20, shrinking with distance from the camera entity (gone at 10 blocks). */
+    /** A label: centred, bold 20, shrinking with distance from the camera entity (gone at 10 blocks). */
     fun label(text: String, pos: Vec3, color: Int) {
         val s = project(pos) ?: return
         val cam = mc.cameraEntity ?: return

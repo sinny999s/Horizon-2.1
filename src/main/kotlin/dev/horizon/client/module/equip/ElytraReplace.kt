@@ -13,7 +13,7 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.Items
 
 /**
- * The original's "elytra-replace" (`jw`): when the worn elytra has 2 or fewer uses left, the first glider with more than 2
+ * When the worn elytra has 2 or fewer uses left, the first glider with more than 2
  * (inventory index 36 down to 0) is swapped onto the chest with three pickup clicks and a close, every tick it holds.
  */
 class ElytraReplace : Module("elytra-replace", Categories.EQUIP) {
@@ -26,7 +26,6 @@ class ElytraReplace : Module("elytra-replace", Categories.EQUIP) {
             EquipUtil.click(found.slot)
             EquipUtil.click(6)
             EquipUtil.click(found.slot, close = true)
-            // The original looks up modules.equip.elytra-replace.replaced; its language file has it under "inventory".
             Notifications.post(name, REPLACED, 2f, NotificationType.INFO)
             moduleMessage(name.trim(), REPLACED)
         }

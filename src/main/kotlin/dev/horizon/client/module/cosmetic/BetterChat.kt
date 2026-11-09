@@ -26,7 +26,7 @@ import org.joml.Vector2f
 import java.util.IdentityHashMap
 
 /**
- * Not in the original: chat in the client's style. Its text is set in Inter SemiBold (`font/chat.json`, hinted for
+ * Chat in the client's style. Its text is set in Inter SemiBold (`font/chat.json`, hinted for
  * screens; vanilla's glyphs for anything Inter lacks), bold parts in Inter ExtraBold, through vanilla's own font system, as a
  * font on each message's style, so vanilla still wraps, draws and hit-tests the lines (links, hovers and clicks stay exact). The input bar's
  * text and the command suggestions use it too. Vanilla's black strip behind each line becomes one rounded dark pane

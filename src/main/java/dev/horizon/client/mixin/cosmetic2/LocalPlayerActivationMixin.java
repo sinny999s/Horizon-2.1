@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's floating-item hook (26.2 `GameRenderer.displayItemActivation`; 26.3 moved it to the local player). */
+/** The floating-item hook (26.2 `GameRenderer.displayItemActivation`; 26.3 moved it to the local player). */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerActivationMixin {
 	@Inject(method = "displayItemActivation", at = @At("HEAD"), cancellable = true)

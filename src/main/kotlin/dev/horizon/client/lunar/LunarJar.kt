@@ -16,7 +16,7 @@ import java.util.UUID
 import java.util.zip.Inflater
 
 /**
- * Not in the original: finds the current Lunar Client version and git commit the way Moonlight's `VersionFetcher` does.
+ * Finds the current Lunar Client version and git commit the way Moonlight's `VersionFetcher` does.
  * Lunar's launcher API names the current `lunar.jar` for 1.8.9 (the same jar it names for every other Minecraft version);
  * its `lunarBuildData.txt` holds `lunarVersion` and `fullGitHash`. Only the zip's tail, central directory and that one entry are downloaded (HTTP ranges), not the whole
  * jar. Game-free, so the zip reading is tested on its own.

@@ -28,7 +28,7 @@ import kotlin.math.hypot
 import kotlin.math.max
 
 /**
- * The original's "particles" (`rr`): ambient sprites spawned around the player every tick — drifting, falling, shooting
+ * Ambient sprites spawned around the player every tick — drifting, falling, shooting
  * stars or rain (rain drops trail a line, splash on the ground with a ring and sparks).
  */
 class Particles : Module("particles", Categories.COSMETIC) {
@@ -42,7 +42,7 @@ class Particles : Module("particles", Categories.COSMETIC) {
     val time = int("time", 256, 5..80)
     val size = float("size", 1.0f, 0.1f..1.5f)
 
-    /** The original's `ts`: one particle. Its life, hue, colour and ground height are set as the original's constructor does. */
+    /** One particle. */
     private inner class Drop(var x: Float, var y: Float, var z: Float, var vx: Float, var vy: Float, var vz: Float, var rot: Float,
                              var rotSpeed: Float) {
         var prevX = x
@@ -67,7 +67,7 @@ class Particles : Module("particles", Categories.COSMETIC) {
             false, emptyList(), emptyList())?.blockPos?.above()?.y?.toFloat() ?: y
     }
 
-    /** The original's `nm`: a rain drop's splash ring. */
+    /** A rain drop's splash ring. */
     private class Ring(val x: Float, val y: Float, val z: Float, val color: Int) {
         var age = 0
     }
@@ -80,10 +80,9 @@ class Particles : Module("particles", Categories.COSMETIC) {
         on<Render3DEvent> { render() }
     }
 
-    /** The original's hue `((now / 18 + offset) % 360)` in degrees. */
+    /** The hue `((now / 18 + offset) % 360)` in degrees. */
     private fun hueStep(offset: Int): Int = ((System.currentTimeMillis() / 18 + offset) % 360).toInt()
 
-    /** The original's `sf.v(18, offset, s, 1)`. */
     private fun hsb(offset: Int, s: Float): Int = Color(Color.HSBtoRGB(hueStep(offset) / 360.0f, s, 1.0f)).rgb or (255 shl 24)
 
     private fun tick() {
@@ -120,7 +119,7 @@ class Particles : Module("particles", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `rr.u`: one tick of a particle; true once it is dead. */
+    /** One tick of a particle; true once it is dead. */
     private fun tickDrop(d: Drop): Boolean {
         val p = mc.player!!
         val rain = physics.value == Physics.RAIN
@@ -153,7 +152,7 @@ class Particles : Module("particles", Categories.COSMETIC) {
             d.rotSpeed = Rng.float(-20.0f, 20.0f)
             rings += Ring(d.x, d.groundY, d.z, d.color)
         }
-        // The original compares a distance with what look like squared distances (32², 48²): always visible in practice.
+        // Compares a distance with what look like squared distances (32², 48²) on purpose: always visible in practice.
         val dist = hypot(d.x - p.x, d.z - p.z)
         d.visible = dist < if (rain) 1024.0f else 2304.0f
         return false

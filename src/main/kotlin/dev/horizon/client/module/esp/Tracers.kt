@@ -27,7 +27,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * The original's "tracers" (`e9`): an arrow per player around the crosshair pointing at them (tilted like a compass), or in
+ * An arrow per player around the crosshair pointing at them (tilted like a compass), or in
  * LINES mode a line from in front of the camera to each player.
  */
 class Tracers : Module("tracers", Categories.ESP) {
@@ -42,11 +42,11 @@ class Tracers : Module("tracers", Categories.ESP) {
     val friend = color("friend", Color(0xFF00FF00.toInt(), true))
     val teamColors = bool("team-colors", false)
 
-    /** Arrow tilt floor and ring radius (`P`, `G`). */
+    /** Arrow tilt floor and ring radius. */
     private val tilt = Animation(Easing.OUT_QUINT, 300)
     private val radius = Animation(Easing.OUT_QUINT, 300)
 
-    /** The smoothed yaw the arrows turn with (`q`). */
+    /** The smoothed yaw the arrows turn with. */
     private var yaw = 0f
 
     init {
@@ -60,7 +60,6 @@ class Tracers : Module("tracers", Categories.ESP) {
         return c
     }
 
-    /** `e9.K` (Render2D). */
     private fun arrows() {
         if (mode.value == Mode.LINES) return
         val me = mc.player ?: return
@@ -94,13 +93,13 @@ class Tracers : Module("tracers", Categories.ESP) {
         }
     }
 
-    /** `e9.Y`: the mode's atlas triangle, [size] square, centred on ([x], [y]), additive (`sf.L`); the GPS uses it too. */
+    /** The mode's atlas triangle, [size] square, centred on ([x], [y]), additive; the GPS uses it too. */
     fun arrow(ps: PoseStack, x: Float, y: Float, size: Float, color: Int) {
         val uv = mode.value.sprite
         val hw = size / 2f
         val hh = size / 2f
         Esp2.drawGui(Pipelines.COLORED_TEXTURE_ADDITIVE, Skins.atlas(), ps.last().pose()) { vc ->
-            // The original offsets the first corner by the half height, not the half width (the same for a square).
+            // The first corner is offset by the half height, not the half width (the same for a square).
             vc.addVertex(x - hh, y + hh, 0f).setUv(uv[0], uv[3]).setColor(color)
             vc.addVertex(x + hw, y + hh, 0f).setUv(uv[2], uv[3]).setColor(color)
             vc.addVertex(x + hw, y - hh, 0f).setUv(uv[2], uv[1]).setColor(color)
@@ -108,7 +107,7 @@ class Tracers : Module("tracers", Categories.ESP) {
         }
     }
 
-    /** `e9.e` (Render3D): LINES mode. */
+    /** LINES mode. */
     private fun lines() {
         if (mode.value != Mode.LINES) return
         val level = mc.level ?: return

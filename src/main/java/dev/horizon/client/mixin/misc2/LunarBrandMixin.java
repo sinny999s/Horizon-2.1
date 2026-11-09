@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * Not in the original: Lunar Spoof's brand. The brand the client sends when login finishes (vanilla's "vanilla", which
+ * Lunar Spoof's brand. The brand the client sends when login finishes (vanilla's "vanilla", which
  * Fabric makes "fabric") is "lunarclient:v&lt;version&gt;" while it's on, as Lunar Client's own, except in singleplayer and on
  * versions Lunar doesn't run on (Moonlight's FMLCommonHandlerMixin).
  */

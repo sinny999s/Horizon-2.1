@@ -4,7 +4,7 @@ import net.minecraft.world.level.BaseSpawner;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-/** A spawner's ticks to its next spawn (the original read the field directly). */
+/** A spawner's ticks to its next spawn. */
 @Mixin(BaseSpawner.class)
 public interface BaseSpawnerAccessor {
 	@Accessor("spawnDelay")

@@ -15,7 +15,7 @@ import net.minecraft.world.phys.AABB
 import kotlin.math.roundToInt
 
 /**
- * The original's "anti-phase" (`_q`): a ladder, vine, item frame or scaffolding into the feet block of an enemy who stands
+ * A ladder, vine, item frame or scaffolding into the feet block of an enemy who stands
  * alone in one block column next to walls (phased into a 1x1 gap, or about to be).
  */
 class AntiPhase : PlacerModule("anti-phase", Categories.ATTACK, 150) {
@@ -29,7 +29,6 @@ class AntiPhase : PlacerModule("anti-phase", Categories.ATTACK, 150) {
     /** The item goes into the cell the enemy stands in, so no entity check. */
     override val ignoreMode: IgnoreMode get() = IgnoreMode.NONE
 
-    /** The original's `_q.r`. */
     override fun items(): List<Item> {
         val list = ArrayList<Item>(4)
         if (scaffoldings.value) list += Items.SCAFFOLDING
@@ -43,7 +42,7 @@ class AntiPhase : PlacerModule("anti-phase", Categories.ATTACK, 150) {
         on<PlayerUpdateEvent> { placeItems(positions(), false) }
     }
 
-    /** The original's `_q.I`: the feet block of each eligible player, in level order (no de-duplication). */
+    /** The feet block of each eligible player, in level order (no de-duplication). */
     private fun positions(): List<BlockPos> {
         val level = mc.level ?: return emptyList()
         val out = ArrayList<BlockPos>()
@@ -51,7 +50,6 @@ class AntiPhase : PlacerModule("anti-phase", Categories.ATTACK, 150) {
         return out
     }
 
-    /** The original's `_q.M`. */
     private fun eligible(p: Player): Boolean {
         val self = mc.player ?: return false
         val level = mc.level ?: return false
@@ -67,7 +65,7 @@ class AntiPhase : PlacerModule("anti-phase", Categories.ATTACK, 150) {
         return self.distanceTo(p) <= range.value + 3.0f
     }
 
-    /** The original's `nq.a`: the block columns the hitbox covers (1, 2 or 4). */
+    /** The block columns the hitbox covers (1, 2 or 4). */
     private fun columns(p: Player): List<BlockPos> {
         val y = BlockPos.containing(p.x, p.y.roundToInt().toDouble(), p.z).y.toDouble()
         val bb = p.boundingBox
@@ -80,7 +78,7 @@ class AntiPhase : PlacerModule("anti-phase", Categories.ATTACK, 150) {
         ).toList()
     }
 
-    /** The original's `_q.H`: an item frame (or glow frame) already hangs in [box]. */
+    /** An item frame (or glow frame) already hangs in [box]. */
     private fun hasFrame(box: AABB): Boolean =
         mc.level?.entitiesForRendering()?.any { it is ItemFrame && it.boundingBox.intersects(box) } ?: false
 }

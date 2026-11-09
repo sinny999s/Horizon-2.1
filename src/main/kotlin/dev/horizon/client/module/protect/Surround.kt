@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 import kotlin.math.floor
 
-/** The original's "surround" (`b8`): keeps blocks around (and under) the feet, re-placing the moment one goes. */
+/** Keeps blocks around (and under) the feet, re-placing the moment one goes. */
 class Surround : PlacerModule("surround", Categories.PROTECT, 200, showRange = false) {
     enum class Center { OFF, DEFAULT, SMART }
 
@@ -72,7 +72,7 @@ class Surround : PlacerModule("surround", Categories.PROTECT, 200, showRange = f
             if (c.distanceToSqr(p.eyePosition) >= 9.0) return@on
             val list = positions(feet(), ArrayList())
             if (list.isEmpty()) return@on
-            // The original followed the attack with a swing packet, which 26.3 doesn't have.
+            // No swing packet follows the attack; 26.3 doesn't have one.
             Packets.send(ServerboundAttackPacket(pk.id))
             placeList(list.sortedBy { Vec3.atCenterOf(it).distanceTo(c) }, true)
             skipTick = true
@@ -113,7 +113,7 @@ class Surround : PlacerModule("surround", Categories.PROTECT, 200, showRange = f
         Placer.place(pos, 0, interact.value, placeMode.value, IgnoreMode.ONLY_CRYSTALS, 6.0f, 6.0f, 200, switch.value) != null
 
     /**
-     * The original's `b8.H`: the free blocks around [pos] (and under it), going around any block a living entity stands in,
+     * The free blocks around [pos] (and under it), going around any block a living entity stands in,
      * with a support block first where one is needed; nearest to where the movement keys are taking the player first.
      */
     private fun positions(pos: BlockPos, visited: MutableList<BlockPos>): List<BlockPos> {
@@ -133,7 +133,7 @@ class Surround : PlacerModule("surround", Categories.PROTECT, 200, showRange = f
                 result += n
                 continue
             }
-            // Every placeable support is added, and n after each of them (as in the original).
+            // Every placeable support is added, and n after each of them (on purpose).
             for (d2 in DIRS) {
                 val h = n.relative(d2)
                 if (canPlace(h)) {

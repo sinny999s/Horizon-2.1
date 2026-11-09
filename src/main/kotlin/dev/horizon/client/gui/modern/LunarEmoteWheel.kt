@@ -17,7 +17,7 @@ import kotlin.math.hypot
 import kotlin.math.sin
 
 /**
- * Not in the original: Lunar's emote wheel. Held open by the Lunar menu's emote key: the emotes in your wheel's slots
+ * Lunar's emote wheel. Held open by the Lunar menu's emote key: the emotes in your wheel's slots
  * (set with right-click in the locker's Emotes tab, saved on your account) sit around a ring; point at one and let go
  * of the key (or click) to play it ([LunarSocial.playEmote]: for other Lunar players too when you own it).
  */

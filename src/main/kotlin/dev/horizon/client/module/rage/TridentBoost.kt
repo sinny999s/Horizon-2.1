@@ -17,7 +17,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * The original's "trident-boost" (`by`): replaces the riptide release. After [delay] ticks of use it pushes the player along
+ * Replaces the riptide release. After [delay] ticks of use it pushes the player along
  * the look with [factor] (Motion) or [factor] × 3 × (1 + riptide) / 4 (Factor); with [rainSpoof] it works out of water
  * and rain too.
  */
@@ -30,7 +30,7 @@ class TridentBoost : Module("trident-boost", Categories.RAGE) {
     val delay = int("delay", 10, 0..20)
     val rainSpoof = bool("rain-spoof", true)
 
-    /** The original's `by.Z` body: the boost, when held long enough with riptide (and water or rain, unless spoofed). */
+    /** The boost, when held long enough with riptide (and water or rain, unless spoofed). */
     private fun boost() {
         val p = mc.player ?: return
         val level = mc.level ?: return

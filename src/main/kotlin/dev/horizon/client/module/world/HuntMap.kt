@@ -43,7 +43,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Not in the original: a full-screen map for base hunting ([openKey], M by default). While on, it records every chunk you
+ * A full-screen map for base hunting ([openKey], M by default). While on, it records every chunk you
  * load (top-down colours, and New Chunks' new/old verdict, so New Chunks remembers across relogs and 6b6t worker moves)
  * per server and dimension. Where the world's seed is known ([seeds]: 6b6t and 2b2t are filled in; singleplayer uses
  * its own), the map shows the untouched land as parchment everywhere, and flags recorded overworld chunks whose ground

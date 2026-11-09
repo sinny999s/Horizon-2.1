@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's post/default/default.fsh: the chams mask filled with one colour, with a soft outline around it.
+// The chams mask filled with one colour, with a soft outline around it.
 uniform sampler2D Sampler0;
 
 layout(std140) uniform UBO {

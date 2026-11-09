@@ -18,7 +18,7 @@ import net.minecraft.network.chat.contents.TranslatableContents
 import kotlin.math.floor
 
 /**
- * Not in the original: the pause menu in the client's style, over the blurred world: a panel with where you are (the world,
+ * The pause menu in the client's style, over the blurred world: a panel with where you are (the world,
  * or the server, its address and how many are online) and vanilla's buttons in vanilla's rows, pressing vanilla's own
  * (leaving and saving included); the feedback and bug-report links are left out.
  */

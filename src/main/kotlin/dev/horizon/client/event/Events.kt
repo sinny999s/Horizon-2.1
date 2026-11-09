@@ -10,7 +10,7 @@ import org.joml.Matrix4f
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * An event; [cancel] marks it cancelled for the code that posted it (other handlers still run, as in the original). Shared
+ * An event; [cancel] marks it cancelled for the code that posted it (other handlers still run). Shared
  * instances are reset to not cancelled before each post.
  */
 abstract class Event {
@@ -75,7 +75,7 @@ class ContainerClickEvent(val slotId: Int, val button: Int, val input: Container
 /** Around vanilla's hotbar (`Hud.extractItemHotbar` HEAD, then RETURN). */
 class HotbarRenderEvent(val pre: Boolean) : Event()
 
-/** The client's 2D layer, after the world composites and before the HUD widgets (the original's Render2DEvent). */
+/** The client's 2D layer, after the world composites and before the HUD widgets. */
 class Render2DEvent(val graphics: GuiGraphicsExtractor) : Event()
 
 /** After `KeyboardInput.tick` read the keys into the movement input. */
@@ -98,7 +98,7 @@ class FireworkVectorEvent(var vector: Vec3) : Event()
 /** Around `MultiPlayerGameMode.useItem` ([pre] at HEAD, then RETURN). */
 class UseItemEvent(val pre: Boolean) : Event()
 
-/** Not in the original: every frame, just after vanilla turned the camera by the mouse (Aura's Legit rotation turns it too). */
+/** Every frame, just after vanilla turned the camera by the mouse (Aura's Legit rotation turns it too). */
 object MouseTurnEvent : Event() {
     /** Timestamp (`System.nanoTime()`) of the last non-zero physical mouse delta in `MouseHandler`. */
     @Volatile
@@ -118,7 +118,7 @@ class RenderEntityEvent(val entity: Entity) : Event()
 
 /**
  * `LocalPlayer.move`, at the call to `super.move`: the local player moving by [movement]. Cancelling moves by [x], [y],
- * [z] instead (the original's MoveEvent; handlers set them and cancel).
+ * [z] instead (handlers set them and cancel).
  */
 class MoveEvent(val type: MoverType, val movement: Vec3) : Event() {
     var x = movement.x
@@ -133,7 +133,7 @@ object UsingItemEvent : Event()
 object StopUsingItemEvent : Event()
 
 /**
- * The original's event bus (Gofra): handlers run in descending priority, equal priorities in the order they were plugged.
+ * The event bus: handlers run in descending priority, equal priorities in the order they were plugged.
  * Every handler runs even after a cancel.
  */
 object EventBus {

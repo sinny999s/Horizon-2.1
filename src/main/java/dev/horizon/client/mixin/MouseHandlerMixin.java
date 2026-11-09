@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** HUD widget dragging, mouse binds and the held-buttons list, before the screen sees the click (as the original). */
+/** HUD widget dragging, mouse binds and the held-buttons list, before the screen sees the click. */
 @Mixin(MouseHandler.class)
 public abstract class MouseHandlerMixin {
 	@Shadow
@@ -34,7 +34,7 @@ public abstract class MouseHandlerMixin {
 		}
 	}
 
-	/** Not in the original: a turn of the camera each frame, after the mouse's own (MouseTurnEvent). */
+	/** A turn of the camera each frame, after the mouse's own (MouseTurnEvent). */
 	@Inject(method = "handleAccumulatedMovement", at = @At("TAIL"))
 	private void horizon$turn(CallbackInfo ci) {
 		EventBus.INSTANCE.post(MouseTurnEvent.INSTANCE);

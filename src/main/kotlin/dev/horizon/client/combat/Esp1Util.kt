@@ -42,7 +42,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 /**
- * The original's hole cache (`vg`), shared by hole-esp, hole-filler and hole-anchor: every tick in which someone asked for the
+ * Hole cache, shared by hole-esp, hole-filler and hole-anchor: every tick in which someone asked for the
  * holes during the last second, a new scan around the player is started on a virtual thread; readers get the last scan
  * that has finished. Nobody asking for a second stops the scanning and empties the list.
  */
@@ -50,9 +50,9 @@ object Holes {
     enum class Safety { UNSAFE, SAFE }
     enum class Shape { SINGLE, DOUBLE_X, DOUBLE_Z, QUAD }
 
-    /** The original's `vl`: a hole by its min-x/min-z air cell. */
+    /** A hole by its min-x/min-z air cell. */
     class Hole(val pos: BlockPos, val safety: Safety, val shape: Shape) {
-        /** `vl.r`: the hole's cells, [height] tall. */
+        /** The hole's cells, [height] tall. */
         fun box(height: Float): AABB {
             val x = pos.x.toDouble()
             val y = pos.y.toDouble()
@@ -91,10 +91,10 @@ object Holes {
         }
     }
 
-    /** Plugs the cache's tick handler (the original plugged it at start-up, before any module). */
+    /** Plugs the cache's tick handler. */
     fun init() {}
 
-    /** `vg.m`: the latest finished scan; asking keeps the scanning going. */
+    /** The latest finished scan; asking keeps the scanning going. */
     fun holes(): List<Hole> {
         lastQuery.reset()
         val s = scan
@@ -102,7 +102,7 @@ object Holes {
         return holes
     }
 
-    /** `vg.u`: whether [pos] is a cell of a cached hole. */
+    /** Whether [pos] is a cell of a cached hole. */
     fun contains(pos: BlockPos): Boolean = holes().any { h ->
         val o = h.pos
         pos == o || when (h.shape) {
@@ -117,7 +117,7 @@ object Holes {
 
     private fun vertical() = minOf(32, maxOf(Modules.get<HoleAnchor>().verticalRange.value, Modules.get<HoleEsp>().rangeY.value))
 
-    /** `vg.u(x, y, z)`: a block read off the main thread; air for anything that can't be read. */
+    /** A block read off the main thread; air for anything that can't be read. */
     private fun block(x: Int, y: Int, z: Int): BlockState = try {
         val level = Minecraft.getInstance().level!!
         val chunk = level.getChunk(x shr 4, z shr 4)
@@ -129,7 +129,7 @@ object Holes {
         Blocks.AIR.defaultBlockState()
     }
 
-    /** `vg.v`: x, then y, then z over the scan box around the player's feet block. */
+    /** X, then y, then z over the scan box around the player's feet block. */
     private fun scan(): List<Hole> {
         val out = ArrayList<Hole>()
         val p = BlockPos.containing(Minecraft.getInstance().player!!.position())
@@ -157,7 +157,7 @@ object Holes {
         }
     }
 
-    /** `vg.E`: the hole whose min corner is (x, y, z), if any; a shape that fails its walls doesn't fall back to a smaller one. */
+    /** The hole whose min corner is (x, y, z), if any; a shape that fails its walls doesn't fall back to a smaller one. */
     private fun classify(x: Int, y: Int, z: Int): Hole? {
         val w = Walls()
         w.count(x - 1, y, z)
@@ -189,9 +189,9 @@ object Holes {
     }
 }
 
-/** The original's 2D ESP frames (`sf.L` + `sf.j`): an entity's render box as a screen rectangle with a black border. */
+/** 2D ESP frames: an entity's render box as a screen rectangle with a black border. */
 object Frames {
-    /** The original's `h3.W`: the entity's box at its interpolated position, 0.05 wider on each side and 0.15 taller. */
+    /** The entity's box at its interpolated position, 0.05 wider on each side and 0.15 taller. */
     fun renderBox(e: Entity): AABB {
         val pt = World3D.partialTick.toDouble()
         val x = Mth.lerp(pt, e.xo, e.x)
@@ -203,8 +203,8 @@ object Frames {
     }
 
     /**
-     * The (min x, min y, max x, max y) of the on-screen corners of [e]'s render box, or null when none is on screen. As
-     * The original, the max x starts at the first corner's depth and the max y at 0.
+     * The (min x, min y, max x, max y) of the on-screen corners of [e]'s render box, or null when none is on screen. The
+     * max x starts at the first corner's depth and the max y at 0 (on purpose).
      */
     fun screenBox(e: Entity): FloatArray? {
         val b = renderBox(e)
@@ -225,7 +225,7 @@ object Frames {
         return floatArrayOf(q[0].toFloat(), q[1].toFloat(), q[2].toFloat(), q[3].toFloat())
     }
 
-    /** The original's `sf.j`: four black bars, then the four coloured half-unit lines. */
+    /** Four black bars, then the four coloured half-unit lines. */
     fun draw(x1: Float, y1: Float, x2: Float, y2: Float, color: Int) {
         val black = java.awt.Color.BLACK.rgb
         bar(x1 - 1.0f, y1, x1 + 0.5f, y2 + 0.5f, black)
@@ -238,14 +238,13 @@ object Frames {
         bar(x2 - 0.5f, y1, x2, y2, color)
     }
 
-    /** The original's `sf.p`: the rectangle between (x1, y1) and (x2, y2). */
+    /** The rectangle between (x1, y1) and (x2, y2). */
     private fun bar(x1: Float, y1: Float, x2: Float, y2: Float, color: Int) = Canvas.quad(x1, y1, x2 - x1, y2 - y1, color)
 }
 
 /**
- * The original's batched glass plates (`_m`, used by tags): [add] remembers a plate with the pose it was added under, [flush]
- * draws all of them (radius 3, border 0.75) in the order added. The original drew them as one depth-tested draw with rising
- * depth, which keeps that order.
+ * Batched glass plates (used by tags): [add] remembers a plate with the pose it was added under, [flush] draws all of
+ * them (radius 3, border 0.75) in the order added.
  */
 class GlassPlates {
     private class Plate(val pose: Matrix3x2f, val x: Float, val y: Float, val w: Float, val h: Float, val alpha: Float)
@@ -268,7 +267,7 @@ class GlassPlates {
     }
 }
 
-/** The original's `lq.j`: a component as a §-coded string, a colour code wherever the colour changes, ending in "§r". */
+/** A component as a §-coded string, a colour code wherever the colour changes, ending in "§r". */
 fun legacyText(c: Component): String {
     val sb = StringBuilder()
     var last = Int.MIN_VALUE
@@ -287,7 +286,7 @@ fun legacyText(c: Component): String {
     return sb.toString()
 }
 
-/** The original's `lq.T`: the legacy code of a chat colour, or §x§R§R§G§G§B§B for any other. */
+/** The legacy code of a chat colour, or §x§R§R§G§G§B§B for any other. */
 private fun colorCode(rgb: Int): String {
     val code = when (rgb) {
         0 -> '0'; 170 -> '1'; 43520 -> '2'; 43690 -> '3'; 5592405 -> '8'; 5592575 -> '9'; 5635925 -> 'a'; 5636095 -> 'b'
@@ -302,10 +301,10 @@ private fun colorCode(rgb: Int): String {
     return sb.toString()
 }
 
-/** The original's world → screen helpers (`sf.m`, `sf.d`), with this frame's Render3D matrices. */
+/** World → screen helpers, with this frame's Render3D matrices. */
 object Projection {
     /**
-     * `sf.m`: [pos] in GUI coordinates (x, y) and window depth z; behind the camera it is (NaN, NaN, −1). On screen
+     * [pos] in GUI coordinates (x, y) and window depth z; behind the camera it is (NaN, NaN, −1). On screen
      * exactly when 0 < z < 1.
      */
     fun project(pos: Vec3): Vec3 {
@@ -323,7 +322,7 @@ object Projection {
         return Vec3((winX / sc).toDouble(), ((h - winY) / sc).toDouble(), winZ.toDouble())
     }
 
-    /** `sf.d`: (x, y, max(x, z), 0) when [pos] is on screen, else null. */
+    /** (x, y, max(x, z), 0) when [pos] is on screen, else null. */
     fun box(pos: Vec3): Vector4d? {
         val v = project(pos)
         return if (v.z > 0.0 && v.z < 1.0) Vector4d(v.x, v.y, maxOf(v.x, v.z), 0.0) else null
@@ -331,13 +330,13 @@ object Projection {
 }
 
 /**
- * The original's player shapes (`k7`): the player model, without its outer layer, as flat-coloured quads (fill) or quad
+ * Player shapes: the player model, without its outer layer, as flat-coloured quads (fill) or quad
  * outlines, through walls. Used by player-esp's "default" type and logout-spots' DEFAULT mode.
  */
 object PlayerShapes {
     private val mc get() = Minecraft.getInstance()
 
-    /** The original's `ou`: takes the model's vertex positions four at a time and emits a quad, or its four edges. */
+    /** Takes the model's vertex positions four at a time and emits a quad, or its four edges. */
     private class Collector(val out: VertexConsumer, val outline: Boolean, val color: Int) : VertexConsumer {
         private val xs = FloatArray(4)
         private val ys = FloatArray(4)
@@ -375,7 +374,7 @@ object PlayerShapes {
     }
 
     /**
-     * `k7.n`: every player in the level within [maxH] blocks horizontally and [maxV] vertically of the camera entity
+     * Every player in the level within [maxH] blocks horizontally and [maxV] vertically of the camera entity
      * (yourself only in third person), friends in the friend colours.
      */
     fun drawLevel(mode: RenderMode, fill: Int, line: Int, friendFill: Int, friendLine: Int, maxV: Int, maxH: Int) {
@@ -392,7 +391,7 @@ object PlayerShapes {
     }
 
     /**
-     * `k7.T`: the given players at their last tick's position; yourself only in third person and within [maxH] /
+     * The given players at their last tick's position; yourself only in third person and within [maxH] /
      * [maxV] of the camera entity, everyone else always.
      */
     fun drawList(mode: RenderMode, fill: Int, line: Int, list: List<Player>, maxV: Int, maxH: Int) {
@@ -420,7 +419,7 @@ object PlayerShapes {
         }
     }
 
-    /** `k7.T(stack, entity, …)`: the model at the player's position interpolated by [t], vertices relative to the camera. */
+    /** The model at the player's position interpolated by [t], vertices relative to the camera. */
     private fun shape(player: Player, vc: VertexConsumer, t: Float) {
         val p = player as? AbstractClientPlayer ?: return
         @Suppress("UNCHECKED_CAST")
@@ -453,7 +452,7 @@ object PlayerShapes {
         model.renderToBuffer(stack, vc, 15728880, 0, -1)
     }
 
-    /** The original's `e2.f`: vanilla's model rotations without the death roll, sleeping, upside-down and freezing. */
+    /** Vanilla's model rotations without the death roll, sleeping, upside-down and freezing. */
     fun setupRotations(rs: AvatarRenderState, stack: PoseStack, bodyRot: Float) {
         if (rs.isFallFlying) {
             stack.rotateDegrees(Axis.YP, 180.0f - bodyRot)

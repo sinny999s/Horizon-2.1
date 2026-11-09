@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's core/rect/blurred_rect.fsh: the blurred screen inside a rounded rectangle (a radius per corner),
+// The blurred screen inside a rounded rectangle (a radius per corner),
 // tinted and bordered.
 uniform sampler2D Sampler0;
 

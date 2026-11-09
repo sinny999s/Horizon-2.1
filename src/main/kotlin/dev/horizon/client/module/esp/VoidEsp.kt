@@ -12,7 +12,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
 
-/** The original's "void-esp" (`e_`): marks the holes in the bedrock floor (bottom-layer blocks that aren't bedrock). */
+/** Marks the holes in the bedrock floor (bottom-layer blocks that aren't bedrock). */
 class VoidEsp : Module("void-esp", Categories.ESP) {
     enum class Mode { FLAT, BOX, WIRE_FRAME, CROSS }
 
@@ -49,7 +49,7 @@ class VoidEsp : Module("void-esp", Categories.ESP) {
         }
     }
 
-    /** `e_.R`: the bottom layer within [range] of the player (x and z truncated, end exclusive) minus bedrock. */
+    /** The bottom layer within [range] of the player (x and z truncated, end exclusive) minus bedrock. */
     private fun scan(): List<BlockPos> {
         val p = mc.player ?: return emptyList()
         val level = mc.level ?: return emptyList()

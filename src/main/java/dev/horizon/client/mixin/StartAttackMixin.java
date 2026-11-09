@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Marks vanilla's own left click, which sends its swing itself (Swings; not in the original). */
+/** Marks vanilla's own left click, which sends its swing itself (Swings). */
 @Mixin(Minecraft.class)
 public abstract class StartAttackMixin {
 	@Inject(method = "startAttack", at = @At("HEAD"))

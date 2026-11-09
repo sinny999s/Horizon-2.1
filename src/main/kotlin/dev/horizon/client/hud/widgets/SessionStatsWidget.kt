@@ -15,7 +15,7 @@ import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 import kotlin.math.max
 
 /**
- * Not in the original: Session Stats HUD widget showing session playtime, kills, deaths and K/D ratio.
+ * Session Stats HUD widget showing session playtime, kills, deaths and K/D ratio.
  *
  * On Hypixel (in Bedwars, or wherever the Mod API says it's Hypixel) nobody really dies: you're made a spectator, so a
  * death is only seen in chat. There it reads the server's own lines instead ([HypixelChat]): kills, deaths, final

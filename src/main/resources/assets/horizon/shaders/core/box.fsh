@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: Canvas.box, a rounded rectangle as a browser draws one. uSize is the quad's size: the box plus a
+// Canvas.box, a rounded rectangle as a browser draws one. uSize is the quad's size: the box plus a
 // one-unit margin all round for the anti-aliased edge. The border lies inside the box, over the fill, and the fill's
 // alpha counts once. With DITHER (gradients, whose few colour levels show as lines) the output is premultiplied, with about
 // one level of noise, as in glow.fsh; an opaque one keeps its colours exact.

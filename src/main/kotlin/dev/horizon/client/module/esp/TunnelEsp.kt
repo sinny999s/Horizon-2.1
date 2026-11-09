@@ -31,7 +31,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * Not in the original: player-dug passages (the idea of Trouser-Streak's Hole/Tunnel/Stairs ESP, for following someone's route
+ * Player-dug passages (the idea of Trouser-Streak's Hole/Tunnel/Stairs ESP, for following someone's route
  * to a base). A column of room with a floor and a ceiling, walled in on every side but the one or two it continues to, is
  * part of a passage; that one rule covers straight tunnels, ones zigzagging diagonally and winding ones, and with a step
  * up or down, stairs. [HuntShapes] joins the columns and drops anything too short or of varying height. [shafts] finds

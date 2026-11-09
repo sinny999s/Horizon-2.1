@@ -16,15 +16,15 @@ import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.Items
 
 /**
- * The original's "legit-totem" (`jb`): refills the off-hand totem like a person would — opens the inventory screen 2–4
+ * Refills the off-hand totem like a person would — opens the inventory screen 2–4
  * ticks after the pop, drifts the cursor towards a random totem, swaps it into the off-hand with the F-key click 2–4
  * ticks later and closes the screen 3–5 ticks after that. No settings.
  */
 class LegitTotem : Module("legit-totem", Categories.LEGIT) {
-    /** Progress in ticks, 0 = idle (the original's `I`); never reset on enable/disable. */
+    /** Progress in ticks, 0 = idle; never reset on enable/disable. */
     private var progress = 0
 
-    /** [progress] at which the next step happens (the original's `R`). */
+    /** [progress] at which the next step happens. */
     private var target = 0
 
     init {
@@ -46,7 +46,7 @@ class LegitTotem : Module("legit-totem", Categories.LEGIT) {
                 PlayerState.releaseMovementKeys()
                 return@on
             }
-            // Whatever screen is open gets the click (in a chest the slot numbers differ; original).
+            // Whatever screen is open gets the click (in a chest the slot numbers differ; on purpose).
             Inventory.click(found.slot, 40, ContainerInput.SWAP, false)
             Scheduler.ticks(Rng.int(2, 4)) { closeAll() }
             progress = 0
@@ -54,7 +54,7 @@ class LegitTotem : Module("legit-totem", Categories.LEGIT) {
     }
 
     /**
-     * The original's `jb.n`: a uniformly random totem among inventory indices 36 down to 0 (Kotlin's unseeded random, re-rolled
+     * A uniformly random totem among inventory indices 36 down to 0 (Kotlin's unseeded random, re-rolled
      * every tick), as a container slot id: the hotbar becomes 36..44, index 36 (boots) stays 36.
      */
     private fun pickTotem(): Found? {
@@ -68,7 +68,7 @@ class LegitTotem : Module("legit-totem", Categories.LEGIT) {
     }
 
     /**
-     * Warps the cursor 60 % of the way to the original's approximation of the slot's position (20 px grid from the
+     * Warps the cursor 60 % of the way to an approximation of the slot's position (20 px grid from the
      * centre), in framebuffer pixels (GUI coordinates × GUI scale), and tells the mouse handler.
      */
     private fun moveCursorTowards(slot: Int) {
@@ -87,7 +87,7 @@ class LegitTotem : Module("legit-totem", Categories.LEGIT) {
         mouse.horizon_setYpos((ny * s).toInt().toDouble())
     }
 
-    /** The original's `jb.x`: closes whatever is open (client side first, so the close packet carries id 0) and re-syncs the keys. */
+    /** Closes whatever is open (client side first, so the close packet carries id 0) and re-syncs the keys. */
     private fun closeAll() {
         val p = mc.player ?: return
         p.clientSideCloseContainer()

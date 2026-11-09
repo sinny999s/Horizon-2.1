@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's `MixinKeyboardHandler.onKey`: keys go through InputEvent before vanilla, while in a world. */
+/** Keys go through InputEvent before vanilla, while in a world. */
 @Mixin(KeyboardHandler.class)
 public abstract class KeyInputMixin {
 	@Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)

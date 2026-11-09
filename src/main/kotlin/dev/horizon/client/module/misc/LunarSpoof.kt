@@ -10,7 +10,7 @@ import net.minecraft.SharedConstants
 import net.minecraft.network.Connection
 
 /**
- * Not in the original: makes the client pass for Lunar Client on servers, after Moonlight (afterlike's Forge 1.8.9 mod),
+ * Makes the client pass for Lunar Client on servers, after Moonlight (afterlike's Forge 1.8.9 mod),
  * for servers that treat Lunar players differently (Hypixel lets Lunar through where it's picky about other clients;
  * Apollo servers enable Lunar's features). Off singleplayer only, and corrected to what Lunar Client itself sends
  * ([dev.horizon.client.lunar.LunarProfile]). It claims Lunar for the Minecraft version the server is joined as

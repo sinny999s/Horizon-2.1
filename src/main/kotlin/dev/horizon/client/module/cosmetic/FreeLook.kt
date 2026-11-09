@@ -14,14 +14,14 @@ import net.minecraft.client.CameraType
 import net.minecraft.util.profiling.Profiler
 
 /**
- * The original's "free-look" (`r5`): third person, the mouse turns only the camera; the rotation the player had when it was
+ * Third person, the mouse turns only the camera; the rotation the player had when it was
  * enabled ([rotation]) is what the server gets, what movement, jumps and the crosshair use, and what is restored on disable.
  */
 class FreeLook : Module("free-look", Categories.COSMETIC) {
-    /** The original's `T`; the rotation manager snaps it to the sensitivity grid in place. */
+    /** The rotation manager snaps it to the sensitivity grid in place. */
     var rotation = Rotation(0f, 0f)
 
-    /** The original's `H`: the free rotation while travel runs with [rotation]. */
+    /** The free rotation while travel runs with [rotation]. */
     private var saved = Rotation(0f, 0f)
 
     init {

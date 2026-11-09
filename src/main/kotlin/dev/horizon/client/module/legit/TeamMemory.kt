@@ -1,7 +1,7 @@
 package dev.horizon.client.module.legit
 
 /**
- * Not in the original: who [Teams] last saw as a teammate, for the moments a server shows nothing to tell a player's
+ * Who [Teams] last saw as a teammate, for the moments a server shows nothing to tell a player's
  * team by. A Bedwars teammate who respawns reappears a moment before his dyed armour and team colour do, and Aura would
  * swing at him in that gap. A teammate stays one while every check has nothing to compare ([Signal.UNKNOWN]). A check
  * that sees two different teams ([Signal.MISMATCH]) forgets him at once, so a waiting room where everyone's name is the

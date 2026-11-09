@@ -6,7 +6,7 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 
 /**
- * Not in the original: plays a Lunar GeckoLib cosmetic's animations, as Lunar does, for one wearer at a time
+ * Plays a Lunar GeckoLib cosmetic's animations, as Lunar does, for one wearer at a time
  * ([Instance]): every frame Lunar's `constants.molang` updates the wearer's `c.` values, each animation controller of
  * the cosmetic's state machine picks its state (the first whose `plays_when` holds; "single" machines always play
  * their one animation), switches cross-fade over the controller's transition ticks, and the animations are sampled

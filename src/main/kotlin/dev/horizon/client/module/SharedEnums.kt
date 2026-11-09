@@ -1,6 +1,6 @@
 package dev.horizon.client.module
 
-// Enums the original shares between several modules (generated from its module dump).
+// Enums shared between several modules.
 
 @Suppress("EnumEntryName")
 enum class Animation { Fade, Hover, Decrease, Static, Flash, Grow, FILL, TNT, Pull }

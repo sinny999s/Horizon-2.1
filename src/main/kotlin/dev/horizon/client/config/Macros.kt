@@ -23,7 +23,6 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import java.nio.file.Files
 
-/** The original's macro (`ze`). */
 sealed interface Macro {
     var id: String
     var bind: Bind
@@ -59,7 +58,7 @@ private data class MacrosFile(
 )
 
 /**
- * The original's macros (`ty`), saved in `macro.hzn` (loaded chat, item, setting, so they regroup by type on restart).
+ * Macros, saved in `macro.hzn` (loaded chat, item, setting, so they regroup by type on restart).
  * They fire with no screen open, on press and release of their bind, in list order.
  */
 object Macros {
@@ -87,7 +86,7 @@ object Macros {
         list.filterIsInstance<SettingMacro>(), list.filterIsInstance<ChatMacro>(), list.filterIsInstance<ItemMacro>(),
     ))
 
-    /** The original's `ty.N`: a block (as its item) or item whose id is [name]; hits are cached. */
+    /** A block (as its item) or item whose id is [name]; hits are cached. */
     fun item(name: String): Item? {
         items[name]?.let { return it }
         val found = BuiltInRegistries.BLOCK.firstOrNull { it.descriptionId == "block.minecraft.$name" }?.asItem()
@@ -97,7 +96,7 @@ object Macros {
         return found
     }
 
-    /** A key or mouse button event. The original compared only the code; here the device must match too, as 26.3 codes overlap. */
+    /** A key or mouse button event. The device must match too, as 26.3 codes overlap. */
     fun input(key: Int, mouse: Boolean, press: Boolean) {
         if (mc.level == null || mc.player == null || mc.gui.screen() != null) return
         for (m in list.toList()) {
@@ -148,7 +147,7 @@ object Macros {
         gm.handleContainerInput(menu.containerId, slot, inv.selectedSlot, ContainerInput.SWAP, p)
     }
 
-    /** The original's rage use: on the looked-at block for block items, else in the air; then a swing. */
+    /** Rage use: on the looked-at block for block items, else in the air; then a swing. */
     private fun useHeld(item: Item) {
         val p = mc.player ?: return
         val gm = mc.gameMode ?: return

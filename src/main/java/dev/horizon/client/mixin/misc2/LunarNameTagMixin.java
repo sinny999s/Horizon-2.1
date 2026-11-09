@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * Not in the original: Lunar's logo and badge on a Lunar player's vanilla name tag ([LunarNameTag]). The name line (not
+ * Lunar's logo and badge on a Lunar player's vanilla name tag ([LunarNameTag]). The name line (not
  * the score line above it) gets room for them, and they're drawn in the same place and turn as its text.
  */
 @Mixin(EntityRenderer.class)

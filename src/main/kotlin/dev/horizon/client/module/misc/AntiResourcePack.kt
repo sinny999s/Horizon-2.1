@@ -9,9 +9,9 @@ import net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 
 /**
- * The original's "anti-resource-pack" (`a8`): drops the server's resource-pack push, then answers ACCEPTED after 15–30
+ * Drops the server's resource-pack push, then answers ACCEPTED after 15–30
  * player ticks and SUCCESSFULLY_LOADED after 40–60 (each bound re-rolled every tick). The pack id it sends is the
- * player's UUID, as the original did. Turns itself off on crystalpvp.cc.
+ * player's UUID (on purpose). Turns itself off on crystalpvp.cc.
  */
 class AntiResourcePack : Module("anti-resource-pack", Categories.MISC) {
     private var pending = false

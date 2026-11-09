@@ -14,7 +14,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
 /**
- * Not in the original: when you open a furnace (or smoker, blast furnace), takes out what's done, tops the input up from
+ * When you open a furnace (or smoker, blast furnace), takes out what's done, tops the input up from
  * your inventory and the fuel from [fuel], then closes it with [close]. Stash: smelts what the Dupe Stash still needs
  * ([StashPlan]: cobblestone into stone, then the deepslate and stone bricks to crack), counting what it takes out;
  * Litematica: what furnaces must make for your Litematica placement's missing blocks ([CraftPlanner.shortfall]: the

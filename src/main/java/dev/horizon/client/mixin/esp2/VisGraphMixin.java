@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's VisGraphMixin: while x-ray is on no block occludes, so cave culling hides no section. */
+/** While x-ray is on no block occludes, so cave culling hides no section. */
 @Mixin(VisGraph.class)
 public abstract class VisGraphMixin {
 	@Inject(method = "setOpaque", at = @At("HEAD"), cancellable = true)

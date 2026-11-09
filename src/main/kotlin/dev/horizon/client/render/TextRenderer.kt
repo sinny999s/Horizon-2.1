@@ -17,7 +17,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 /**
- * The original's text engine (`k4` + `f3`): glyphs rasterised by AWT at `size * guiScale` into 512-character pages, drawn as
+ * Text engine: glyphs rasterised by AWT at `size * guiScale` into 512-character pages, drawn as
  * textured quads at whole pixels from the line's top-left. No kerning, no shadow; `§` colour codes work.
  */
 class TextRenderer(file: String, private val size: Float) {
@@ -35,7 +35,7 @@ class TextRenderer(file: String, private val size: Float) {
     private class Queued(val texture: DynamicTexture, val scissor: IntArray?, val m: Matrix3x2f, val x: Float, val y: Float,
                          val w: Float, val h: Float, val u0: Float, val v0: Float, val u1: Float, val v1: Float, val argb: Int)
 
-    /** One 512-character page (the original's `y_`), rasterised on first use with one font. */
+    /** One 512-character page, rasterised on first use with one font. */
     private class Page(val from: Int, val to: Int, val font: Font) {
         val glyphs = ArrayList<Glyph>()
         var texture: DynamicTexture? = null
@@ -63,7 +63,7 @@ class TextRenderer(file: String, private val size: Float) {
                 val b = font.getStringBounds(ch.toString(), frc)
                 val w = ceil(b.width).toInt()
                 val h = ceil(b.height).toInt()
-                // The original measures before wrapping.
+                // Measured before wrapping (on purpose).
                 maxW = max(maxW, x + w)
                 maxH = max(maxH, y + h)
                 if (col >= perRow) {
@@ -130,16 +130,16 @@ class TextRenderer(file: String, private val size: Float) {
 
     // ---- drawing ----
 
-    /** The original's `E`: [text] with its line box's top-left at ([x], [y]). */
+    /** [text] with its line box's top-left at ([x], [y]). */
     fun draw(text: String, x: Float, y: Float, color: Int) = run(text, x, y, color, false, 0, false)
 
-    /** The original's `B`: centred on ([cx], [cy]) both ways. */
+    /** Centred on ([cx], [cy]) both ways. */
     fun drawCentered(text: String, cx: Float, cy: Float, color: Int) = draw(text, cx - width(text) / 2f, cy - height(text) / 2f, color)
 
-    /** The original's `Z`: the theme's moving primary/secondary gradient, [step] apart per character. */
+    /** The theme's moving primary/secondary gradient, [step] apart per character. */
     fun drawGradient(text: String, x: Float, y: Float, step: Int) = run(text, x, y, -1, true, step, false)
 
-    /** The original's `C`: [drawGradient] centred horizontally on [cx]. */
+    /** [drawGradient] centred horizontally on [cx]. */
     fun drawGradientCentered(text: String, cx: Float, y: Float, step: Int) = drawGradient(text, cx - width(text) / 2f, y, step)
 
     private var capScale = -1
@@ -149,9 +149,9 @@ class TextRenderer(file: String, private val size: Float) {
     private val symbols = HashMap<String, java.awt.geom.Rectangle2D>()
 
     /**
-     * Not in the original: the y to [draw] at so the text's capitals are centred on [cy]. [drawCentered] centres the line box
+     * The y to [draw] at so the text's capitals are centred on [cy]. [drawCentered] centres the line box
      * (descender room included) and [draw] puts it 1.5 lower than asked, so text sits low; the client's own screens
-     * line it up with this instead (the ClickGUI and HUD keep the original's placement).
+     * line it up with this instead (the ClickGUI and HUD don't).
      */
     fun middleY(cy: Float): Float {
         checkScale()
@@ -170,16 +170,16 @@ class TextRenderer(file: String, private val size: Float) {
         return cy - capHeight / 2f - capTop - 1.5f
     }
 
-    /** Not in the original: [text] from [x], its capitals centred on [cy]. */
+    /** [text] from [x], its capitals centred on [cy]. */
     fun drawMiddle(text: String, x: Float, cy: Float, color: Int) = draw(text, x - 0.5f, middleY(cy), color)
 
-    /** Not in the original: [text] from [x] with its baseline on [baseline], so two sizes can share a line. */
+    /** [text] from [x] with its baseline on [baseline], so two sizes can share a line. */
     fun drawBaseline(text: String, x: Float, baseline: Float, color: Int) {
         middleY(0f)
         draw(text, x - 0.5f, baseline - capHeight - capTop - 1.5f, color)
     }
 
-    /** Not in the original: [text], a symbol such as an arrow, centred on ([cx], [cy]) by its own outline. */
+    /** [text], a symbol such as an arrow, centred on ([cx], [cy]) by its own outline. */
     fun drawSymbolCentered(text: String, cx: Float, cy: Float, color: Int) {
         middleY(cy)
         val b = symbols.getOrPut(text) { font.createGlyphVector(FontRenderContext(AffineTransform(), true, false), text).visualBounds }
@@ -187,13 +187,13 @@ class TextRenderer(file: String, private val size: Float) {
         draw(text, cx - (b.x + b.width / 2).toFloat() / scale - 0.5f, baseline - ascentPx.toFloat() / scale - 1.5f, color)
     }
 
-    /** Not in the original: [text] centred on ([cx], [cy]), by its capitals vertically. */
+    /** [text] centred on ([cx], [cy]), by its capitals vertically. */
     fun drawMiddleCentered(text: String, cx: Float, cy: Float, color: Int) = drawMiddle(text, cx - width(text) / 2f, cy, color)
 
-    /** The original's batched `S` / `k4.g(...)`: drawn at the next [flush], with the scissor that is current now. */
+    /** Batched: drawn at the next [flush], with the scissor that is current now. */
     fun queue(text: String, x: Float, y: Float, color: Int, rainbow: Boolean = false, step: Int = 0) = run(text, x, y, color, rainbow, step, true)
 
-    /** The original's `o()`: draws the queued text, grouped by glyph page and scissor. */
+    /** Draws the queued text, grouped by glyph page and scissor. */
     fun flush() {
         if (queued.isEmpty()) return
         val byTexture = LinkedHashMap<DynamicTexture, MutableList<Queued>>()
@@ -275,7 +275,7 @@ class TextRenderer(file: String, private val size: Float) {
                             val page = gl.page
                             val tw = page.width.toFloat()
                             val th = page.height.toFloat()
-                            // The original's e(): floats truncated to bytes.
+                            // Floats truncated to bytes.
                             val argb = ((a * 255).toInt() shl 24) or ((r * 255).toInt() shl 16) or ((g * 255).toInt() shl 8) or (b * 255).toInt()
                             val q = Queued(page.texture!!, scissor, m, cx, cy, gl.w.toFloat(), gl.h.toFloat(),
                                 gl.x / tw, gl.y / th, (gl.x + gl.w) / tw, (gl.y + gl.h) / th, argb)
@@ -294,7 +294,7 @@ class TextRenderer(file: String, private val size: Float) {
 
     // ---- measuring ----
 
-    /** The original's `z(s)`: the widest line, in GUI units. */
+    /** The widest line, in GUI units. */
     fun width(text: String): Float {
         checkScale()
         var cur = 0f
@@ -310,7 +310,7 @@ class TextRenderer(file: String, private val size: Float) {
         return max(cur, best)
     }
 
-    /** The original's `l(s)`: line heights (tallest glyph cell / scale) added up. */
+    /** Line heights (tallest glyph cell / scale) added up. */
     fun height(text: String): Float {
         checkScale()
         var chars = strip(NameProtect.protect(text)).toCharArray()
@@ -319,7 +319,7 @@ class TextRenderer(file: String, private val size: Float) {
         var total = 0f
         for (c in chars) {
             if (c == '\n') {
-                // NB: The original does not divide this one by the scale.
+                // NB: this one is not divided by the scale (on purpose).
                 if (lineH == 0f) lineH = glyph(' ')?.h?.toFloat() ?: (1f / scale)
                 total += lineH
                 lineH = 0f
@@ -340,7 +340,7 @@ class TextRenderer(file: String, private val size: Float) {
         private fun load(name: String): Font =
             TextRenderer::class.java.getResourceAsStream("/assets/${HorizonClient.ID}/fonts/$name.ttf")!!.use { Font.createFont(Font.TRUETYPE_FONT, it) }
 
-        /** The original's rounding of the text origin to 0.1 GUI. */
+        /** Rounds the text origin to 0.1 GUI. */
         private fun round1(v: Float): Float = if (v.isNaN()) 1f else ((v * 100f).roundToInt() / 100f * 10f).roundToInt() / 10f
 
         private fun hexDigit(c: Char) = c.digitToIntOrNull(16)

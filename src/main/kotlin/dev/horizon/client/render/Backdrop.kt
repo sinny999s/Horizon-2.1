@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.state.gui.GuiElementRenderState
 import org.joml.Matrix3x2f
 
 /**
- * Not in the original: the animated backdrop every screen out of a world shows instead of the panorama (MenuPanoramaMixin).
+ * The animated backdrop every screen out of a world shows instead of the panorama (MenuPanoramaMixin).
  * One full-screen quad drawn with `shaders/core/menu_background`: black through white only, a horizon with a soft white
  * light over it, fog drifting along it and dust in the air; time goes to the shader in the quad's UVs, the theme colour
  * (unused by the shader now) in its vertex colour. It

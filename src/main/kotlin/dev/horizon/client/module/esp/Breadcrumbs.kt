@@ -26,7 +26,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * Not in the original: a line along the path you've walked (or flown, or ridden), so you can find your way back. A point is
+ * A line along the path you've walked (or flown, or ridden), so you can find your way back. A point is
  * dropped every [spacing] blocks at your feet; a jump of more than [BREAK] blocks in one tick (a teleport, a pearl, a
  * respawn) starts a new piece rather than drawing a line across. Each server and dimension has its own trail, the last
  * [length] points, kept on disk under `horizon/breadcrumbs/` with [save] (so it survives relogs and restarts). Drawn
@@ -100,7 +100,7 @@ class Breadcrumbs : Module("breadcrumbs", Categories.ESP) {
         key = null
     }
 
-    /** Not in the original: the trail of the world you're in for the hunt map (nulls are breaks), even while the module is off. */
+    /** The trail of the world you're in for the hunt map (nulls are breaks), even while the module is off. */
     fun trailForMap(): List<Vec3?> {
         val k = currentKey() ?: return emptyList()
         return trails[k]?.toList() ?: load(k).toList()

@@ -37,7 +37,7 @@ import kotlin.math.exp
 import kotlin.math.hypot
 
 /**
- * The original's chams (`rp.G` and `fn`): entities or the hands are drawn into a mask target, and a post shader puts the
+ * Chams: entities or the hands are drawn into a mask target, and a post shader puts the
  * mask on the screen as glass (MIRROR), a fill with a soft edge (DEFAULT), a glow (BLOOM), a two-colour glow (DOUBLE)
  * or a camouflage pattern (CAMOUFLAGE). Shared by crystal-chams, hand-chams, player-esp and item-esp.
  */
@@ -56,7 +56,7 @@ object Chams {
         .withUniform("UBO", UniformType.UNIFORM_BUFFER)
         .build()
 
-    /** A full-screen pass with the original's post vertex shader (as the port's `kawase.vsh` triangle). Compiled on first use. */
+    /** A full-screen pass with the `kawase.vsh` triangle as its vertex shader. Compiled on first use. */
     fun post(name: String, twoSamplers: Boolean, blend: BlendFunction = BlendFunction.TRANSLUCENT): RenderPipeline =
         RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
             .withLocation(id("pipeline/$name"))
@@ -66,7 +66,6 @@ object Chams {
             .withColorTargetState(ColorTargetState(blend))
             .build()
 
-    // The original's `l0.f.W()`, `w()`, `X()`, `h()`, `v()`.
     private val DEFAULT = post("chams_default", false)
     private val MIRROR = post("chams_mirror", true)
     private val BLOOM = post("chams_bloom", true)
@@ -105,7 +104,7 @@ object Chams {
         putVec4((c shr 16 and 255) / 255f, (c shr 8 and 255) / 255f, (c and 255) / 255f, (c ushr 24) / 255f)
 
     /**
-     * The original's `new MainTarget(main size)` / resize, then cleared to transparent with depth 0 (the farthest, reversed-Z),
+     * A target of the main target's size (new or resized), then cleared to transparent with depth 0 (the farthest, reversed-Z),
      * so whatever is drawn into it is not hidden by the level.
      */
     fun ensure(t: TextureTarget?, label: String): TextureTarget {
@@ -117,13 +116,13 @@ object Chams {
         return target
     }
 
-    /** The original's `rp.U` / `rp.Y`: the bloom weights, rebuilt only when the radius changes (shared by every chams user). */
+    /** The bloom weights, rebuilt only when the radius changes (shared by every chams user). */
     private val weights = FloatArray(16)
     private var weightsRadius = 0
 
     /**
-     * The original's `rp.G`: the chams of [frameBuffer] (the mask) onto the screen in [mode] (null: nothing, as the original's
-     * SELECTION). [secondary] is BLOOM's scratch target. Colours are ARGB.
+     * The chams of [frameBuffer] (the mask) onto the screen in [mode] (null: nothing).
+     * [secondary] is BLOOM's scratch target. Colours are ARGB.
      */
     fun composite(mode: ShaderMode?, color: Int, frameBuffer: TextureTarget, secondary: TextureTarget, glass: Boolean, border: Boolean,
                   radius: Float, distance: Float, glowAlpha: Float, lineWidth: Float, colorMode: Int, color1: Int, color2: Int,
@@ -134,21 +133,21 @@ object Chams {
         val texel = 1f / frameBuffer.width to 1f / frameBuffer.height
         when (mode) {
             null -> {}
-            // `rp.o`: the blurred screen (half a screen lower unless glass) through the mask.
+            // The blurred screen (half a screen lower unless glass) through the mask.
             ShaderMode.MIRROR -> pass(MIRROR, main, mapOf("Sampler0" to mask, "Sampler1" to Blur.texture())) {
                 it.putVec2(0f, if (glass) 0f else 0.5f).color(color).putFloat(if (border) 1f else 0f).putVec2(texel.first, texel.second)
                     .putFloat(alpha).putFloat(alpha)
             }
             ShaderMode.DEFAULT -> fill(color, lineWidth, frameBuffer)
             ShaderMode.BLOOM -> bloom(color, frameBuffer, secondary, radius, distance, glowAlpha, lineWidth)
-            // `rp.s`: thin outline on.
+            // Thin outline on.
             ShaderMode.DOUBLE -> pass(DOUBLEGLOW, main, mapOf("Sampler0" to mask)) {
                 val p = mc.player!!
                 val time = abs(Mth.lerp(World3D.partialTick, (p.tickCount - 1) / 6.0f, p.tickCount / 6.0f))
                 it.putFloat(time).color(color1).color(color2).putInt(colorMode).putInt(glowQuality).putFloat(glowRadius).putFloat(glowAlphaMult)
                     .putInt(1).putFloat(fillAlphaMult).putVec2(texel.first, texel.second).putFloat(saturation).putFloat(brightness)
             }
-            // `rp.y(...)`: the two colours and each twice darker.
+            // The two colours and each twice darker.
             ShaderMode.CAMOUFLAGE -> pass(CAMOUFLAGE, main, mapOf("Sampler0" to mask)) {
                 val p = mc.player!!
                 val time = abs(Mth.lerp(World3D.partialTick, (p.tickCount - 1) / 1000.0f, p.tickCount / 1000.0f))
@@ -158,7 +157,7 @@ object Chams {
         }
     }
 
-    /** The original's `rp.R`: the mask in [color] with a soft [lineWidth] edge. */
+    /** The mask in [color] with a soft [lineWidth] edge. */
     private fun fill(color: Int, lineWidth: Float, frameBuffer: TextureTarget) {
         pass(DEFAULT, mc.gameRenderer.mainRenderTarget().colorTextureView!!, mapOf("Sampler0" to frameBuffer.colorTextureView!!)) {
             it.putVec2(1f / frameBuffer.width, 1f / frameBuffer.height).color(color).putFloat(lineWidth)
@@ -166,8 +165,8 @@ object Chams {
     }
 
     /**
-     * The original's `rp.W`: DEFAULT first, then a two-pass gaussian glow of the mask (horizontal into [secondary], vertical onto
-     * the screen outside the mask). The step is one GUI unit (1 / scaled size), as in the original.
+     * DEFAULT first, then a two-pass gaussian glow of the mask (horizontal into [secondary], vertical onto
+     * the screen outside the mask). The step is one GUI unit (1 / scaled size), on purpose.
      */
     private fun bloom(color: Int, frameBuffer: TextureTarget, secondary: TextureTarget, radius: Float, distance: Float, glowAlpha: Float,
                       lineWidth: Float) {
@@ -182,8 +181,8 @@ object Chams {
         val tx = 1.0f / window.guiScaledWidth
         val ty = 1.0f / window.guiScaledHeight
         val mask = frameBuffer.colorTextureView!!
-        // The original binds only Sampler1 here; the shader reads Sampler0 only in the vertical pass, so binding the mask is
-        // invisible and keeps the pipeline's layout complete.
+        // The shader reads Sampler0 only in the vertical pass, so binding the mask here is invisible and keeps the
+        // pipeline's layout complete.
         pass(BLOOM, secondary.colorTextureView!!, mapOf("Sampler0" to mask, "Sampler1" to mask)) {
             it.putVec2(tx, ty).putVec2(distance, 0f).putFloat(r.toFloat()).putFloat(glowAlpha).putMat4f(w).color(color)
         }
@@ -218,8 +217,8 @@ object Chams {
     }
 
     /**
-     * The original's `fn`: a mask of entities ([target], the original's `t`) and BLOOM's scratch target ([secondary], `O`).
-     * [active] is true while drawing into or out of them (the original's `fn.b`).
+     * A mask of entities ([target]) and BLOOM's scratch target ([secondary]).
+     * [active] is true while drawing into or out of them.
      */
     class EntityMask {
         var target: TextureTarget? = null
@@ -229,7 +228,7 @@ object Chams {
         var active = false
             private set
 
-        /** The original's `fn.X`: both targets cleared, then [crystals] (else players) near the camera drawn into [target]. */
+        /** Both targets cleared, then [crystals] (else players) near the camera drawn into [target]. */
         fun render(view: Matrix4f, crystals: Boolean, vDist: Int, hDist: Int) {
             active = true
             target = ensure(target, "horizon chams")
@@ -238,7 +237,7 @@ object Chams {
             active = false
         }
 
-        /** The original's `fn.h`: entities submitted with their real render states (shadows off, visible, not glowing). */
+        /** Entities submitted with their real render states (shadows off, visible, not glowing). */
         private fun draw(view: Matrix4f, crystals: Boolean, vDist: Int, hDist: Int) {
             val level = mc.level ?: return
             val cam = mc.gameRenderer.mainCamera().position()
@@ -275,7 +274,7 @@ object Chams {
             mc.options.entityShadows().set(shadows)
         }
 
-        /** The original's `fn.w`: the mask's chams on the screen (nothing until the first [render]). */
+        /** The mask's chams on the screen (nothing until the first [render]). */
         fun composite(mode: ShaderMode, color: Int, glass: Boolean, border: Boolean, radius: Float, distance: Float, glowAlpha: Float,
                       lineWidth: Float, colorMode: Int, color1: Int, color2: Int, glowQuality: Int, glowRadius: Float, glowAlphaMult: Float,
                       fillAlphaMult: Float, saturation: Float, brightness: Float, alpha: Float) {
@@ -288,10 +287,10 @@ object Chams {
         }
     }
 
-    // ---- flat model geometry (the original's `k7` / `ou`) ----
+    // ---- flat model geometry ----
 
     /**
-     * The original's `ou`: takes a model's (already transformed) vertices four at a time and emits each face as a quad
+     * Takes a model's (already transformed) vertices four at a time and emits each face as a quad
      * ([fill]) or its four edges as lines, all in [color]; everything else the model sends is ignored.
      */
     class FlatConsumer(private val out: VertexConsumer, private val fill: Boolean, private val color: Int) : VertexConsumer {
@@ -330,7 +329,7 @@ object Chams {
         override fun setLineWidth(w: Float) = this
     }
 
-    /** The original's `dw` (the same as [Ghost]'s collector): each vertex's position and UV, in one [color], unlit. */
+    /** Each vertex's position and UV, in one [color], unlit (the same as [Ghost]'s collector). */
     class SkinConsumer(private val out: VertexConsumer, private val color: Int) : VertexConsumer {
         private var x = 0f
         private var y = 0f
@@ -357,7 +356,7 @@ object Chams {
         override fun setLineWidth(w: Float) = this
     }
 
-    /** The original's `e2.f` (the same as [Ghost]'s): vanilla's player rotations without death roll, sleeping or shaking. */
+    /** Vanilla's player rotations without death roll, sleeping or shaking (the same as [Ghost]'s). */
     fun setupRotations(rs: AvatarRenderState, stack: PoseStack, bodyRot: Float) {
         if (rs.isFallFlying) {
             stack.rotateDegrees(Axis.YP, 180f - bodyRot)

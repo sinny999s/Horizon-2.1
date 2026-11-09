@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * The original's LivingEntityRendererMixin alpha hook: another player's model colour. A cancelled EntityAlphaEvent replaces
- * the colour with white at the event's alpha (the original's `withAlpha(Color(654311423), alpha)`; vanilla's tint is dropped).
+ * Another player's model colour. A cancelled EntityAlphaEvent replaces
+ * the colour with white at the event's alpha (vanilla's tint is dropped).
  */
 @Mixin(LivingEntityRenderer.class)
 public abstract class NoRenderAlphaMixin {

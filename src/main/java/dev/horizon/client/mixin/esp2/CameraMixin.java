@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-/** The original's CameraMixin.setRotationHook / setPosHook: FreecamStateEvent may move and turn the camera. */
+/** FreecamStateEvent may move and turn the camera. */
 @Mixin(Camera.class)
 public abstract class CameraMixin {
 	@ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))

@@ -8,7 +8,7 @@ import dev.horizon.client.module.Module
 import net.minecraft.world.effect.MobEffects
 
 /**
- * The original's "levitation-control" (`b3`): with Levitation, NCP and DEFAULT replace the vertical move (jump rises, sneak
+ * With Levitation, NCP and DEFAULT replace the vertical move (jump rises, sneak
  * sinks, else hover); ANTI removes the effect client-side. MoveEvent priority 0.
  */
 class LevitationControl : Module("levitation-control", Categories.RAGE) {

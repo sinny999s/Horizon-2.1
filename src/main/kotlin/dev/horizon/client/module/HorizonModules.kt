@@ -217,7 +217,7 @@ import dev.horizon.client.module.world.SoilRipper
 import dev.horizon.client.module.world.TpsSync
 import dev.horizon.client.module.world.Zoom
 
-/** Every the original module, in the original's registration order (the search and the Key Binds widget list them in it). */
+/** Every module, in registration order (the search and the Key Binds widget list them in it). */
 object HorizonModules {
     fun register() {
         Modules.register(ElytraTarget())
@@ -387,7 +387,6 @@ object HorizonModules {
         Modules.register(MaceKiller())
         Modules.register(TridentBoost())
         Modules.register(Quiver())
-        // Not in the original.
         Modules.register(ShulkerView())
         Modules.register(GlowEsp())
         Modules.register(NewChunks())

@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: Canvas.blurBox's vertex shader. TexCoord samples the blurred screen under this pixel.
+// Canvas.blurBox's vertex shader. TexCoord samples the blurred screen under this pixel.
 layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;
     mat4 TextureMat;

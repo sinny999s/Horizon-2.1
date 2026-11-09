@@ -21,12 +21,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * The original's "throw-petard" (`rh`): turning it on throws a little firecracker along the look direction (fuse sound, a
+ * Turning it on throws a little firecracker along the look direction (fuse sound, a
  * trail of star sparks); it bounces along the ground and after 100 ticks explodes in a burst of particles and turns the
  * module off.
  */
 class ThrowPetard : Module("throw-petard", Categories.COSMETIC) {
-    // The original's G V B (position), v d j (last tick's), q L h (velocity), R (ticks flown).
     private var x = 0f
     private var y = 0f
     private var z = 0f
@@ -46,7 +45,7 @@ class ThrowPetard : Module("throw-petard", Categories.COSMETIC) {
     override fun onEnable() {
         val p = mc.player ?: return
         ticks = 0
-        // The original plays the fuse at the previous petard's position (the origin the first time).
+        // The fuse plays at the previous petard's position (the origin the first time), on purpose.
         mc.level?.playLocalSound(x.toDouble(), y + 0.5, z.toDouble(), SoundEvents.TNT_PRIMED, SoundSource.BLOCKS, 0.2f, 1.0f, false)
         x = p.eyePosition.x.toFloat()
         y = p.eyePosition.y.toFloat()
@@ -66,8 +65,7 @@ class ThrowPetard : Module("throw-petard", Categories.COSMETIC) {
         vx *= 0.98f
         vy *= 0.98f
         vz *= 0.98f
-        // Cast backwards from the new position. The original compares the hit with HitResult.Type.MISS through equals(),
-        // which is never true, so any hit counts as landing.
+        // Cast backwards from the new position. Any hit counts as landing.
         val hit = Explosions.raycast(Vec3(x.toDouble(), y.toDouble(), z.toDouble()),
             Vec3(prevX.toDouble(), prevY.toDouble(), prevZ.toDouble()), false, emptyList(), emptyList())
         if (hit != null) {
@@ -101,12 +99,12 @@ class ThrowPetard : Module("throw-petard", Categories.COSMETIC) {
         val cam = mc.gameRenderer.mainCamera().position()
         val m = Matrix4f(World3D.view).translate((Mth.lerp(pt, prevX, x) - cam.x).toFloat(), (Mth.lerp(pt, prevY, y) - cam.y).toFloat(),
             (Mth.lerp(pt, prevZ, z) - cam.z).toFloat())
-        // The original transforms the vertices by the pose and then draws them with that same pose as the model-view, so the
-        // petard ends up transformed twice; kept.
+        // The vertices are transformed by the pose and then drawn with that same pose as the model-view, so the petard
+        // ends up transformed twice (on purpose).
         World3D.draw(Pipelines.WORLD_FILL, mc.gameRenderer.mainRenderTarget().colorTextureView!!, null, m) { vc -> petard(vc, m) }
     }
 
-    /** The original's `rh.h`: a dark grey tube (16 sides, r 0.12, 0.5 tall) with a white band and a black fuse. */
+    /** A dark grey tube (16 sides, r 0.12, 0.5 tall) with a white band and a black fuse. */
     private fun petard(vc: VertexConsumer, m: Matrix4f) {
         val tmp = Vector3f()
         fun v(px: Float, py: Float, pz: Float, c: Int) {

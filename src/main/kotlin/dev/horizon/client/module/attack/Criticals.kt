@@ -11,9 +11,9 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 /**
- * The original's "criticals" (`j1`): before every attack packet (on anything but a crystal), position packets that tell the
+ * Before every attack packet (on anything but a crystal), position packets that tell the
  * server we're a hair above the ground and falling. Note: they go out in the same tick as the movement packet, and a
- * 26.3 server kicks for a second position packet in one tick; servers on older versions (the original's target) accept them.
+ * 26.3 server kicks for a second position packet in one tick; servers on older versions accept them.
  */
 class Criticals : Module("criticals", Categories.ATTACK) {
     enum class Mode { NCP, CUSTOM }
@@ -56,7 +56,7 @@ class Criticals : Module("criticals", Categories.ATTACK) {
         }
     }
 
-    /** The original's `j1.vB`: on the ground (or creative-flying), not in lava or under water. */
+    /** On the ground (or creative-flying), not in lava or under water. */
     private fun tryCrit() {
         val pl = mc.player ?: return
         if (!pl.onGround() && !pl.abilities.flying) return
@@ -68,7 +68,6 @@ class Criticals : Module("criticals", Categories.ATTACK) {
         }
     }
 
-    /** The original's `j1.vs`. */
     private fun ncp() {
         when (ncpMode.value) {
             NcpMode.NORMAL -> {
@@ -93,7 +92,7 @@ class Criticals : Module("criticals", Categories.ATTACK) {
         }
     }
 
-    /** The original's `j1.vp`: the enabled custom packets, 1 to 5. */
+    /** The enabled custom packets, 1 to 5. */
     private fun custom() {
         if (sendPacket1.value) send(offset1.value.toDouble(), full1.value, ground1.value)
         if (sendPacket2.value) send(offset2.value.toDouble(), full2.value, ground2.value)
@@ -102,7 +101,7 @@ class Criticals : Module("criticals", Categories.ATTACK) {
         if (sendPacket5.value) send(offset5.value.toDouble(), full5.value, ground5.value)
     }
 
-    /** The original's `j1.h`: our position raised by [offset]; [full] adds the last rotation sent. The last-sent fields stay. */
+    /** Our position raised by [offset]; [full] adds the last rotation sent. The last-sent fields stay. */
     private fun send(offset: Double, full: Boolean, ground: Boolean) {
         val pl = mc.player ?: return
         val acc = pl as LocalPlayerAccessor

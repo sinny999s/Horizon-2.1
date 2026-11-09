@@ -29,7 +29,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * Not in the original: Hunt Map's screen. Drag to move, scroll to zoom, right-click a spot for what to do there, Space to
+ * Hunt Map's screen. Drag to move, scroll to zoom, right-click a spot for what to do there, Space to
  * follow yourself again; the chips at the top switch layers. Drawn bottom to top: the seed's parchment, the recorded
  * terrain, chunk states, your trail, worker borders, markers and you.
  */

@@ -6,8 +6,8 @@ import java.nio.file.Files
 import kotlin.io.path.extension
 
 /**
- * A theme as saved in `horizon/themes/<id>.hzn` (the original's `ng`, colours as ARGB ints). Mutable: the theme editor
- * writes into it, which previews live when it is the current theme. Equality is over all fields, as in the original.
+ * A theme as saved in `horizon/themes/<id>.hzn` (colours as ARGB ints). Mutable: the theme editor
+ * writes into it, which previews live when it is the current theme. Equality is over all fields.
  */
 @Serializable
 data class ThemeData(
@@ -25,7 +25,7 @@ data class ThemeData(
     var moduleOutlineColor: Int,
     var nonActiveOutlineModuleColor: Int,
 ) {
-    /** The 12 colours in the editor's order, by id (the original's `zo.v(theme)`). */
+    /** The 12 colours in the editor's order, by id. */
     fun colors(): LinkedHashMap<String, Int> = linkedMapOf(
         "primary" to primaryColor, "secondary" to secondaryColor, "blur" to blurColor, "widget-blur" to widgetBlurColor,
         "outline" to outlineColor, "text" to textColor, "inactive-text" to nonactiveTextColor, "sliders" to slidersColor,
@@ -56,7 +56,7 @@ data class ThemeData(
 
         /**
          * The redesign mockup's themes (design/clickgui's THEMES) besides the user's own: its two
-         * accents, the rest of the colours as the original's default with its tints taken from [secondary] (as the default
+         * accents, the rest of the colours as the old default's with its tints taken from [secondary] (as the default
          * tints its greys towards its purple).
          */
         fun presets() = listOf(
@@ -69,7 +69,7 @@ data class ThemeData(
             monochrome(),
         )
 
-        /** Not in the original: black through white only, matching the title screen and the menus: light grey into mid grey. */
+        /** Black through white only, matching the title screen and the menus: light grey into mid grey. */
         fun monochrome() = preset("Monochrome", 0xFFBEBEC4.toInt(), 0xFF5E5E66.toInt())
 
         private fun preset(id: String, primary: Int, secondary: Int): ThemeData {
@@ -84,9 +84,9 @@ data class ThemeData(
 }
 
 /**
- * The theme list and the current theme (the original's `wa`). Loaded from `horizon/themes/<id>.hzn`; when none has the
+ * The theme list and the current theme. Loaded from `horizon/themes/<id>.hzn`; when none has the
  * saved id, the built-in default is added. Saving writes every listed theme; removing one only drops it from the list
- * (its file stays, as in the original).
+ * (its file stays).
  */
 object Themes {
     val list = ArrayList<ThemeData>()
@@ -102,18 +102,18 @@ object Themes {
                 s.filter { it.extension == "hzn" }.sorted().forEach { list += Storage.json.decodeFromString(ThemeData.serializer(), Files.readString(it)) }
             }
         } catch (e: Exception) {
-            // The original drops every theme when one file doesn't parse.
+            // Every theme is dropped when one file doesn't parse (on purpose).
             dev.horizon.client.HorizonClient.LOG.warn("Themes are not loaded from file for some reasons.", e)
             list.clear()
         }
-        // Not in the original: Monochrome came later, so it's added once on its own for lists that already had the rest
+        // Monochrome came later, so it's added once on its own for lists that already had the rest
         // (before the current theme is looked up, so it can be the one picked).
         if (Storage.shared.themePresets && !Storage.shared.themeMonochrome) {
             if (list.none { it.id == "Monochrome" }) list += ThemeData.monochrome()
             Storage.shared.themeMonochrome = true
         }
         current = list.firstOrNull { it.id == Storage.shared.themeConfig } ?: ThemeData.default().also { list += it }
-        // Not in the original: the redesign's themes, added once (one removed later stays removed).
+        // The redesign's themes, added once (one removed later stays removed).
         if (!Storage.shared.themePresets) {
             for (p in ThemeData.presets()) if (list.none { it.id == p.id }) list += p
             Storage.shared.themePresets = true

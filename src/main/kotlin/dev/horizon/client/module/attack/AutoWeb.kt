@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.LiquidBlock
 
 /**
- * The original's "auto-web" (`_h`): cobwebs into an enemy's feet block (and/or the one above), where their movement says
+ * Cobwebs into an enemy's feet block (and/or the one above), where their movement says
  * they'll be by the time the server gets the packet.
  */
 class AutoWeb : PlacerModule("auto-web", Categories.ATTACK, 132) {
@@ -34,7 +34,6 @@ class AutoWeb : PlacerModule("auto-web", Categories.ATTACK, 132) {
         on<PlayerUpdateEvent> { tick() }
     }
 
-    /** The original's `_h.l`. */
     private fun tick() {
         val self = mc.player ?: return
         val level = mc.level ?: return
@@ -59,7 +58,7 @@ class AutoWeb : PlacerModule("auto-web", Categories.ATTACK, 132) {
         }
     }
 
-    /** The original's `nq.u`: a web in the feet block (and, with face on, the one above). */
+    /** A web in the feet block (and, with face on, the one above). */
     private fun webbed(p: Player, faceOn: Boolean): Boolean {
         val level = mc.level ?: return false
         val f = BlockPos.containing(p.position())
@@ -68,7 +67,7 @@ class AutoWeb : PlacerModule("auto-web", Categories.ATTACK, 132) {
         return level.getBlockState(f.above()).block == Blocks.COBWEB
     }
 
-    /** The original's `_h.k`: the predicted feet block, then the one above (per `face`), never our own feet or eyes. */
+    /** The predicted feet block, then the one above (per `face`), never our own feet or eyes. */
     private fun webTarget(p: Player) {
         val self = mc.player ?: return
         val level = mc.level ?: return

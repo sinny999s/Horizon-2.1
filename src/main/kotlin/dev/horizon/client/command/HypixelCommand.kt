@@ -7,7 +7,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.client.multiplayer.ClientSuggestionProvider
 
 /**
- * Not in the original: the Hypixel Stats widget's API key and asking. `hypixel key <key>` sets the key (from
+ * The Hypixel Stats widget's API key and asking. `hypixel key <key>` sets the key (from
  * developer.hypixel.net) and asks at once, `hypixel key clear` forgets it, `hypixel refresh` asks now, and `hypixel`
  * says where things stand. The key is never shown.
  */

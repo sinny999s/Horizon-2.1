@@ -67,7 +67,7 @@ internal object GuiData {
     /** The module's mode (its "mode" enum) as the ArrayList shows it, or "". */
     fun mode(m: Module): String = (m.settings.firstOrNull { it.id == "mode" } as? EnumSetting<*>)?.let { enumName(it.value) } ?: ""
 
-    /** A number setting's value as the original's sliders show it, or its word from ValueLabels (Aura's fov 1 = Trigger). */
+    /** A number setting's value as the sliders show it, or its word from ValueLabels (Aura's fov 1 = Trigger). */
     fun number(s: Setting<*>, v: Number): String {
         val shown = if (s is IntSetting) v.toInt().toString() else v.toFloat().toString()
         val label = ValueLabels.get(s.id, v, shown)

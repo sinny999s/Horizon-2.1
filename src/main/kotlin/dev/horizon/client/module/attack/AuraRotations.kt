@@ -49,7 +49,7 @@ private fun eyeY(): Double {
     return p.position().y + p.getEyeHeight(p.pose)
 }
 
-/** The original's `kk.T`: the look vector, in float maths. */
+/** The look vector, in float maths. */
 fun viewVec(pitch: Float, yaw: Float): Vec3 {
     val r = (PI / 180).toFloat()
     return Vec3(
@@ -59,7 +59,7 @@ fun viewVec(pitch: Float, yaw: Float): Vec3 {
     )
 }
 
-/** The original's `w4.f`: looking along [rot], would the crosshair land on [target] within [range]? Other entities never block. */
+/** Looking along [rot], would the crosshair land on [target] within [range]? Other entities never block. */
 fun rayHitsTarget(target: Entity, rot: Rotation, range: Float, wallsCheck: Boolean): Boolean {
     val p = mc.player ?: return false
     val level = mc.level ?: return false
@@ -98,7 +98,7 @@ private fun closestPoint(target: Entity): Vec3 {
 
 private fun camera() = mc.gameRenderer.mainCamera()
 
-/** The original's `ud`: one of Aura's rotation modes. */
+/** One of Aura's rotation modes. */
 abstract class AuraRotation {
     abstract fun rotate(aura: Aura, target: Entity, prev: Rotation, attackReady: Boolean): Rotation
 
@@ -125,7 +125,6 @@ abstract class AuraRotation {
     }
 }
 
-/** The original's `ur`. */
 object SnapRotation : AuraRotation() {
     override fun aimPoint(aura: Aura, target: Entity) = closestPoint(target)
 
@@ -139,7 +138,7 @@ object SnapRotation : AuraRotation() {
         val yawDelta: Double = Mth.wrapDegrees(deg(atan2(dz, dx)) - 90.0f - prev.yaw)
         val pitchDelta: Double = -deg(atan2(aim.y - p.eyePosition.y, hypot(dx, dz))) - prev.pitch
         var yaw = prev.yaw + yawDelta.toFloat()
-        // The sine of a degree value, read as radians (as in the original).
+        // The sine of a degree value, read as radians (on purpose).
         var pitch = prev.pitch + pitchDelta.toFloat() + sin(yawDelta).toFloat()
         if (!attackReady) {
             yaw = p.yRot
@@ -152,7 +151,6 @@ object SnapRotation : AuraRotation() {
     }
 }
 
-/** The original's `ut`. */
 object DefaultRotation : AuraRotation() {
     override fun aimPoint(aura: Aura, target: Entity): Vec3 {
         if (mc.player!!.isFallFlying) return target.eyePosition
@@ -186,7 +184,7 @@ object DefaultRotation : AuraRotation() {
     }
 }
 
-/** The original's `u7` (NONE and GRIM_SILENT): no aiming. */
+/** NONE and GRIM_SILENT: no aiming. */
 object NoRotation : AuraRotation() {
     override fun aimPoint(aura: Aura, target: Entity): Vec3 = target.eyePosition
 
@@ -197,7 +195,6 @@ object NoRotation : AuraRotation() {
     override fun extendsSearch(aura: Aura) = false
 }
 
-/** The original's `uq`. */
 object VulcanRotation : AuraRotation() {
     override fun aimPoint(aura: Aura, target: Entity) = closestPoint(target)
 
@@ -220,13 +217,13 @@ object VulcanRotation : AuraRotation() {
         val yawMove = if (abs(yawDelta) > 0.3) yawDelta else 0.0
         var yaw: Double = prev.yaw + Math.clamp(yawMove, -yawLimit, yawLimit) + sin(rad(p.tickCount.toDouble() * 20.0f)) * 0.5f
         val pitch: Double = prev.pitch + Math.clamp(pitchDelta, -pitchLimit, pitchLimit) + sin(rad(yaw)) * 1.5f
-        // The original's |round(d) - d| < 1 test is always true.
+        // No |round(d) - d| < 1 test: it would always be true.
         yaw += if (p.tickCount % 2 == 0) 1 else -2
         return Rotation(yaw.toFloat(), pitch.toFloat())
     }
 }
 
-/** The original's `up`: an instant snap. */
+/** An instant snap. */
 object HvhRotation : AuraRotation() {
     override fun aimPoint(aura: Aura, target: Entity) = if (mc.player!!.isFallFlying) target.eyePosition else closestPoint(target)
 
@@ -243,7 +240,6 @@ object HvhRotation : AuraRotation() {
     }
 }
 
-/** The original's `u5`. */
 object PolarRotation : AuraRotation() {
     private var ticksSinceHit = 0
     private var saved = Rotation(0f, 0f)
@@ -288,14 +284,14 @@ object PolarRotation : AuraRotation() {
     }
 }
 
-/** The original's `u3`: an addon's rotation; there's no addon API here, so it keeps the previous rotation. */
+/** An addon's rotation; there's no addon API here, so it keeps the previous rotation. */
 object CustomRotation : AuraRotation() {
     override fun aimPoint(aura: Aura, target: Entity): Vec3 = target.eyePosition
 
     override fun rotate(aura: Aura, target: Entity, prev: Rotation, attackReady: Boolean) = prev
 }
 
-/** The original's `y1`: a random walk in [-1, 1]. */
+/** A random walk in [-1, 1]. */
 private class Noise {
     var value = 0f
 
@@ -305,7 +301,7 @@ private class Noise {
     }
 }
 
-/** The original's `yr`: the easings ADVANCED's smoothers apply to the speed factor. */
+/** The easings ADVANCED's smoothers apply to the speed factor. */
 fun ease(e: Aura.YawSmoother, x: Double): Double = when (e) {
     Aura.YawSmoother.LINEAR -> x
     Aura.YawSmoother.IN_QUAD -> x * x
@@ -345,7 +341,7 @@ fun ease(e: Aura.YawSmoother, x: Double): Double = when (e) {
 
 private fun sigmoid(x: Double, k: Double) = 1 / (1 + exp(-k * (x - 0.5)))
 
-/** The original's `um`: speed-capped, eased, jittered rotations, with overshoot, spins, head-ups and holds. */
+/** Speed-capped, eased, jittered rotations, with overshoot, spins, head-ups and holds. */
 object AdvancedRotation : AuraRotation() {
     private var yawFactor = 1f
     private var pitchFactor = 1f
@@ -356,7 +352,7 @@ object AdvancedRotation : AuraRotation() {
     private var headUpTicksLeft = 0
     private var headUpCounter = 0
 
-    /** Rolled with the defaults (165..180) when the class loads, before any config (as in the original). */
+    /** Rolled with the defaults (165..180) when the class loads, before any config (on purpose). */
     private var headUpInterval = Rng.int(165, 180)
     private var spinTicks = 0
     private var spinTicksLeft = 0
@@ -382,7 +378,7 @@ object AdvancedRotation : AuraRotation() {
         listOf(-0.30000305 to 0.0, -0.29999542 to 0.6000004, 0.30000305 to 0.0, -0.7500076 to -0.44999886, 0.30000305 to 0.0),
     )
 
-    /** The original's `um.R`: flat, or a normal distribution truncated to the range. */
+    /** Flat, or a normal distribution truncated to the range. */
     private fun distRandom(aura: Aura, a: Float, b: Float, jitterDist: Boolean): Float {
         val dist = if (jitterDist) aura.jitterDistribution.value else aura.speedDistribution.value
         if (dist == Aura.SpeedDistribution.FLAT) return Rng.float(a, b)
@@ -440,7 +436,7 @@ object AdvancedRotation : AuraRotation() {
         if (roamOffset.z >= (d - hR) / 2.0f) vz = -Rng.double(0.003, 0.03)
         if (roamOffset.z <= -(d - hR) / 2.0f) vz = Rng.double(0.003, 0.03)
         if (vx in -0.03..0.03 || vy in -0.03..0.03 || vz in -0.03..0.03) {
-            // A re-roll the original overwrites straight away; the draws still happen.
+            // A re-roll whose values are discarded; the draws still happen (on purpose).
             Rng.double(-hR, hR)
             Rng.double(-hR, hR)
             Rng.double(-hR, hR)
@@ -538,7 +534,7 @@ object AdvancedRotation : AuraRotation() {
             if (headUpTicksLeft > 0) {
                 headUpTicksLeft -= 1
                 pitch -= distRandom(aura, aura.huSpeedMin.value, aura.huSpeedMax.value, true)
-                // 10 % of the absolute pitch, added to the yaw (as in the original).
+                // 10 % of the absolute pitch, added to the yaw (on purpose).
                 yaw += pitch * 0.1f
             }
         }
@@ -567,7 +563,7 @@ object AdvancedRotation : AuraRotation() {
         return Rotation(yaw, clampF(pitch, lo, hi))
     }
 
-    /** The original's `um.pZ`: after every attack (in every mode): roll a spin, a click-jitter pattern, a hold, a new RUST point. */
+    /** After every attack (in every mode): roll a spin, a click-jitter pattern, a hold, a new RUST point. */
     fun onAttack(aura: Aura) {
         val p = mc.player ?: return
         if (aura.do360.value) {
@@ -593,7 +589,7 @@ object AdvancedRotation : AuraRotation() {
 }
 
 /**
- * Not in the original: aims like a hand on a mouse. Nothing is silent: the camera itself turns, every frame, and Aura only
+ * Aims like a hand on a mouse. Nothing is silent: the camera itself turns, every frame, and Aura only
  * hits when the crosshair is on the target. Tunable through Aura's `legit` group (aim spot, min/max speed, smoothness,
  * pitch-assist scale, hitbox-relax so it stops fighting your mouse once on target, reaction time, tremor, and
  * require-click). Each turn is made in whole mouse counts at your sensitivity, so it is always a turn a mouse could make.
@@ -631,7 +627,7 @@ object LegitRotation : AuraRotation() {
     private val human = HumanAim(Rng.random)
 
     /**
-     * Not in the original: Aura's `silent`. While [silentActive], the hand turns this look (what Aura sends) instead of
+     * Aura's `silent`. While [silentActive], the hand turns this look (what Aura sends) instead of
      * the camera; it starts from the camera when a target is picked up, and turns back to it when the target goes.
      */
     var silentActive = false
@@ -802,7 +798,7 @@ object LegitRotation : AuraRotation() {
         val shift = t.getPosition(pt).subtract(t.position())
         val eyeNow = p.getEyePosition(pt)
 
-        // Not in the original: `tracking`. How its box moves against your eyes (it strafing, you moving), smoothed over
+        // `tracking`. How its box moves against your eyes (it strafing, you moving), smoothed over
         // about 0.1 s as a person reads it, turned into how fast the aim point swings across your view. The hand matches
         // that share of it, so it keeps up with a strafe instead of trailing the spring's lag behind it, and aims that
         // share of a tick ahead: a hit is judged by the look sent the tick before, so on a strafer a look that is on

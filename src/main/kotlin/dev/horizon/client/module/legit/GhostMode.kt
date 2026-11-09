@@ -7,7 +7,7 @@ import dev.horizon.client.module.Modules
 import dev.horizon.client.module.attack.Aura
 
 /**
- * Not in the original: one switch for playing on a server that watches (Hypixel). While it's on, the blatant modules
+ * One switch for playing on a server that watches (Hypixel). While it's on, the blatant modules
  * (all of Rage and Attack but Aura and Legacy Clicker, and the packet / silent-rotation ones elsewhere, [BLATANT]) are
  * turned off and can't be turned on, and Aura is held to what a player could do: its LEGIT rotations (the real camera,
  * turned like a mouse; its `silent`, the same hand on a look only the server gets, is left to the config), no hits through walls, no back-track and vanilla's 3 block reach (its `reach`; its `range`, how

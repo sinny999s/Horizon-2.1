@@ -26,7 +26,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec2
 
 /**
- * The original's "no-slow" (`bp`): undoes the item-use slowdown (the input ×5 before vanilla's ×0.2) for the selected item
+ * Undoes the item-use slowdown (the input ×5 before vanilla's ×0.2) for the selected item
  * kinds, with each mode's server trick (NCP re-sends the slot, GRIM uses the offhand or re-sends the slot, GRIM_2/3
  * click the crafting slot, GRIM_V3 only every other tick); MATRIX scales the input itself. Also skips the
  * soul-sand/honey/slime/ice/berry-bush slowdowns and the sneak/crawl one.
@@ -50,7 +50,7 @@ class NoSlow : Module("no-slow", Categories.RAGE) {
     val sneak = bool("sneak", false, parent = selection.value)
     val crawl = bool("crawl", false, parent = selection.value)
 
-    /** The original's `v` (flips every tick), `W` (last tick's `v`), `C` (force `v` on next tick), `S` (clicking), `L` (sprint). */
+    /** Flips every tick, last tick's flip, force the flip on next tick, clicking, sprint. */
     private var flip = false
     private var lastFlip = false
     private var forceFlip = false
@@ -110,7 +110,7 @@ class NoSlow : Module("no-slow", Categories.RAGE) {
         on<SweetBerryBushCollisionEvent> { e -> if (sweetBerryBush.value) e.cancel() }
     }
 
-    /** The original's `bp.w`: whether the item in use moves at full speed this tick (with the GRIM_2/GRIM_3 clicks as a side effect). */
+    /** Whether the item in use moves at full speed this tick (with the GRIM_2/GRIM_3 clicks as a side effect). */
     private fun noSlow(): Boolean {
         val p = mc.player ?: return false
         if (mode.value == Mode.MATRIX) return false
@@ -161,7 +161,7 @@ class NoSlow : Module("no-slow", Categories.RAGE) {
         }
     }
 
-    /** The original's `y6.V(1, …, close)` under the `S` flag: a pickup click on crafting slot 1 that changes nothing here, then a close. */
+    /** Under the [clicking] flag: a pickup click on crafting slot 1 that changes nothing here, then a close. */
     private fun clickCraftingSlot() {
         val p = mc.player ?: return
         clicking = true

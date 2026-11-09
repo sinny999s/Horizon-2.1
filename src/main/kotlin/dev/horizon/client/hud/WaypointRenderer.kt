@@ -14,7 +14,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 
 /**
- * The original's waypoint labels (`lo.R`): every visible waypoint of this server ("localhost" ones everywhere) and dimension
+ * Waypoint labels: every visible waypoint of this server ("localhost" ones everywhere) and dimension
  * within the horizontal field of view gets "<id> (<distance>m)" in bold with a map pin above it. Always on, F1 too.
  */
 object WaypointRenderer {

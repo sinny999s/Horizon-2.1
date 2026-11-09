@@ -13,7 +13,7 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
- * Not in the original: a player's stats from Hypixel's public API (`GET https://api.hypixel.net/v2/player?uuid=...` with an
+ * A player's stats from Hypixel's public API (`GET https://api.hypixel.net/v2/player?uuid=...` with an
  * `API-Key` header; a key is free from developer.hypixel.net). Only what the Hypixel Stats widget shows: the network
  * level and Bedwars. Game-free, so it's tested on its own; the widget does the asking and keeping.
  */

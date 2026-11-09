@@ -16,7 +16,7 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.level.block.Blocks
 
 /**
- * The original's "more-knockback" (`ju`): right before an attack packet on a living entity, (STOP_SPRINTING and)
+ * Right before an attack packet on a living entity, (STOP_SPRINTING and)
  * START_SPRINTING, so the server counts every hit as a sprint hit — unless the hit would be a real critical.
  */
 class MoreKnockback : Module("more-knockback", Categories.ATTACK) {
@@ -42,7 +42,7 @@ class MoreKnockback : Module("more-knockback", Categories.ATTACK) {
         }
     }
 
-    /** The original's `ju.h`: this hit would be a vanilla critical (falling, charged, nothing in the way). */
+    /** This hit would be a vanilla critical (falling, charged, nothing in the way). */
     private fun willCrit(): Boolean {
         val pl = mc.player ?: return false
         val level = mc.level ?: return false

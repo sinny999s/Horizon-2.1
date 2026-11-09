@@ -1,7 +1,7 @@
 package dev.horizon.client.lunar
 
 /**
- * Not in the original: what a real Lunar Client says about itself, read from Lunar Client 2.23.14-2645's own code
+ * What a real Lunar Client says about itself, read from Lunar Client 2.23.14-2645's own code
  * (`lunar.jar`, `modern` and `genesis` in `~/.lunarclient/offline/multiver`, 2026-11-05) and Lunar's launcher API
  * (2026-11-08), where it differs from Moonlight:
  * - the brand is "lunarclient:v<version>" (Moonlight left out the "v"). On 1.16.5 and later Lunar's `modern` jar

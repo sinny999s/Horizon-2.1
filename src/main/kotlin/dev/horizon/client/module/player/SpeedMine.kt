@@ -52,11 +52,10 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The original's "speed-mine" (`rs`, entries `dl`): packet mining. A click starts a block (START, then ABORT/STOP), progress
- * is counted client-side for the best tool, and once it's ready the tool is swapped in for the STOP. Up to two blocks
- * with double-mine; rebreak modes for blocks that get placed again. With [hold] (not in the original, which only mined
- * clicked blocks), holding the button mines each new block it moves onto too. With [maxBlocks] (not in the original, which
- * took two) double-mine lines up more and mines them two at a time: a server only tracks two per player, its delayed and
+ * Packet mining. A click starts a block (START, then ABORT/STOP), progress is counted client-side for the best tool, and
+ * once it's ready the tool is swapped in for the STOP. Up to two blocks with double-mine; rebreak modes for blocks that
+ * get placed again. With [hold], holding the button mines each new block it moves onto too. With [maxBlocks],
+ * double-mine lines up more and mines them two at a time: a server only tracks two per player, its delayed and
  * current destroy blocks, and starting a third would lose the current one, so the next two start once both are gone.
  */
 class SpeedMine : Module("speed-mine", Categories.PLAYER) {
@@ -101,21 +100,21 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
 
     enum class ResetReason { SWITCH, TOGGLE, EATING }
 
-    /** The original's `dl`: one block in the mining queue; creating it sends the start sequence. */
+    /** One block in the mining queue; creating it sends the start sequence. */
     inner class Entry(val pos: BlockPos, dir: Direction?) {
-        /** `b`: progress (uncapped; 1 = ready). */
+        /** Progress (uncapped; 1 = ready). */
         var progress = 0f
 
-        /** `u`: last tick's progress; −1 while the block is air and held for a rebreak. */
+        /** Last tick's progress; −1 while the block is air and held for a rebreak. */
         var prevProgress = 0f
 
-        /** `m`: break sequences sent. */
+        /** Break sequences sent. */
         var breaks = 0
 
-        /** `L`: on-ground samples, one per tick while the block is air (NCP_AIR credits them). */
+        /** On-ground samples, one per tick while the block is air (NCP_AIR credits them). */
         private val samples = ArrayDeque<Boolean>()
 
-        /** `d`: at most one restart per 500 ms. */
+        /** At most one restart per 500 ms. */
         private val restartTimer = MsTimer()
 
         init {
@@ -123,7 +122,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
             start(dir)
         }
 
-        /** `dl.R`: the start packets (with swap-timing ALWAYS, around a tool swap). */
+        /** The start packets (with swap-timing ALWAYS, around a tool swap). */
         fun start(dir0: Direction?) {
             val p = mc.player ?: return
             val dir = dir0 ?: p.direction
@@ -163,7 +162,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
             }
         }
 
-        /** `dl.r`: one tick of this block; true = drop it from the queue. */
+        /** One tick of this block; true = drop it from the queue. */
         fun update(forced: Boolean): Boolean {
             val p = mc.player ?: return false
             val level = mc.level ?: return false
@@ -228,14 +227,14 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
             return false
         }
 
-        /** `dl.c`: a GRIM rebreak may go now (once auto-crystal has locked the spot, when awaiting it). */
+        /** A GRIM rebreak may go now (once auto-crystal has locked the spot, when awaiting it). */
         fun rebreakReady(): Boolean {
             if (breaks <= 0 || rebreak.value != Rebreak.GRIM) return false
             if (aboveTarget(pos) && awaitAutoCrystal.value && !PlacementLock.isLocked(pos)) return false
             return pos == lastStarted || queue.size <= 1
         }
 
-        /** `dl.W`: tool in, STOP, tool back (one tick later on a double-mine block's first break, or with 1.21). */
+        /** Tool in, STOP, tool back (one tick later on a double-mine block's first break, or with 1.21). */
         private fun breakBlock(slot: Int, prev: Int, dir: Direction) {
             swap(slot, -1)
             toolSwapInFlight.set(true)
@@ -247,7 +246,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
             }
             Modules.get<AutoCrystal>().minedMap[pos] = System.currentTimeMillis()
             samples.clear()
-            // The original sent a swing packet here; 26.3 has none.
+            // 26.3 has no swing packet to send here.
             if ((doubleMine.value && breaks < 1) || n121.value) Scheduler.ticks(1) { swap(prev, slot) } else swap(prev, slot)
             breakTimer.reset()
             lastBroken = pos
@@ -257,13 +256,12 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
             progress = 0f
         }
 
-        /** `dl.f`. */
         fun abort() {
             samples.clear()
             if (progress != 0f) abortPacket(pos)
         }
 
-        /** `dl.q`: start over (after a switch with NCP_AIR, a block that's air only gets a START). */
+        /** Start over (after a switch with NCP_AIR, a block that's air only gets a START). */
         fun reset(reason: ResetReason) {
             samples.clear()
             val p = mc.player ?: return
@@ -283,23 +281,23 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         }
     }
 
-    /** `rs.V`: the queue (at most two blocks). */
+    /** The queue (at most two blocks). */
     val queue = LinkedList<Entry>()
 
-    /** Not in the original: blocks lined up past the queue, no packets sent yet (see [maxBlocks]). */
+    /** Blocks lined up past the queue, no packets sent yet (see [maxBlocks]). */
     private val pending = LinkedList<Pair<BlockPos, Direction>>()
 
-    /** `rs.g`: the last block started (the newest entry; the one kept for rebreak). */
+    /** The last block started (the newest entry; the one kept for rebreak). */
     private var lastStarted: BlockPos? = null
 
-    /** `rs.W` / `rs.T`: the last block broken, and when. */
+    /** The last block broken, and when. */
     private var lastBroken: BlockPos? = null
     private val breakTimer = MsTimer()
 
-    /** `rs.h`: blocks a STOP went out for, and when (await, phase). */
+    /** Blocks a STOP went out for, and when (await, phase). */
     private val recent = ConcurrentHashMap<BlockPos, Long>()
 
-    /** `rs.L`: set while Speed Mine is switched to its tool; placer modules pause meanwhile. */
+    /** Set while Speed Mine is switched to its tool; placer modules pause meanwhile. */
     val toolSwapInFlight = AtomicBoolean(false)
 
     init {
@@ -307,7 +305,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         on<BlockBreakProgressEvent> { e ->
             if (mode.value != Mode.PACKET) return@on
             e.cancel()
-            // Not in the original: holding the button onto a block that isn't being mined starts it, as a click would.
+            // Holding the button onto a block that isn't being mined starts it, as a click would.
             val p = mc.player ?: return@on
             if (hold.value && !p.abilities.instabuild && !inQueue(e.pos) && canMine(e.pos)) startMining(e.pos, e.direction)
         }
@@ -339,7 +337,6 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
 
     override fun onDisable() = resetAll(ResetReason.TOGGLE)
 
-    /** `rs.C`. */
     private fun tick() {
         val p = mc.player ?: return
         val level = mc.level ?: return
@@ -356,7 +353,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         startPending()
     }
 
-    /** Not in the original: the next two lined-up blocks, once nothing in the queue is left to break. */
+    /** The next two lined-up blocks, once nothing in the queue is left to break. */
     private fun startPending() {
         if (mode.value != Mode.PACKET || !doubleMine.value || maxBlocks.value <= 2) pending.clear()
         val level = mc.level ?: return
@@ -368,7 +365,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         }
     }
 
-    /** `rs.t`: reset every entry, then forget them. */
+    /** Reset every entry, then forget them. */
     private fun resetAll(reason: ResetReason) {
         for (e in queue) e.reset(reason)
         queue.clear()
@@ -377,13 +374,12 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         toolSwapInFlight.set(false)
     }
 
-    /** `rs.u(pos)`. */
     fun inQueue(pos: BlockPos) = queue.any { it.pos == pos } || pending.any { it.first == pos }
 
-    /** `rs.a`: no room for another block (double-mine: [maxBlocks] queued; else the one entry is still solid). */
+    /** No room for another block (double-mine: [maxBlocks] queued; else the one entry is still solid). */
     fun busy() = if (doubleMine.value) queue.size + pending.size >= maxBlocks.value else queue.isNotEmpty() && queue.first().prevProgress != -1f
 
-    /** `rs.j`: breakable and in range (+0.5); with double-mine far blocks pass too, unless it's the newest one. */
+    /** Breakable and in range (+0.5); with double-mine far blocks pass too, unless it's the newest one. */
     fun canMine(pos: BlockPos): Boolean {
         val p = mc.player ?: return false
         val level = mc.level ?: return false
@@ -398,9 +394,8 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
     }
 
     /**
-     * `rs.G`: start mining a block (single: replaces the current one; double-mine: replaces the newest of two). Not in
-     * The original: with [maxBlocks] above two, a block past a queue still mining is lined up instead (replacing the newest
-     * lined up when full).
+     * Start mining a block (single: replaces the current one; double-mine: replaces the newest of two). With [maxBlocks]
+     * above two, a block past a queue still mining is lined up instead (replacing the newest lined up when full).
      */
     fun startMining(pos: BlockPos, dir: Direction) {
         val p = mc.player ?: return
@@ -430,7 +425,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
     }
 
     /**
-     * The original's `rs.u(long, bool)`: blocks about to break (or the one just broken, with [includeRecent]); AutoCrystal
+     * Blocks about to break (or the one just broken, with [includeRecent]); AutoCrystal
      * treats them as air.
      */
     fun aboutToBreak(includeRecent: Boolean): List<BlockPos> {
@@ -448,10 +443,10 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
     private fun soon(e: Entry): Boolean =
         e.progress < 1f && e.progress + (e.progress - e.prevProgress) * 2.5f >= 1f && mc.level?.isEmptyBlock(e.pos) == false
 
-    /** `rs.Y`: recently broken blocks collide as air for 200 ms. */
+    /** Recently broken blocks collide as air for 200 ms. */
     fun phaseActive() = enabled && phase.value && recent.values.any { System.currentTimeMillis() - it < 200 }
 
-    /** `rs.x`: the block is above auto-crystal's target's head. */
+    /** The block is above auto-crystal's target's head. */
     private fun aboveTarget(pos: BlockPos): Boolean {
         val ac = Modules.get<AutoCrystal>()
         val t = ac.target ?: return false
@@ -464,7 +459,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
     private fun abortPacket(pos: BlockPos) =
         Packets.send(ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN))
 
-    /** `rs.E` / `rs.o`: progress per tick with the given tool slot (the original's maths, not vanilla's). */
+    /** Progress per tick with the given tool slot (its own maths, not vanilla's). */
     private fun delta(state: BlockState, pos: BlockPos, slot: Int, onGround: Boolean): Float {
         val p = mc.player ?: return 0f
         val level = mc.level ?: return 0f
@@ -498,15 +493,15 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         return EnchantmentHelper.getItemEnchantmentLevel(e, stack)
     }
 
-    /** `rs.T`: the best tool's inventory index (−1 for air): among correct tools, else among all. */
+    /** The best tool's inventory index (−1 for air): among correct tools, else among all. */
     private fun bestTool(pos: BlockPos): Int {
         val r = toolPass(pos, true)
         return if (r != -1) r else toolPass(pos, false)
     }
 
     /**
-     * `rs.c`: main inventory first, then the hotbar; score = efficiency + destroy speed. The correct-tool pass keeps the
-     * LOWEST score, as the original's does (so the weakest correct tool); the fallback keeps the highest.
+     * Main inventory first, then the hotbar; score = efficiency + destroy speed. The correct-tool pass keeps the
+     * LOWEST score on purpose (so the weakest correct tool); the fallback keeps the highest.
      */
     private fun toolPass(pos: BlockPos, requireCorrect: Boolean): Int {
         val p = mc.player ?: return -1
@@ -530,7 +525,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         return if (best >= 36) best - 36 else best
     }
 
-    /** `rs.Q(a, b)`: bring tool [a] in (b = −1), or put [b]'s stack back with [a] as the slot to return to. */
+    /** Bring tool [a] in (b = −1), or put [b]'s stack back with [a] as the slot to return to. */
     private fun swap(a: Int, b: Int) {
         val p = mc.player ?: return
         if (switchMode.value != SwitchMode.Alternative && a < 9) {
@@ -547,7 +542,7 @@ class SpeedMine : Module("speed-mine", Categories.PLAYER) {
         toolSwapInFlight.set(false)
     }
 
-    /** `rs.w(Render3DEvent)`: the hold outline and the progress box of each block. */
+    /** The hold outline and the progress box of each block. */
     private fun render(pt: Float) {
         if (mode.value == Mode.DAMAGE) return
         val p = mc.player ?: return

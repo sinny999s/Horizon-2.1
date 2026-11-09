@@ -29,7 +29,7 @@ import net.minecraft.world.phys.AABB
 import java.awt.Color
 
 /**
- * The original's block-placer base (`_0`): the shared placing settings and the place-a-list loop. [priority] goes with every
+ * The block-placer base: the shared placing settings and the place-a-list loop. [priority] goes with every
  * rotation request; [showRange] shows the range settings (Surround and Blocker hide them).
  */
 abstract class PlacerModule(id: String, subCategory: SubCategory, val priority: Int = 150, showRange: Boolean = true) :
@@ -61,16 +61,16 @@ abstract class PlacerModule(id: String, subCategory: SubCategory, val priority: 
     /** The last successful place; an inventory screen opening within 250 ms of it is closed straight away. */
     private val lastPlace = MsTimer()
 
-    /** The blocks this module places (the original's `t()`). */
+    /** The blocks this module places. */
     open fun blocks(): List<Block> = Placer.DEFAULT_BLOCKS
 
-    /** The items [placeItems] places (the original's `r()`), for things that aren't blocks (item frames). */
+    /** The items [placeItems] places, for things that aren't blocks (item frames). */
     open fun items(): List<Item> = emptyList()
 
-    /** Entities in the target block that don't stop a placement (the original's `N()`). */
+    /** Entities in the target block that don't stop a placement. */
     open val ignoreMode: IgnoreMode get() = IgnoreMode.ONLY_CRYSTALS
 
-    /** Whether a crystal in the target block may be broken first (the original's `I(Entity)`). */
+    /** Whether a crystal in the target block may be broken first. */
     open fun mayBreak(crystal: Entity) = !paused()
 
     init {
@@ -85,13 +85,13 @@ abstract class PlacerModule(id: String, subCategory: SubCategory, val priority: 
     }
 
     /**
-     * The original's `_0.s`: places down [positions] in order. Vanilla timing places one block per call, Instant up to
+     * Places down [positions] in order. Vanilla timing places one block per call, Instant up to
      * `blocks-per-action`. [immediate] places at once instead of when the rotation has been sent.
      */
     fun placeList(positions: List<BlockPos>, immediate: Boolean, forceVanilla: Boolean = false, blocks: List<Block> = blocks(),
                   altSearch: Boolean = false): Boolean = placeItems(positions, immediate, forceVanilla, blocks.map { it.asItem() }, altSearch)
 
-    /** The original's `_0.t`: [placeList] with the items given as they are. */
+    /** [placeList] with the items given as they are. */
     fun placeItems(positions: List<BlockPos>, immediate: Boolean, forceVanilla: Boolean = false, items: List<Item> = items(),
                    altSearch: Boolean = false): Boolean {
         if (delay > 0) {
@@ -115,7 +115,6 @@ abstract class PlacerModule(id: String, subCategory: SubCategory, val priority: 
         return placed
     }
 
-    /** The original's `_0.Y`. */
     private fun placeOne(pos: BlockPos, items: List<Item>, immediate: Boolean, forceVanilla: Boolean, altSearch: Boolean): Boolean {
         val player = mc.player ?: return false
         val level = mc.level ?: return false
@@ -151,7 +150,7 @@ abstract class PlacerModule(id: String, subCategory: SubCategory, val priority: 
         return true
     }
 
-    /** The original's `_0.i`: the pause settings, plus Speed Mine holding its tool. */
+    /** The pause settings, plus Speed Mine holding its tool. */
     fun paused(): Boolean {
         val player = mc.player ?: return true
         if (mining.value && mc.gameMode?.isDestroying == true) return true

@@ -193,7 +193,6 @@ tape-mouse=Clicks for you on a delay.
 team-communication=Encrypted team chat and shared coordinates.
 test=Developer benchmark for crystal damage.
 translator=Translates chat both ways.
-# Not in the original.
 ambience=Custom client-side control over time of day, weather, and world ambience.
 anchor-aura=Places, charges and detonates respawn anchors on nearby targets in the overworld and end.
 announce=Periodically sends chat announcements or commands at a configured interval.

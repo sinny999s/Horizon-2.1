@@ -14,7 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.random.Random
 
-/** The original's proxy (`ve`); [ping] is -1 when never pinged or failed, -2 while pinging. */
+/** A proxy; [ping] is -1 when never pinged or failed, -2 while pinging. */
 @Serializable
 data class Proxy(
     var id: String,
@@ -30,13 +30,13 @@ data class Proxy(
 private data class ProxiesFile(val proxies: List<Proxy>)
 
 /**
- * The original's proxies (`t0`), saved in `proxy.hzn`. The selected one (not saved) is put first in the pipeline of every
+ * Proxies, saved in `proxy.hzn`. The selected one (not saved) is put first in the pipeline of every
  * connection to a server. Pings measure the TCP connect to the proxy.
  */
 object Proxies {
     val list = ArrayList<Proxy>()
 
-    /** The proxy for the next connections; deleting it doesn't clear it (as in the original). */
+    /** The proxy for the next connections; deleting it doesn't clear it (on purpose). */
     var selected: Proxy? = null
 
     private val file: Path get() = Storage.root.resolve("proxy.hzn")
@@ -54,8 +54,8 @@ object Proxies {
     fun save() = Storage.write(file, ProxiesFile.serializer(), ProxiesFile(list.toList()))
 
     /**
-     * The original's `t0.N`: every proxy to -2, then one thread each. Proxy i waits 2000·i ms before connecting, and the
-     * time is taken before that wait, so it reports about 2000·i ms too much (as in the original).
+     * Every proxy to -2, then one thread each. Proxy i waits 2000·i ms before connecting, and the
+     * time is taken before that wait, so it reports about 2000·i ms too much (on purpose).
      */
     fun pingAll() {
         for (p in list) p.ping = -2
@@ -73,7 +73,7 @@ object Proxies {
         }
     }
 
-    /** Not in the original: pings one proxy at once (the new Windows screen's Test), without [pingAll]'s 2 s steps. */
+    /** Pings one proxy at once (the new Windows screen's Test), without [pingAll]'s 2 s steps. */
     fun ping(p: Proxy) {
         p.ping = -2
         Thread {

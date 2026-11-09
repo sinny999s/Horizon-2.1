@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/** The original's BlockMixin.shouldDrawSideHook: while x-ray is on, a face is drawn only when x-ray says so. */
+/** While x-ray is on, a face is drawn only when x-ray says so. */
 @Mixin(Block.class)
 public abstract class BlockMixin {
 	@ModifyReturnValue(method = "shouldRenderFace", at = @At("RETURN"))

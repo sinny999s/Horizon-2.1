@@ -14,7 +14,7 @@ import kotlin.math.cos
 import kotlin.math.pow
 
 /**
- * The original's "view-model" (`e8`): moves, scales and turns the first-person held items (main and off hand), optionally
+ * Moves, scales and turns the first-person held items (main and off hand), optionally
  * spinning them a little every tick, and replaces the eating/drinking jiggle with a configurable one.
  */
 class ViewModel : Module("view-model", Categories.COSMETIC) {
@@ -48,7 +48,7 @@ class ViewModel : Module("view-model", Categories.COSMETIC) {
     val eatY = float("eat-y", 1.0f, -1.0f..2.0f, parent = eating.value)
     val eatShake = float("eat-shake", 0.005f, 0.0f..0.2f, parent = eating.value)
 
-    // Last tick's angles, for interpolation (the original's P, F, D, y, u, T).
+    // Last tick's angles, for interpolation.
     private var prevPitch = 0f
     private var prevYaw = 0f
     private var prevRoll = 0f
@@ -74,7 +74,7 @@ class ViewModel : Module("view-model", Categories.COSMETIC) {
         on<HandModifyEvent> { e -> modify(e) }
     }
 
-    /** The original's `e8.H`: one tick of spin, wrapping to 180 at the bottom. */
+    /** One tick of spin, wrapping to 180 at the bottom. */
     private fun step(angle: Float, speed: Float): Float {
         if (angle - speed - 180f > 0f) return 180f
         val v = angle - speed
@@ -114,7 +114,7 @@ class ViewModel : Module("view-model", Categories.COSMETIC) {
         s.rotate(Axis.ZP.rotationDegrees(Mth.lerp(pt, prevOffRoll, offRoll.value)))
     }
 
-    /** The original's `e8.K`: vanilla's eat/drink transform with the eat-x/eat-y/eat-shake amounts, mirrored by hand. */
+    /** Vanilla's eat/drink transform with the eat-x/eat-y/eat-shake amounts, mirrored by hand. */
     private fun eat(s: PoseStack, pt: Float, hand: InteractionHand, item: ItemStack) {
         val p = mc.player ?: return
         val time = p.useItemRemainingTicks - pt + 1f
@@ -128,12 +128,12 @@ class ViewModel : Module("view-model", Categories.COSMETIC) {
         s.rotate(Axis.ZP.rotationDegrees(inv * k * 30f))
     }
 
-    /** The original's `e8.j`: the main-hand offset (for Swing Animations), while enabled. */
+    /** The main-hand offset (for Swing Animations), while enabled. */
     fun translate(s: PoseStack) {
         if (enabled) s.translate(x.value, y.value, z.value)
     }
 
-    /** The original's `e8.e`: undoes [translate]. */
+    /** Undoes [translate]. */
     fun untranslate(s: PoseStack) {
         if (enabled) s.translate(-x.value, -y.value, -z.value)
     }

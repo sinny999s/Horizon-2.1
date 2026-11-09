@@ -5,7 +5,7 @@ import dev.horizon.client.config.Storage
 import kotlinx.serialization.Serializable
 
 /**
- * Not in the original: the Lunar Client version Lunar Spoof claims to be, after Moonlight's `MoonlightConfig`. Kept in
+ * The Lunar Client version Lunar Spoof claims to be, after Moonlight's `MoonlightConfig`. Kept in
  * `horizon/lunar-spoof/version.json` with when it was looked up, and looked up again ([LunarJar]) once it's a day old.
  * The version is Lunar's own build data (`lunarBuildData.txt` in its `lunar.jar`), which is the same jar for every
  * Minecraft version Lunar runs on (the launcher API's answers for 1.8.9 and 1.21.10 to 26.3, Lunar and Fabric modules,

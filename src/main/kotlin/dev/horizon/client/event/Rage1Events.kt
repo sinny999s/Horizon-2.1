@@ -5,7 +5,7 @@ import net.minecraft.world.entity.Pose
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
 
-/** `WebBlock.entityInside` HEAD; cancelling skips the cobweb's slowdown (the original's CobWebEvent). */
+/** `WebBlock.entityInside` HEAD; cancelling skips the cobweb's slowdown. */
 class CobWebEvent : Event()
 
 /** `SweetBerryBushBlock.entityInside` HEAD; cancelling skips the bush's slowdown and damage. */
@@ -14,13 +14,13 @@ class SweetBerryBushCollisionEvent : Event()
 /** `SlimeBlock.stepOn` HEAD; cancelling skips the slime's slowdown. */
 class StepOnSlimeEvent : Event()
 
-/** `Block.getFriction` HEAD; cancelling returns dirt's friction (the original's SlipperinessEvent). */
+/** `Block.getFriction` HEAD; cancelling returns dirt's friction. */
 class SlipperinessEvent(val block: Block) : Event()
 
-/** `Block.getSpeedFactor` HEAD; cancelling returns dirt's speed factor (the original's VelocityMultiplierEvent). */
+/** `Block.getSpeedFactor` HEAD; cancelling returns dirt's speed factor. */
 class VelocityMultiplierEvent(val block: Block) : Event()
 
-/** `LocalPlayer.isMovingSlowly` HEAD; cancelling makes it false (the original's SlowDownEvent). */
+/** `LocalPlayer.isMovingSlowly` HEAD; cancelling makes it false. */
 class SlowDownEvent : Event()
 
 /** `LocalPlayer.shouldStopRunSprinting` HEAD; cancelling makes it false. */
@@ -41,12 +41,11 @@ class SetPoseEvent : Event() {
 }
 
 /**
- * The local player's `LivingEntity.travel` HEAD with its velocity; cancelling skips travel and moves by [vec] instead
- * (the original's PreElytraEvent).
+ * The local player's `LivingEntity.travel` HEAD with its velocity; cancelling skips travel and moves by [vec] instead.
  */
 class PreElytraEvent(var vec: Vec3) : Event()
 
-/** The local player's `LivingEntity.travel` RETURN; cancelling moves by [vec] once more (the original's AfterElytraEvent). */
+/** The local player's `LivingEntity.travel` RETURN; cancelling moves by [vec] once more. */
 class AfterElytraEvent(var vec: Vec3) : Event()
 
 /** A firework boosting the local player sets its velocity; cancelling sets [velocity] instead. */

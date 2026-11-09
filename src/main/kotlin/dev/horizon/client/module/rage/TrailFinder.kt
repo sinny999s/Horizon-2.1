@@ -6,7 +6,7 @@ import kotlin.math.floor
 import kotlin.math.sin
 
 /**
- * Not in the original: Elytra Autopilot's trail steering, kept free of the game so it can be tested on its own. A trail is a
+ * Elytra Autopilot's trail steering, kept free of the game so it can be tested on its own. A trail is a
  * line of old chunks (ones that existed before you loaded them, so someone has been there) running through new ones.
  * [steer] looks along every direction within `spread` degrees of the current heading and takes the one with the most
  * old chunks ahead, if any has at least `minOld`. Where almost everything around is old (explored land) there is no

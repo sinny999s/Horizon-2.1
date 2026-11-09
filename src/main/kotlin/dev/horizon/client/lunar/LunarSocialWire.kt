@@ -6,7 +6,7 @@ import dev.horizon.client.lunar.LunarWire.message
 import java.util.UUID
 
 /**
- * Not in the original: Lunar's emote, spray and notification services on its game websocket (schemas from lunar.jar:
+ * Lunar's emote, spray and notification services on its game websocket (schemas from lunar.jar:
  * `lunarclient.websocket.emote.v1`, `spray.v1`, `notification.v1`), read and written by hand like [LunarWire]. Game-free.
  */
 object LunarSocialWire {

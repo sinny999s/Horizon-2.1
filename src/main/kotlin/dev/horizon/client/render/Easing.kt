@@ -8,7 +8,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * The original's easing curves (`yr`), in its order and with its exact formulas, including its quirks: IN_OUT_SINE is the
+ * Easing curves, with quirks kept on purpose: IN_OUT_SINE is the
  * same as IN_SINE and OUT_ELASTIC's wobble is halved. Input and output are 0..1 (sigmoids stop short of the ends).
  */
 enum class Easing(private val f: (Double) -> Double) {

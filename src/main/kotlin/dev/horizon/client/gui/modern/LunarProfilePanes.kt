@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft
 import java.util.UUID
 
 /**
- * Not in the original: the locker's Outfits and Badges tabs ([LunarProfileEdits]).
+ * The locker's Outfits and Badges tabs ([LunarProfileEdits]).
  * - Outfits: your Lunar outfits; the one you wear is marked. Pick one to wear it, rename or delete it, or have it worn
  *   instead in a situation (on this server, in this dimension, at night, in rain, while swimming); those rules are
  *   listed under it. New makes an outfit (named from the box at the top).

@@ -1,7 +1,7 @@
 package dev.horizon.client.render
 
 /**
- * The original's animated value (`ch`): [update] moves towards a target over [duration] ms along [easing], restarting from
+ * An animated value: [update] moves towards a target over [duration] ms along [easing], restarting from
  * the current value whenever the target changes. Time is wall-clock ms.
  */
 class Animation(private val easing: Easing, private val duration: Long) {
@@ -12,10 +12,10 @@ class Animation(private val easing: Easing, private val duration: Long) {
     private var from = 0f
     private var target = 0f
 
-    /** True once the run reached its target (not updated on the frame the target changes, as in the original). */
+    /** True once the run reached its target (not updated on the frame the target changes, on purpose). */
     var finished = false
 
-    /** The original's `I(target)`: call every frame with where the value should go. */
+    /** Call every frame with where the value should go. */
     fun update(target: Float) {
         if (this.target != target) {
             this.target = target
@@ -31,13 +31,13 @@ class Animation(private val easing: Easing, private val duration: Long) {
         value = (from + (this.target - from) * t).toFloat()
     }
 
-    /** The original's `p(v)`: restart from [v]. */
+    /** Restart from [v]. */
     fun reset(v: Float) {
         start = System.currentTimeMillis()
         from = v
         finished = false
     }
 
-    /** The original's `i()`: restart from the current value. */
+    /** Restart from the current value. */
     fun reset() = reset(value)
 }

@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Every fluid flow vector goes through WaterPushEvent (the original's `getVelocityHook`). */
+/** Every fluid flow vector goes through WaterPushEvent. */
 @Mixin(FlowingFluid.class)
 public abstract class FlowingFluidBasicMixin {
 	@Inject(method = "getFlow", at = @At("HEAD"), cancellable = true)

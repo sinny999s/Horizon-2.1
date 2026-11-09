@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Around the local player's travel (movement physics; cancelling the pre event skips travel and the post event), and
- * Reach's interaction ranges (any player, as in the original).
+ * Reach's interaction ranges (any player, on purpose).
  */
 @Mixin(Player.class)
 public abstract class PlayerMixin {

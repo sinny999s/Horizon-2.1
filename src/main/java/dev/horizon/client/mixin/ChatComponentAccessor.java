@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 
-/** Better Chat: the messages, newest first, to see when a new one comes in (not in the original). */
+/** Better Chat: the messages, newest first, to see when a new one comes in. */
 @Mixin(ChatComponent.class)
 public interface ChatComponentAccessor {
 	@Accessor("allMessages")

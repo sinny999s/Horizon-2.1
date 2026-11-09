@@ -1,7 +1,6 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's core/default/colored_texture.vsh.
 layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;
     mat4 TextureMat;

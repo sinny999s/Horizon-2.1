@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec3
 import java.util.UUID
 
 /**
- * Not in the original: Lunar's logo and badge by a Lunar player's name, laid out as Lunar Client lays them out.
+ * Lunar's logo and badge by a Lunar player's name, laid out as Lunar Client lays them out.
  * - Name tags: the logo (10 px, tinted the player's logo colour, with a small plus in their Lunar+ colour on its top
  *   right) before the name and the badge (8 px) after it, each in 12 px of the tag, which widens to fit. Used for
  *   vanilla's name tags (`misc2/LunarNameTagMixin`) and Name Tags' plates.

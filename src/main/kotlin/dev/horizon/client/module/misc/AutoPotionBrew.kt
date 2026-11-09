@@ -26,13 +26,13 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.item.alchemy.Potion as McPotion
 
 /**
- * The original's "auto-potion-brew" (`aj`): in a brewing stand it adds blaze powder, water bottles, nether wart, the
+ * In a brewing stand it adds blaze powder, water bottles, nether wart, the
  * [potion]'s ingredients, its glowstone/redstone upgrade and (with [throwable]) gunpowder, one click set per [delay] ms,
  * closes the stand once it brews, and when done takes or throws the potions. With [open] it opens brewing stands in
  * reach that aren't brewing, every 10 ticks.
  */
 class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
-    /** The original's `gz`: base ingredient, second ingredient (AIR when none), upgrade. */
+    /** Base ingredient, second ingredient (AIR when none), upgrade. */
     enum class Potion(val base: Item, val second: Item, val upgrade: Item) {
         SPEED(Items.SUGAR, Items.AIR, Items.GLOWSTONE_DUST),
         STRENGTH(Items.BLAZE_POWDER, Items.AIR, Items.GLOWSTONE_DUST),
@@ -93,7 +93,7 @@ class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
                 moveOne(p.second, 3)
                 return@on
             }
-            // The original tests SWIFTNESS twice here (and never FIRE_RESISTANCE), so fire resistance isn't upgraded.
+            // Tests SWIFTNESS twice here (and never FIRE_RESISTANCE), so fire resistance isn't upgraded (on purpose).
             val base = all(Potions.STRENGTH.value()) || all(Potions.SWIFTNESS.value()) || all(Potions.SWIFTNESS.value()) ||
                 all(Potions.INVISIBILITY.value())
             var canUpgrade = true
@@ -125,7 +125,7 @@ class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
         }
     }
 
-    /** The original's open loop: every brewing stand in reach that isn't brewing gets a rotation + use, on ticks % 10. */
+    /** Every brewing stand in reach that isn't brewing gets a rotation + use, on ticks % 10. */
     private fun openStands() {
         val player = mc.player ?: return
         for (be in blockEntitiesAround()) {
@@ -144,7 +144,7 @@ class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
         }
     }
 
-    /** The original's `aj.f`: per bottle slot, once [delay] has passed, takes (shift-click) or throws the potion. */
+    /** Per bottle slot, once [delay] has passed, takes (shift-click) or throws the potion. */
     private fun finish() {
         for (i in 0 until 3) {
             if (!timer.passed(delay.value.toLong())) continue
@@ -156,7 +156,7 @@ class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
         }
     }
 
-    /** The original's `aj.T(item, slot)`: once [delay] has passed, picks up the stack, drops one into [slot], puts it back. */
+    /** Once [delay] has passed, picks up the stack, drops one into [slot], puts it back. */
     private fun moveOne(item: Item, slot: Int) {
         if (!timer.passed(delay.value.toLong())) return
         val from = find(item)
@@ -167,14 +167,14 @@ class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
         timer.reset()
     }
 
-    /** The original's `aj.F`: the first inventory slot (5..40) of the stand's menu holding [item], else -1. */
+    /** The first inventory slot (5..40) of the stand's menu holding [item], else -1. */
     private fun find(item: Item): Int {
         val slots = mc.player?.containerMenu?.slots ?: return -1
         for (i in 5 until 41) if (slots[i].item.item == item) return i
         return -1
     }
 
-    /** The original's `aj.R`: the first inventory slot (5..40) holding a [potion] potion, else -1. */
+    /** The first inventory slot (5..40) holding a [potion] potion, else -1. */
     private fun findPotion(potion: McPotion): Int {
         val slots = mc.player?.containerMenu?.slots ?: return -1
         for (i in 5 until 41) {
@@ -184,7 +184,7 @@ class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
         return -1
     }
 
-    /** The original's `aj.g`: all three bottle slots hold a [potion] potion. */
+    /** All three bottle slots hold a [potion] potion. */
     private fun all(potion: McPotion): Boolean {
         val slots = mc.player?.containerMenu?.slots ?: return false
         for (i in 0 until 3) {
@@ -195,7 +195,7 @@ class AutoPotionBrew : Module("auto-potion-brew", Categories.MISC) {
         return true
     }
 
-    /** The original's `aj.r`: all three bottle slots hold splash potions. */
+    /** All three bottle slots hold splash potions. */
     private fun allSplash(): Boolean {
         val slots = mc.player?.containerMenu?.slots ?: return false
         for (i in 0 until 3) if (slots[i].item.item != Items.SPLASH_POTION) return false

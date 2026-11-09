@@ -19,7 +19,7 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Not in the original (ported from Horizon): joining 6b6t and the other big anarchy servers Mojang's blocklist keeps out, as
+ * Joining 6b6t and the other big anarchy servers Mojang's blocklist keeps out, as
  * the 6b6t team's AnarchyMod does (MIT licence, github.com/6b6t/AnarchyMod). Their domains pass the blocklist check, the
  * list is kept up to date from 6b6t.org, and on joining one of them the client sends the same empty `anarchymod:join`
  * message AnarchyMod does (6b6t counts players with the mod by it).

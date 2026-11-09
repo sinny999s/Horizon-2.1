@@ -24,7 +24,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * The original's `mn`: the aura's (or auto-crystal's) target with armour, head, hands, totem pops and health, red sparks
+ * The aura's (or auto-crystal's) target with armour, head, hands, totem pops and health, red sparks
  * on hits, drops at low health and "EZZZ…" after a kill. In chat and the Hud editor the target is you.
  */
 object TargetInfo : HudWidget("target-info") {
@@ -42,7 +42,7 @@ object TargetInfo : HudWidget("target-info") {
     /** Ticks since the shown player started dying. */
     private var dying = 0
 
-    /** The original's: the aura's target (`jv.PW()`), else the auto-crystal's while it's on (`js.dR()`). */
+    /** The aura's target, else the auto-crystal's while it's on. */
     private fun target(): Entity? = Modules.get<Aura>().target ?: Modules.get<AutoCrystal>().takeIf { it.enabled }?.target
 
     private val pt get() = mc.deltaTracker.getGameTimeDeltaPartialTick(false)
@@ -61,7 +61,7 @@ object TargetInfo : HudWidget("target-info") {
     override fun postRender() = draw(true)
 
     /**
-     * Not in the original: the new look (hud.css .ti): the rounded head, the name, a red-to-orange health bar, the health
+     * The new look (hud.css .ti): the rounded head, the name, a red-to-orange health bar, the health
      * and totem pops, and the armour and main hand in a row (in the editor, where the target is you, "you, in the
      * editor" beside them).
      */
@@ -140,7 +140,7 @@ object TargetInfo : HudWidget("target-info") {
         val u = shown
         if (u != null && u.isDeadOrDying && u is Player && u != mc.player) dying++ else dying = 0
         val t = target()
-        // Where the new look's head and health bar sit (not where the original's did).
+        // Where the new look's head and health bar sit.
         if (t is Player && t.health < 10f && t.tickCount % 6 == 0) {
             particles += Particle(left + 4.5f + 28 * Math.random().toFloat(), top + 4.5f,
                 Math.random().toFloat() * 2 - 1, Math.random().toFloat() * 2, false)

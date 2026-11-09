@@ -16,7 +16,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 
 /**
- * The original's "perfect-delay" (`r8`): lets go of a trident, crossbow or bow the tick it is fully charged, and charges a
+ * Lets go of a trident, crossbow or bow the tick it is fully charged, and charges a
  * ridden horse's jump fully ([Horse.Rage]: set to full every tick; [Horse.Legit]: the jump key is let go once full).
  */
 class PerfectDelay : Module("perfect-delay", Categories.PLAYER) {
@@ -45,7 +45,7 @@ class PerfectDelay : Module("perfect-delay", Categories.PLAYER) {
         }
     }
 
-    /** The original's `r8.T(ItemStack)`: the stack's Quick Charge level. */
+    /** The stack's Quick Charge level. */
     private fun quickCharge(stack: ItemStack): Float {
         val level = mc.level ?: return 0f
         val holder = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.QUICK_CHARGE)

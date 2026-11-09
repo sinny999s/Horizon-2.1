@@ -8,7 +8,7 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 
 /**
- * Not in the original: a Lunar GeckoLib cosmetic's Bedrock geometry (`.geo.json`), baked into textured quads in the
+ * A Lunar GeckoLib cosmetic's Bedrock geometry (`.geo.json`), baked into textured quads in the
  * player model's own space, one list per body part, so each part's quads can be drawn with that part's pose. In its
  * rest pose: the cosmetic's animations (Molang) aren't played. Game-free.
  *

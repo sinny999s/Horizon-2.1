@@ -45,7 +45,7 @@ import net.minecraft.world.item.ItemUseAnimation
 import kotlin.random.Random
 
 /**
- * The original's "aura" (`jv`): every tick picks a target, turns towards it with the chosen rotation mode, and hits it when
+ * Every tick picks a target, turns towards it with the chosen rotation mode, and hits it when
  * the attack timer, sprint handling and the ray (or line of sight) allow.
  *
  * Extended with ViaFabricPlus 1.8.x auto-detection ([combatMode]), millisecond-paced humanized 1.8 clicking, 1.8
@@ -60,10 +60,10 @@ class Aura : Module("aura", Categories.ATTACK) {
     enum class FilterLowDeltas { REMOVE, REPLACE, OFF }
     enum class RotationMode { SNAP, DEFAULT, NONE, VULCAN, HVH, POLAR_SEP_25, GRIM_SILENT, ADVANCED, CUSTOM, LEGIT }
     enum class LegitSpot { WANDER, CLOSEST, CHEST, HEAD }
-    /** Not in the original: LEGIT's aim, a mouse spring (SPRING, the default) or human submovements ([HumanAim], HUMAN). */
+    /** LEGIT's aim, a mouse spring (SPRING, the default) or human submovements ([HumanAim], HUMAN). */
     enum class AimModel { SPRING, HUMAN }
     enum class CombatMode { AUTO, COOLDOWN, LEGACY }
-    /** BLOCK_HIT / HOLD: sword blocking around Aura's hits. LEGIT (not in the original): block-hits with the use key (see ShieldHook). */
+    /** BLOCK_HIT / HOLD: sword blocking around Aura's hits. LEGIT: block-hits with the use key (see ShieldHook). */
     enum class AutoBlock { OFF, BLOCK_HIT, HOLD, LEGIT }
     enum class AutoWeapon { NORMAL, NONE, SILENT }
     enum class WhileShielding { PAUSE, IGNORE, UNPRESS, LEGIT }
@@ -76,13 +76,13 @@ class Aura : Module("aura", Categories.ATTACK) {
     /** How far targets are looked for and tracked; hits only land within [reach]. */
     val range = float("range", 3.0f, 3.0f..6.0f)
     /**
-     * Not in the original (whose `range` was also its reach): how far a hit may land, vanilla's 3 by default, so a long
+     * How far a hit may land, vanilla's 3 by default, so a long
      * `range` only finds and follows targets from further away. Ghost Mode holds it at 3.
      */
     val reach = float("reach", 3.0f, 3.0f..6.0f)
     val ignoreWalls = bool("ignore-walls", true)
     val fov = int("fov", 180, 1..180).also { ValueLabels.register("fov", 1, "trigger") }
-    /** Not in the original: no attacks in a Bedwars lobby or waiting room, back to it when the match starts ([Bedwars]). */
+    /** No attacks in a Bedwars lobby or waiting room, back to it when the match starts ([Bedwars]). */
     val lobbyOff = bool("lobby-off", true)
     val advanced = group("advanced") { rotationMode.value == RotationMode.ADVANCED }
     val point = enum("point", Point.CENTER, parent = advanced.value) { rotationMode.value == RotationMode.ADVANCED }
@@ -161,7 +161,7 @@ class Aura : Module("aura", Categories.ATTACK) {
     val tremor = float("tremor", 0.35f, 0.0f..2.0f, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     val requireClick = bool("require-click", false, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
     /**
-     * Not in the original: the same hand turns a look only the server gets (sent like the other silent modes) and
+     * The same hand turns a look only the server gets (sent like the other silent modes) and
      * leaves your camera alone. Losing the target, it turns back to your camera rather than snapping. Use it with
      * Move Fix so you walk the way the server sees you face.
      */
@@ -197,7 +197,7 @@ class Aura : Module("aura", Categories.ATTACK) {
     val sprint = enum("sprint", Sprint.NORMAL)
     val esp = enum("esp", Esp.COMETS)
     val sort = enum("sort", Sort.Distance)
-    /** Not in the original: let go of the held target for whoever is under the crosshair or the mouse turns towards. */
+    /** Let go of the held target for whoever is under the crosshair or the mouse turns towards. */
     val dynamicSwitch = bool("dynamic-switch", false) { sort.value != Sort.FOV }
     val targets = group("targets", GroupMode.BOOLS)
     val antibot = bool("antibot", true, parent = targets.value)
@@ -214,7 +214,7 @@ class Aura : Module("aura", Categories.ATTACK) {
     val ignoreCreative = bool("ignore-creative", true, parent = targets.value)
     val ignoreNaked = bool("ignore-naked", false, parent = targets.value)
     /**
-     * Not in the original: how [antibot] tells a bot. ARMOR is the original's check (full, fresh, unenchanted armour
+     * How [antibot] tells a bot. ARMOR is the armour check (full, fresh, unenchanted armour
      * with leather or iron in it), which in Bedwars is every player in the starting kit. TAB_LIST counts a player
      * missing from the tab list as a bot (Hypixel's bots and NPCs aren't in it; real players are), or one with an
      * NPC's UUID (version 2). AUTO is TAB_LIST in Bedwars ([Bedwars]) or on Hypixel ([HypixelApi]), ARMOR elsewhere.
@@ -228,15 +228,15 @@ class Aura : Module("aura", Categories.ATTACK) {
         CombatMode.COOLDOWN -> false
     }
 
-    /** The entity Aura is fighting (the original's `G`). */
+    /** The entity Aura is fighting. */
     @Volatile
     var target: Entity? = null
 
-    /** Aura's last rotation (the original's `d`); the rotation manager snaps it in place when it sends it. */
+    /** Aura's last rotation; the rotation manager snaps it in place when it sends it. */
     var rotation = Rotation(0f, 0f)
         private set
 
-    /** A rotation callback ran since the last rotate-on-disable (the original's `aJ`). */
+    /** A rotation callback ran since the last rotate-on-disable. */
     private var rotated = false
 
     val timer = AttackTimer(this)
@@ -245,7 +245,7 @@ class Aura : Module("aura", Categories.ATTACK) {
     private val shield = ShieldHook(this)
     val weapon = WeaponHook(this)
 
-    /** The original's hook list, in its order: attack timing, offhand-hit-swap, sprint, while-shielding, auto-weapon. */
+    /** The hooks, in order: attack timing, offhand-hit-swap, sprint, while-shielding, auto-weapon. */
     private val hooks: List<AuraHook> = listOf(timer, offhandSwap, sprintHook, shield, weapon)
     val backTracker = BackTrack(this)
     private val finder = AuraTargets(this)
@@ -259,7 +259,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         on<CrosshairEvent> { e -> overrideCrosshair(e) }
         on<Render3DEvent> { render() }
         on<MouseTurnEvent> {
-            // Not in the original: a fireball deflect or a pearl throw has the camera meanwhile.
+            // A fireball deflect or a pearl throw has the camera meanwhile.
             if (effectiveRotation() === LegitRotation && !Modules.get<FireballDeflect>().busy && !Modules.get<PearlSave>().busy) {
                 val t = target
                 if (dynamicSwitch.value && t != null && sort.value != Sort.FOV) finder.turnedTo(t)?.let { target = it }
@@ -268,7 +268,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         }
     }
 
-    /** The original's `jv.Y`: the target ESP, then (with back-track, whatever the ESP) the back-tracked ghost. */
+    /** The target ESP, then (with back-track, whatever the ESP) the back-tracked ghost. */
     private fun render() {
         val p = mc.player ?: return
         val t = target ?: return
@@ -277,7 +277,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         when (esp.value) {
             Esp.COMETS -> WorldEsp.comets(t, alpha)
             Esp.BLOOM_CIRCLE -> WorldEsp.bloomCircle(t, alpha)
-            // SELECTION draws nothing in the original (its composite is an empty method).
+            // SELECTION draws nothing (on purpose).
             Esp.SELECTION, Esp.OFF -> {}
         }
         if (backTrack.value) backTracker.render()
@@ -307,20 +307,19 @@ class Aura : Module("aura", Categories.ATTACK) {
 
     fun isHumanAim() = rotationMode.value == RotationMode.LEGIT && aimModel.value == AimModel.HUMAN
 
-    /** The original's `jv.O()`: Aura is fighting someone with a weapon. */
+    /** Aura is fighting someone with a weapon. */
     fun isAttacking(): Boolean = enabled && target != null && weapon.gate()
 
-    /** The original's `jv.n()`: DEFAULT while elytra-targeting (gliding) or mace-elytra-targeting, else the setting. */
+    /** DEFAULT while elytra-targeting (gliding) or mace-elytra-targeting, else the setting. */
     fun effectiveRotation(): AuraRotation {
         val p = mc.player
         val elytra = Modules.get<ElytraTarget>().enabled && p != null && p.isFallFlying
         return if (elytra || Modules.get<MaceElytraTarget>().enabled) DefaultRotation else AuraRotation.of(rotationMode.value)
     }
 
-    /** The original's `jv.Ps`. */
     private fun shouldPause(): Boolean {
         val p = mc.player ?: return true
-        // Not in the original: nothing to fight in a lobby or a game's waiting room.
+        // Nothing to fight in a lobby or a game's waiting room.
         if (lobbyOff.value && Bedwars.inLobby) {
             if (!lobbyTold) moduleMessage(name.trim(), "held off in the lobby until the match starts")
             lobbyTold = true
@@ -345,14 +344,13 @@ class Aura : Module("aura", Categories.ATTACK) {
         rotation = Rotation(p.yRot, p.xRot)
     }
 
-    /** Not in the original: with no target, `silent`'s hidden look is still sent while it turns back to the camera. */
+    /** With no target, `silent`'s hidden look is still sent while it turns back to the camera. */
     private fun silentReturn() {
         if (effectiveRotation() !== LegitRotation || !LegitRotation.silentActive) return
         rotation = Rotation(LegitRotation.silentYaw, LegitRotation.silentPitch)
         RotationManager.rotate(rotation, 130)
     }
 
-    /** The original's `jv.S`. */
     private fun tick() {
         val p = mc.player ?: return
         if (shouldPause()) {
@@ -367,7 +365,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         Modules.get<ElytraTarget>().resolve { selectAndAim(p) }
     }
 
-    /** The original's `jv.a`: pick the target, aim, and queue the hit with the rotation. */
+    /** Pick the target, aim, and queue the hit with the rotation. */
     private fun selectAndAim(p: Player) {
         val t = finder.select(target)
         target = t
@@ -382,7 +380,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         val attackReady = sprintHook.gate(timer.ready(0))
         val mode = effectiveRotation()
         if (mode === LegitRotation && LegitRotation.silentActive) {
-            // Not in the original: `silent`. The hand turned the hidden look; it is sent like the other silent modes,
+            // `silent`. The hand turned the hidden look; it is sent like the other silent modes,
             // and the same check as below applies to it (the last look sent and this one both on the target).
             rotation = Rotation(LegitRotation.silentYaw, LegitRotation.silentPitch)
             val sentOnTarget = rayHitsTarget(t, Rotation(Rotation.lastYaw, Rotation.lastPitch), reach.value, true)
@@ -440,7 +438,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         LegitRotation.onSwing()
     }
 
-    /** The original's `jv.s` (with 1.8.x swing-before-attack packet ordering when [isLegacyCombat] is active). */
+    /** The hit (with 1.8.x swing-before-attack packet ordering when [isLegacyCombat] is active). */
     private fun attack(t: Entity, rot: Rotation) {
         val p = mc.player ?: return
         val gm = mc.gameMode ?: return
@@ -474,14 +472,14 @@ class Aura : Module("aura", Categories.ATTACK) {
         LegitRotation.onSwing()
     }
 
-    /** The original's `jv.PZ`: an axe hit (swapped in through the inventory) on a player holding a shield up. */
+    /** An axe hit (swapped in through the inventory) on a player holding a shield up. */
     private fun breakShield(): Boolean {
         if (!shieldBreaker.value) return false
         val t = target as? Player ?: return false
         if (!t.holdingShieldUp()) return false
         val p = mc.player ?: return false
         val axe = Inventory.find { it.`is`(ItemTags.AXES) } ?: return false
-        // Inventory.find gives container ids, so the hotbar branch of the original's code can't happen.
+        // Inventory.find gives container ids, so there's no hotbar branch.
         Inventory.swap(axe.slot, p.inventory.selectedSlot, true)
         mc.gameMode?.attack(p, t)
         p.swing(InteractionHand.MAIN_HAND, p.mainHandItem.attackAnimation, false)
@@ -512,7 +510,7 @@ class Aura : Module("aura", Categories.ATTACK) {
         if (backTrack.value) backTracker.receive(e)
     }
 
-    /** The original's `jv.T`: vanilla's crosshair pick, along Aura's rotation and out to its reach (the original's range). */
+    /** Vanilla's crosshair pick, along Aura's rotation and out to its reach. */
     private fun overrideCrosshair(e: CrosshairEvent) {
         if (target == null || !overrideCrosshair.value) return
         Profiler.get().pop()

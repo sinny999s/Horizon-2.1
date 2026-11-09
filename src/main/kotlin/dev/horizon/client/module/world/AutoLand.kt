@@ -13,7 +13,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 
 /**
- * The original's "auto-land" (`rj`): every `delay` ticks, plants one thing: the selected seeds on the closest free farmland;
+ * Every `delay` ticks, plants one thing: the selected seeds on the closest free farmland;
  * failing that (sugar-cane) sugar cane next to water; failing that (nether-wart) nether wart on soul sand.
  */
 class AutoLand : Module("auto-land", Categories.WORLD) {
@@ -41,7 +41,7 @@ class AutoLand : Module("auto-land", Categories.WORLD) {
         }
     }
 
-    /** The original's `G`: farmland with air above. */
+    /** Farmland with air above. */
     private fun seeds(): Boolean {
         val level = mc.level ?: return false
         val hits = FarmUtil.topHits(0.4375) { pos ->
@@ -51,7 +51,7 @@ class AutoLand : Module("auto-land", Categories.WORLD) {
         return FarmUtil.useOn(hits, switch.value) { items.contains(it.item) }
     }
 
-    /** The original's `i`: sand, dirt, grass or red sand with water on a horizontal side and air above. */
+    /** Sand, dirt, grass or red sand with water on a horizontal side and air above. */
     private fun sugarCane(): Boolean {
         val level = mc.level ?: return false
         val hits = FarmUtil.topHits(0.5) { pos ->
@@ -64,7 +64,7 @@ class AutoLand : Module("auto-land", Categories.WORLD) {
         return FarmUtil.useOn(hits, switch.value) { it.item == Items.SUGAR_CANE }
     }
 
-    /** The original's `n`: soul sand with air above. */
+    /** Soul sand with air above. */
     private fun netherWart(): Boolean {
         val level = mc.level ?: return false
         val hits = FarmUtil.topHits(0.5) { pos ->
@@ -73,7 +73,7 @@ class AutoLand : Module("auto-land", Categories.WORLD) {
         return FarmUtil.useOn(hits, switch.value) { it.item == Items.NETHER_WART }
     }
 
-    /** The original's `N()`: the selected seeds, in this order. */
+    /** The selected seeds, in this order. */
     private fun seedItems(): List<Item> {
         val l = ArrayList<Item>()
         if (wheat.value) l += Items.WHEAT_SEEDS

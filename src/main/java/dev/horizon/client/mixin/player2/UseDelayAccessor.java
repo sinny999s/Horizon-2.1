@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-/** The right-click repeat delay (the original's `MinecraftAccessor.getUseCooldown` / `setUseCooldown`). */
+/** The right-click repeat delay. */
 @Mixin(Minecraft.class)
 public interface UseDelayAccessor {
 	@Accessor("rightClickDelay")

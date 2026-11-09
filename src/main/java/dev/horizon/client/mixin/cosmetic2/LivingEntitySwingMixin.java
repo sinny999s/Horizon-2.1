@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * The original's swing-duration hook (26.2 `getCurrentSwingDuration`, every entity). 26.3 fixes a swing's length when it
+ * The swing-duration hook (26.2 `getCurrentSwingDuration`, every entity). 26.3 fixes a swing's length when it
  * starts, in `getModifiedSwingDuration`.
  */
 @Mixin(LivingEntity.class)

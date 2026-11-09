@@ -7,8 +7,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.sounds.SoundEvent
 
 /**
- * The original's GUI sounds (assets/horizon/sounds). The original played them as non-relative sounds at the world origin, so they
- * faded with the distance from 0,0,0; here they play as UI sounds at volume 1, how they sound next to the origin.
+ * GUI sounds (assets/horizon/sounds); they play as UI sounds at volume 1.
  */
 enum class Sounds(file: String) {
     ENABLE("enable"),

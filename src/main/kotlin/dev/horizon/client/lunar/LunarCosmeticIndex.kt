@@ -4,7 +4,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 
 /**
- * Not in the original: the files that describe Lunar's cosmetics, read the way Lunar Client reads them (all on Lunar's
+ * The files that describe Lunar's cosmetics, read the way Lunar Client reads them (all on Lunar's
  * public texture CDN, no sign-in needed). Game-free.
  * - The asset index (the launcher API's `textures.jitIndexUrl`): one `path sha1 size mtime` line per file; a file is
  *   fetched as `baseUrl + sha1`.

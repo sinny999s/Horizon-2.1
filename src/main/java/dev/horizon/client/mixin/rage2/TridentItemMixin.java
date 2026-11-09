@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's `TridentItemMixin`: riptide release and use go through TridentUseEvent / TridentWeatherEvent. */
+/** Riptide release and use go through TridentUseEvent / TridentWeatherEvent. */
 @Mixin(TridentItem.class)
 public abstract class TridentItemMixin {
 	@Inject(method = "releaseUsing", at = @At("HEAD"), cancellable = true)
@@ -29,7 +29,7 @@ public abstract class TridentItemMixin {
 		}
 	}
 
-	// Any player (the integrated server's too), as in the original.
+	// Any player (the integrated server's too), on purpose.
 	@Inject(method = "use", at = @At("HEAD"), cancellable = true)
 	private void horizon$use(Level level, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
 		ItemStack stack = player.getItemInHand(hand);

@@ -47,7 +47,7 @@ import net.minecraft.world.phys.Vec3
 import java.awt.Color
 
 /**
- * The original's "high-jump" (`bm`). VANILLA replaces the jump's power and sprint boost with `vertical`/`horizontal`.
+ * VANILLA replaces the jump's power and sprint boost with `vertical`/`horizontal`.
  * GRIM_SHULKER (every 5 ticks while moving): next to a closed shulker box, opens it (and hides the screen); standing on
  * the opening lid, takes `vertical` upwards and closes it. ELYTRA: looks straight up, jumps, and for `ticks` ticks swaps
  * an elytra on, starts gliding and fires a rocket (first time), then swaps it back; turns off a few ticks later.
@@ -63,13 +63,13 @@ class HighJump : Module("high-jump", Categories.RAGE) {
     val altFireworkSwap = bool("alt-firework-swap", false) { mode.value == Mode.ELYTRA }
     val ticks = int("ticks", 2, 1..15) { mode.value == Mode.ELYTRA }
 
-    /** The original's `v`: elytra steps done; `J`: swallow the next screen (the shulker's); `Q`: pitch saved around travel. */
+    /** Elytra steps done; swallow the next screen (the shulker's); pitch saved around travel. */
     private var steps = 0
     @Volatile
     private var hideScreen = false
     private var savedPitch = 0f
 
-    /** The original's `i`: four ticks between elytra steps. */
+    /** Four ticks between elytra steps. */
     private val stepTimer = TickTimer()
 
     init {
@@ -128,7 +128,6 @@ class HighJump : Module("high-jump", Categories.RAGE) {
         if (mode.value == Mode.ELYTRA) elytra()
     }
 
-    /** The original's GRIM_SHULKER branch of `bm.J`. */
     private fun shulkers() {
         val p = mc.player ?: return
         for (box in ServerInfo.blockEntities.filterIsInstance<ShulkerBoxBlockEntity>()) {
@@ -154,7 +153,7 @@ class HighJump : Module("high-jump", Categories.RAGE) {
         }
     }
 
-    /** The original's `w4.J` (Strict): the face of [pos] whose centre (jittered ±0.1 along the face) is nearest the eyes. */
+    /** The face of [pos] whose centre (jittered ±0.1 along the face) is nearest the eyes. */
     private fun closestFace(pos: BlockPos): Pair<Direction, Vec3>? {
         val p = mc.player ?: return null
         var best = 999.0f
@@ -179,7 +178,6 @@ class HighJump : Module("high-jump", Categories.RAGE) {
         return point?.let { face to it }
     }
 
-    /** The original's ELYTRA branch of `bm.J`. */
     private fun elytra() {
         val p = mc.player ?: return
         val elytra = elytraSlot()
@@ -243,14 +241,14 @@ class HighJump : Module("high-jump", Categories.RAGE) {
 
     private fun legitGuiMove(): Boolean = Modules.get<GuiMove>().let { it.enabled && it.bypass.value == GuiMove.Bypass.LEGIT }
 
-    /** The original's `y6.V`: a pickup click on container slot [slot], then optionally a close. */
+    /** A pickup click on container slot [slot], then optionally a close. */
     private fun click(slot: Int, close: Boolean) {
         val p = mc.player ?: return
         mc.gameMode?.handleContainerInput(p.containerMenu.containerId, slot, 0, ContainerInput.PICKUP, p)
         if (close) Packets.send(ServerboundContainerClosePacket(p.containerMenu.containerId))
     }
 
-    /** The original's `p2.J`: −2 when wearing a usable elytra, else the container slot of the first one (−1 for none). */
+    /** −2 when wearing a usable elytra, else the container slot of the first one (−1 for none). */
     private fun elytraSlot(): Int {
         val p = mc.player ?: return -1
         val chest = p.getItemBySlot(EquipmentSlot.CHEST)
@@ -262,7 +260,7 @@ class HighJump : Module("high-jump", Categories.RAGE) {
         return -1
     }
 
-    /** Elytra-target's rocket use (the original's `bi.L`, called with offHand-firework and alt-firework-swap). */
+    /** Elytra-target's rocket use, called with offHand-firework and alt-firework-swap. */
     private fun firework() {
         val p = mc.player ?: return
         val hotbar = Inventory.hotbarFind(Items.FIREWORK_ROCKET)

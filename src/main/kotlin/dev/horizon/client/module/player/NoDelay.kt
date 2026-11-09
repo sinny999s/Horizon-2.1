@@ -10,7 +10,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 
 /**
- * The original's "no-delay" (`ai`): each player tick, lowers the right-click repeat delay to [delay] for the main-hand item
+ * Each player tick, lowers the right-click repeat delay to [delay] for the main-hand item
  * (when it passes the filter) and, with [jump], clears the hold-to-rejump cooldown. Air Place reads [blocksSetting]
  * and [all].
  */
@@ -34,7 +34,6 @@ class NoDelay : Module("no-delay", Categories.PLAYER) {
         }
     }
 
-    /** The original's `ai.r`. */
     private fun appliesTo(item: Item): Boolean {
         if (item is BlockItem && blocksSetting.value) return true
         if (item == Items.END_CRYSTAL && crystals.value) return true

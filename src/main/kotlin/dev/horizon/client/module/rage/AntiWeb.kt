@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.WebBlock
 
 /**
- * The original's "anti-web" (`bx`). In a web: TIMER runs the client at `timer` while airborne, FLY moves at `speed` (jump/sneak
+ * In a web: TIMER runs the client at `timer` while airborne, FLY moves at `speed` (jump/sneak
  * vertical). SOLID makes webs collide like dirt; IGNORE skips the web's slowdown (grim: plus a stop-destroy packet).
  */
 class AntiWeb : Module("anti-web", Categories.RAGE) {
@@ -44,7 +44,7 @@ class AntiWeb : Module("anti-web", Categories.RAGE) {
         on<CobWebEvent> { e ->
             if (mode.value != Mode.IGNORE) return@on
             e.cancel()
-            // The original's hook never fills in the web's position, so the packet always names 0, 0, 0.
+            // The packet always names 0, 0, 0, not the web's position (on purpose).
             if (grim.value) Packets.sendSequenced { ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, BlockPos.ZERO, Direction.UP, it) }
         }
     }

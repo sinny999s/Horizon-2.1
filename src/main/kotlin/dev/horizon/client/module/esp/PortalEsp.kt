@@ -36,7 +36,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * Not in the original: lit nether portals in the loaded chunks, for base hunting (a portal out in the middle of nowhere is
+ * Lit nether portals in the loaded chunks, for base hunting (a portal out in the middle of nowhere is
  * someone's way home). Chunks are scanned as they arrive, and again when a portal block in them is lit or broken,
  * skipping every section whose palette has no portal block. Touching portal blocks of one axis are one portal, drawn as
  * one box: filled and outlined (BOX), or through the chams shader of [shaderMode] (SHADER). Optional tracers, a

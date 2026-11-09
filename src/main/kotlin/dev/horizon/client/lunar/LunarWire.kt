@@ -9,7 +9,7 @@ import java.security.MessageDigest
 import java.util.UUID
 
 /**
- * Not in the original: the messages of Lunar's own services (the authenticator and the game websocket), hand-encoded
+ * The messages of Lunar's own services (the authenticator and the game websocket), hand-encoded
  * protobuf as Moonlight's `AuthClient` and `WSClient` write and read them (Lunar publishes no schema for these). Field
  * numbers are Moonlight's. Game-free: [LunarNetwork] does the connecting.
  */

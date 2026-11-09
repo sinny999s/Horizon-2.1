@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.roundToInt
 
 /**
- * Not in the original: monitors the durability of all worn armor pieces (helmet, elytra/chestplate, leggings, boots)
+ * Monitors the durability of all worn armor pieces (helmet, elytra/chestplate, leggings, boots)
  * and warns when any piece drops below a critical threshold, preventing catastrophic gear destruction in PvP and travel.
  */
 class ArmorAlert : Module("armor-alert", Categories.PROTECT) {

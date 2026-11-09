@@ -34,7 +34,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 
 /**
- * The original's "mace-elytra-target" (`b5`): wearing a chestplate, it jumps off the ground, swaps the elytra on for one
+ * Wearing a chestplate, it jumps off the ground, swaps the elytra on for one
  * tick in the air to start gliding (and fires a rocket every [fireworkDelay] ticks), then with [peekAssist] climbs
  * [height] blocks above Aura's target (rocket, rotation at priority 200) to drop on it. The firework boost uses the
  * per-pitch table with [boost]; the gliding pose and armour-equip sounds are hidden.
@@ -74,19 +74,19 @@ class MaceElytraTarget : Module("mace-elytra-target", Categories.RAGE) {
     private val fireworkTimer = TickTimer()
     private val elytraTimer = TickTimer()
 
-    /** The original's `W`: never reset, so it has passed 10 ticks from the player's 10th tick on. */
+    /** Never reset (on purpose), so it has passed 10 ticks from the player's 10th tick on. */
     private val startTimer = TickTimer()
 
-    /** The custom boost table (the original's `Y`), rebuilt from the settings on every boost with [customSpeed]. */
+    /** The custom boost table, rebuilt from the settings on every boost with [customSpeed]. */
     private var customTable = HashMap<Float, Float>()
 
-    /** Climbing for a drop: a rocket was fired and the target is not [height] below yet (the original's `v`). */
+    /** Climbing for a drop: a rocket was fired and the target is not [height] below yet. */
     private var climbing = false
 
-    /** Ticks to wait after a wind-burst hit (the original's `p`). */
+    /** Ticks to wait after a wind-burst hit. */
     private var pause = 0
 
-    /** The original's `b5.Q`: on, with [windBurstSync], holding a Wind Burst weapon. */
+    /** On, with [windBurstSync], holding a Wind Burst weapon. */
     fun windBurst(): Boolean {
         val p = mc.player ?: return false
         val level = mc.level ?: return false
@@ -101,7 +101,7 @@ class MaceElytraTarget : Module("mace-elytra-target", Categories.RAGE) {
         return true
     }
 
-    /** The original's `p2.J`: -2 when an elytra (damage < 430) is worn, else the first such elytra's slot id, else -1. */
+    /** -2 when an elytra (damage < 430) is worn, else the first such elytra's slot id, else -1. */
     private fun elytraSlot(): Int {
         val inv = mc.player?.inventory ?: return -1
         for (i in intArrayOf(39, 38, 37, 36)) {
@@ -123,7 +123,7 @@ class MaceElytraTarget : Module("mace-elytra-target", Categories.RAGE) {
         if (fireworkTimer.passedAndReset(fireworkDelay.value)) ElytraFirework.use(offhandFirework.value, altFireworkSwap.value)
     }
 
-    /** The original's `b5.g`: the elytra on for one take-off, then back. */
+    /** The elytra on for one take-off, then back. */
     private fun deploy(slot: Int) {
         GuiMoveHook.internalClick = true
         if (slot >= 36) {
@@ -142,7 +142,7 @@ class MaceElytraTarget : Module("mace-elytra-target", Categories.RAGE) {
         GuiMoveHook.internalClick = false
     }
 
-    /** The original's `b5.w`: climb above the target after a hit (or while the attack isn't ready). */
+    /** Climb above the target after a hit (or while the attack isn't ready). */
     private fun peek() {
         val p = mc.player ?: return
         val aura = Modules.get<Aura>()

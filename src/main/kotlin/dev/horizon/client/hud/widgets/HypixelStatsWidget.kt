@@ -17,7 +17,7 @@ import java.util.UUID
 import kotlin.math.max
 
 /**
- * Not in the original: your own Hypixel stats, from Hypixel's public API ([HypixelPlayerApi]): network level, Bedwars
+ * Your own Hypixel stats, from Hypixel's public API ([HypixelPlayerApi]): network level, Bedwars
  * stars (in the prestige's colour), FKDR, W/L, beds broken/lost, final kills, wins and winstreak. With Session Gain on,
  * what you've gained since the game started is shown after a total ("+12").
  *

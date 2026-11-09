@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Not in the original: Lunar's badges (Lunar+ and event badges a player shows by their name). Which badge is which
+ * Lunar's badges (Lunar+ and event badges a player shows by their name). Which badge is which
  * picture comes from `assets/lunar/badges.json` on Lunar's CDN (id, name, `lunar:badges/<file>.webp`); the pictures are
  * there too (16×16 or 32×32 WebP; an animated one is its frames stacked, with an `.mcmeta` as Minecraft's). Fetched
  * through [LunarAssets] on its pool, uploaded on the game thread.

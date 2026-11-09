@@ -9,7 +9,7 @@ import net.minecraft.world.entity.PlayerRideableJumping
 import net.minecraft.world.phys.Vec3
 
 /**
- * Not in the original: gives full movement, steering, and jump control over ridden entities (horses, donkeys, pigs,
+ * Gives full movement, steering, and jump control over ridden entities (horses, donkeys, pigs,
  * striders, boats) even without a saddle or carrot-on-a-stick, with customizable jump height and speed.
  */
 class EntityControl : Module("entity-control", Categories.RAGE) {

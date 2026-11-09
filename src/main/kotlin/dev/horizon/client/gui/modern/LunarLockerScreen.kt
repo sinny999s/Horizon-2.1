@@ -23,7 +23,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: a cosmetics locker like Lunar Client's own, in the new GUI's style. Your player turns in a stage
+ * A cosmetics locker like Lunar Client's own, in the new GUI's style. Your player turns in a stage
  * on the left wearing what you've picked; tabs of Lunar's cosmetics (cloaks, hats, face, wings, back, body, pets,
  * auras) and emotes fill the right as a searchable grid, with a filter row over it: everything, what your Lunar account
  * owns or what you've picked; newest first or by name; and a Filters panel of Lunar's colour and style tags

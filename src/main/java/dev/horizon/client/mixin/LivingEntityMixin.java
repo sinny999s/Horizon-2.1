@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Sprint changes go through SprintEvent (any living entity, as in the original); the local player's jump through JumpEvent. */
+/** Sprint changes go through SprintEvent (any living entity, on purpose); the local player's jump through JumpEvent. */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
 	@ModifyVariable(method = "setSprinting", at = @At("HEAD"), argsOnly = true)
@@ -31,7 +31,7 @@ public abstract class LivingEntityMixin {
 		JumpEvent e = EventBus.INSTANCE.post(new JumpEvent(self.getYRot(), getJumpPower(), 0.2F));
 		if (!e.getCancelled()) return;
 		ci.cancel();
-		// The original's replay of vanilla's jump with the event's yaw (Math.sin/cos in double, 0.2F).
+		// A replay of vanilla's jump with the event's yaw (Math.sin/cos in double, 0.2F).
 		float y = e.getY();
 		if (y > 1.0E-5F) {
 			Vec3 v = self.getDeltaMovement();

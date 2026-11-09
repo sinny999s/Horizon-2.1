@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Auto Reconnect's button under the back button, before the layout is arranged (not in the original). */
+/** Auto Reconnect's button under the back button, before the layout is arranged. */
 @Mixin(DisconnectedScreen.class)
 public abstract class DisconnectedScreenMixin {
 	@Shadow @Final private Screen parent;

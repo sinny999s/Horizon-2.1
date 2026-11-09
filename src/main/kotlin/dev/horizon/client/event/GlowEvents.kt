@@ -3,7 +3,7 @@ package dev.horizon.client.event
 import net.minecraft.world.entity.Entity
 
 /**
- * Not in the original: whether [entity] should glow (Minecraft's outline, seen through walls) and in what colour, asked by
+ * Whether [entity] should glow (Minecraft's outline, seen through walls) and in what colour, asked by
  * `Minecraft.shouldEntityAppearGlowing` (when vanilla says no) and `Entity.getTeamColor`. A handler sets [glow] and
  * [color] (RGB). Asked for every entity every frame, so it's one shared instance.
  */

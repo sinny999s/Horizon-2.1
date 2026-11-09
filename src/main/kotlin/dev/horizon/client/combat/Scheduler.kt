@@ -5,16 +5,15 @@ import dev.horizon.client.event.PlayerUpdateEvent
 import dev.horizon.client.event.PostTasksEvent
 
 /**
- * The original's `mt`: a task runs once its counter drops below zero. Tick tasks count player ticks: phase 10 at
+ * A task runs once its counter drops below zero. Tick tasks count player ticks: phase 10 at
  * PlayerUpdate priority 10, any other phase at priority −10. Frame tasks count milliseconds, once per frame after the
  * frame's queued tasks (PostTasksEvent). A task scheduled while a pass runs is first seen by the next pass.
  */
 object Scheduler {
-    /** The original's `k2`. */
     private class Task(var left: Int, val phase: Int, val ticks: Boolean, val run: () -> Unit) {
         private var last = System.currentTimeMillis()
 
-        /** The original's `k2.k`: count down, and run when due (true = done). */
+        /** Count down, and run when due (true = done). */
         fun step(): Boolean {
             left -= if (ticks) 1 else (System.currentTimeMillis() - last).toInt()
             if (left < 0) {
@@ -52,7 +51,7 @@ object Scheduler {
     }
 
     /**
-     * The original's `mt.D`: runs [task] once more than [delay] passes went by ([ticks]) or more than [delay] ms (frame
+     * Runs [task] once more than [delay] passes went by ([ticks]) or more than [delay] ms (frame
      * task); tick tasks with [phase] 10 are counted at PlayerUpdate +10, others at −10.
      */
     fun schedule(delay: Int, phase: Int, ticks: Boolean, task: () -> Unit) {

@@ -34,7 +34,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * Not in the original: zero-rotation triggerbot. Attacks only when your real crosshair crosses a valid target within
+ * Zero-rotation triggerbot. Attacks only when your real crosshair crosses a valid target within
  * [range], automatically switching between 1.8.x spam-clicking (ViaFabricPlus auto-detect) and 1.9+ humanized weapon
  * cooldown + falling-crit timing, while skipping friends and [Teams].
  */

@@ -14,7 +14,7 @@ import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
 
 /**
- * Not in the original: one 32x32-chunk region of the hunt map (512x512 blocks), the unit it is saved and drawn in. It holds
+ * One 32x32-chunk region of the hunt map (512x512 blocks), the unit it is saved and drawn in. It holds
  * what was recorded there: each chunk's state from New Chunks, whether its ground matched the seed's terrain, and one
  * map colour per block, packed the way vanilla maps pack them (colour id * 4 + brightness, 0 for nothing). Saved as
  * `r.<rx>.<rz>.bin`: a small header, then the three arrays deflated.

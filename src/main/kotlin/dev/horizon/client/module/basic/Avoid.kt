@@ -10,8 +10,8 @@ import net.minecraft.world.level.block.TripWireHookBlock
 import net.minecraft.world.level.block.TurtleEggBlock
 
 /**
- * The original's "avoid" (`b4`): the blocks it is set to avoid collide like dirt, so the player can't walk into them. Like
- * The original, this changes every collision check while it is on (other entities too, and the integrated server's).
+ * The blocks it is set to avoid collide like dirt, so the player can't walk into them. This changes every collision
+ * check while it is on (other entities too, and the integrated server's).
  */
 class Avoid : Module("avoid", Categories.BASIC) {
     val unloaded = bool("unloaded", false)
@@ -31,7 +31,7 @@ class Avoid : Module("avoid", Categories.BASIC) {
             val level = mc.level ?: return@on
             val state = e.state
             val block = state.block
-            // The chunk the player stands in, from the position truncated to int as the original does.
+            // The chunk the player stands in, from the position truncated to int (on purpose).
             val pos = p.position()
             val hit = (!level.hasChunk(pos.x.toInt() shr 4, pos.z.toInt() shr 4) && unloaded.value) ||
                 (block == Blocks.FIRE || block == Blocks.SOUL_FIRE) && fire.value ||

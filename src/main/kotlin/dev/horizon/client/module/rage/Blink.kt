@@ -36,8 +36,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The original's "blink" (`bo`): holds outgoing packets and sends them all at once later; the server sees us standing at
- * [serverPos] meanwhile. Not in singleplayer.
+ * Holds outgoing packets and sends them all at once later; the server sees us standing at [serverPos] meanwhile. Not in
+ * singleplayer.
  */
 class Blink : Module("blink", Categories.RAGE) {
     enum class AttackAction { REPEAT, OFF, NONE }
@@ -56,16 +56,16 @@ class Blink : Module("blink", Categories.RAGE) {
     val lagBack = bool("lag-back", true, parent = resetOn.value)
     val openScreen = bool("open-screen", true, parent = resetOn.value)
 
-    /** The original's `i`: every held packet, in send order (the original: a LinkedList, flushed from two threads). */
+    /** Every held packet, in send order. */
     private val held = ConcurrentLinkedQueue<Packet<*>>()
 
-    /** The original's `I`: a second copy of every held pong; only the cancel button sends it (again). */
+    /** A second copy of every held pong; only the cancel button sends it (again). */
     private val heldPongs = ConcurrentLinkedQueue<Packet<*>>()
 
-    /** The original's `W`: Blink itself is sending held packets. */
+    /** Blink itself is sending held packets. */
     private val flushing = AtomicBoolean(false)
 
-    /** The original's `O`: where the server last saw us (`kk.V()` reads it through `PlayerState.serverPos`). */
+    /** Where the server last saw us (read through `PlayerState.serverPos`). */
     @Volatile
     var serverPos: Vec3? = null
 
@@ -74,7 +74,7 @@ class Blink : Module("blink", Categories.RAGE) {
     private var enableSprint = false
     private var enableInput: ClientInput? = null
 
-    /** The original's `g`: attack-action REPEAT flushes at the next move packet (survives toggles, as in the original). */
+    /** Attack-action REPEAT flushes at the next move packet (survives toggles, on purpose). */
     private var flushOnNextMove = false
 
     init {
@@ -120,7 +120,7 @@ class Blink : Module("blink", Categories.RAGE) {
                 }
             } else if (delayOnlyMove.value) {
                 // Only move packets are held, the tick-end packets go out live: a 26.3 server kicks for the flushed
-                // run of positions in one tick. The original's target servers accept it.
+                // run of positions in one tick.
                 return@on
             }
 
@@ -128,10 +128,10 @@ class Blink : Module("blink", Categories.RAGE) {
                     (pk is ServerboundPlayerActionPacket && pk.action == ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND) ||
                     pk is ServerboundSetCarriedItemPacket)) return@on
 
-            // The original also reacted to swing packets; 26.3 has none.
+            // Only attacks count: 26.3 has no swing packets.
             if (pk is ServerboundAttackPacket && !Modules.get<ElytraTarget>().enabled) {
                 when (attackAction.value) {
-                    AttackAction.OFF -> disable() // flushes; this attack is still held below, as in the original
+                    AttackAction.OFF -> disable() // flushes; this attack is still held below (on purpose)
                     AttackAction.REPEAT -> flushOnNextMove = true
                     AttackAction.NONE -> {}
                 }
@@ -188,13 +188,13 @@ class Blink : Module("blink", Categories.RAGE) {
         while (held.isNotEmpty()) Packets.send(held.poll())
     }
 
-    /** The original's `bo.J`: elytra-target's fake-lag preset (setting writes). */
+    /** Elytra-target's fake-lag preset (setting writes). */
     fun forceLagSettings() {
         limit.value = 60
         limitAction.value = AttackAction.OFF
     }
 
-    /** The original's `k`: send everything held; the last move packet's position becomes [serverPos]. */
+    /** Send everything held; the last move packet's position becomes [serverPos]. */
     private fun flush() {
         val p = mc.player ?: return
         if (mc.level == null) return
@@ -208,7 +208,7 @@ class Blink : Module("blink", Categories.RAGE) {
         held.clear()
     }
 
-    /** The original's `Y`: back to the held position and the enable-time motion; the held packets are dropped, pongs sent. */
+    /** Back to the held position and the enable-time motion; the held packets are dropped, pongs sent. */
     private fun rollback() {
         val p = mc.player ?: return
         val pos = serverPos ?: return
@@ -225,7 +225,6 @@ class Blink : Module("blink", Categories.RAGE) {
         flushing.set(false)
     }
 
-    /** The original's `qo.a(key)`, on a bind. */
     private fun physical(b: Bind): Boolean {
         if (!RenderSystem.isOnRenderThread() || b.key == -1 || mc.gui.screen() is ChatScreen) return false
         return if (b.mouse) b.key in Keys.heldMouse else Keys.down(b.key)

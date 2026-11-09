@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's GameRendererMixin.renderHand / postRenderHand: the first-person hand can be skipped, and is followed by an event. */
+/** The first-person hand can be skipped, and is followed by an event. */
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
 	@Inject(method = "renderItemInHand", at = @At("HEAD"), cancellable = true)

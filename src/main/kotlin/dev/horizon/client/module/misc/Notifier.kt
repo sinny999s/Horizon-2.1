@@ -56,10 +56,10 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 /**
- * The original's "notifier" (`au`): chat lines and notifications for pops, deaths, players entering and leaving, splash
+ * Chat lines and notifications for pops, deaths, players entering and leaving, splash
  * potions landing on players, items picked up and eaten, effects running out, mentions and stashes, plus the flashing
  * top-centre warnings (air alarm, low armour, server not responding, lag-back). Sounds play only with Assistant on,
- * except the stash one. Pops and deaths come from the pop tracker (`t5`, [dev.horizon.client.combat.PopTracker]).
+ * except the stash one. Pops and deaths come from the pop tracker ([dev.horizon.client.combat.PopTracker]).
  */
 class Notifier : Module("notifier", Categories.MISC) {
     enum class PastEffects { OFF, CHAT, NOTIFICATION, BOTH }
@@ -142,7 +142,7 @@ class Notifier : Module("notifier", Categories.MISC) {
     }
 
 
-    /** The original's `au.r`: a player popped a totem ([count] so far); the pop sound at most every 3 s. */
+    /** A player popped a totem ([count] so far); the pop sound at most every 3 s. */
     fun onPop(name: String, count: Int) {
         if (!totemPops.value) return
         Misc2Util.chat(this, name + " " + String.format("popped %d totem(s)!", count))
@@ -173,14 +173,13 @@ class Notifier : Module("notifier", Categories.MISC) {
         }
     }
 
-    /** The original's `au.g`. */
     private fun seconds(ms: Long) = String.format("%.1f", ms.toFloat() / 1000f)
 
-    /** The original's `au.Y`: durability left in percent. */
+    /** Durability left in percent. */
     private fun durability(s: ItemStack) = ((s.maxDamage - s.damageValue) / max(0.1, s.maxDamage.toDouble()) * 100.0).toInt()
 
     /**
-     * The original's `au.J`: [title] and [text] left-aligned below the top centre, pulsing between red and orange, the icon
+     * [title] and [text] left-aligned below the top centre, pulsing between red and orange, the icon
      * to the right flipping between [a] and [b] with the pulse.
      */
     private fun warning(a: Icon, b: Icon, title: String, text: String) {
@@ -200,7 +199,7 @@ class Notifier : Module("notifier", Categories.MISC) {
         if (mode == PastEffects.CHAT || mode == PastEffects.BOTH) Misc2Util.chat(this, msg)
     }
 
-    /** The original's ReceivePacket handler (network thread). */
+    /** The ReceivePacket handler (network thread). */
     private fun received(packet: Packet<*>) {
         try {
             val level by lazy(LazyThreadSafetyMode.NONE) { mc.level!! }
@@ -334,7 +333,7 @@ class Notifier : Module("notifier", Categories.MISC) {
         lastEffects.addAll(player.activeEffects)
     }
 
-    /** The original's `mo.S`: FunTime's custom splash potions, told apart by their particle colour. */
+    /** FunTime's custom splash potions, told apart by their particle colour. */
     private fun funTimePotion(color: Int): ItemStack {
         val (effects, name) = when (color) {
             -16711936 -> listOf(MobEffectInstance(MobEffects.HEALTH_BOOST, 3600, 1), MobEffectInstance(MobEffects.INVISIBILITY, 18000, 0),

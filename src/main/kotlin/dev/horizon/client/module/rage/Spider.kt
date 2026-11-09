@@ -11,7 +11,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.SwingAnimation
 
 /**
- * The original's "spider" (`bq`): climbs walls. Against a wall each tick (PlayerUpdate priority -10): Matrix fakes ground
+ * Climbs walls. Against a wall each tick (PlayerUpdate priority -10): Matrix fakes ground
  * every [delay] ticks and jumps then, Default sets 0.21 up, WaterBucket (jump held, every other tick) uses a water
  * bucket looking down. Before the move packet: Matrix 2 (jump held, falling) fakes ground with a 0.481 lift, FT Fence
  * (moving) jumps off the wall.

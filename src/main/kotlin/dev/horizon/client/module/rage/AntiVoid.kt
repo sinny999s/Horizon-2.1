@@ -10,8 +10,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
- * The original's "anti-void" (`b_`): falling with only air down to y −64, NCP stops the vertical move (and, with rubber-band,
- * reports an on-ground position); TIMER slows the client to 0.2. MoveEvent priority −20.
+ * Falling with only air down to y −64, NCP stops the vertical move (and, with rubber-band, reports an on-ground
+ * position); TIMER slows the client to 0.2. MoveEvent priority −20.
  */
 class AntiVoid : Module("anti-void", Categories.RAGE) {
     enum class Mode { NCP, TIMER }
@@ -33,7 +33,7 @@ class AntiVoid : Module("anti-void", Categories.RAGE) {
         }
     }
 
-    /** `b_.Q`: not gliding, nothing but air from the feet down to y −64, and falling. */
+    /** Not gliding, nothing but air from the feet down to y −64, and falling. */
     private fun overVoid(): Boolean {
         val p = mc.player ?: return false
         val level = mc.level ?: return false

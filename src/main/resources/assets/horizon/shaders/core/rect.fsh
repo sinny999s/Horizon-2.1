@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's core/rect/rect.fsh: a rounded rectangle with an optional border.
+// A rounded rectangle with an optional border.
 layout(std140) uniform UBO {
     vec2 uSize;
     float uRadius;

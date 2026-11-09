@@ -17,7 +17,7 @@ import net.minecraft.core.BlockPos
 import java.util.concurrent.CompletableFuture
 
 /**
- * Not in the original: the waypoints from chat, like the Waypoints window. `waypoint add <name> [x y z]` (where you stand,
+ * The waypoints from chat, like the Waypoints window. `waypoint add <name> [x y z]` (where you stand,
  * or there, on this server and in this dimension), `remove <name>`, `show <name>`, `hide <name>`, `gps <name>` (the GPS
  * arrow points at it) and `list` (this server's). Also typed as `wp`.
  */

@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
 
 /**
- * Key names and held-state checks (the original's `c6` and `qo`). The original used GLFW key codes; 26.3 uses SDL scancodes and
+ * Key names and held-state checks. The names were for GLFW key codes; 26.3 uses SDL scancodes and
  * counts mouse buttons from 1, so the same names are mapped onto the game's codes here.
  */
 object Keys {
@@ -107,18 +107,18 @@ object Keys {
         put(101, "Menu") // SDL application key
     }
 
-    /** The game's key code for one of the original's key names, or -1. */
+    /** The game's key code for a key name, or -1. */
     fun code(name: String): Int = keyNames.entries.firstOrNull { it.value == name }?.key ?: -1
 
-    /** The original's `c6.H.Z(key)`, "None" when unknown. */
+    /** The key's name, "None" when unknown. */
     fun name(bind: Bind): String = name(bind.key, bind.mouse)
 
     fun name(key: Int, mouse: Boolean): String = (if (mouse) mouseNames[key] else keyNames[key]) ?: "None"
 
-    /** Mouse buttons held right now (the original's `cb.Z`), kept by the input mixin. */
+    /** Mouse buttons held right now, kept by the input mixin. */
     val heldMouse = HashSet<Int>()
 
-    /** The original's `qo.a(key)`: is a key held (false off the render thread or while chat is open). */
+    /** Is a key held (false off the render thread or while chat is open). */
     fun down(key: Int): Boolean {
         if (!RenderSystem.isOnRenderThread()) return false
         if (key == -1) return false

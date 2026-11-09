@@ -4,7 +4,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
 
-/** The original's client chat output (`i3.a`): a green ">", then the message (legacy § colour codes allowed). */
+/** Client chat output: a green ">", then the message (legacy § colour codes allowed). */
 object Chat {
     fun send(text: String) {
         val msg = Component.empty()

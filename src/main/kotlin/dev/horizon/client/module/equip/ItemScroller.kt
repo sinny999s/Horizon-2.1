@@ -14,7 +14,7 @@ import net.minecraft.world.inventory.ContainerInput
 import kotlin.random.Random
 
 /**
- * The original's "item-scroller" (`jq`): in a screen, holding left shift and the left mouse button shift-clicks whatever is
+ * In a screen, holding left shift and the left mouse button shift-clicks whatever is
  * under the cursor every [delay] (+0..9) ms. Ctrl+Shift+Q throws every stack of the hovered item, Ctrl+Alt+Q every
  * stack in the menu.
  */

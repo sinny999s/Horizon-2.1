@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Not in the original: pictures Lunar names by URL (stickers in Lunar chats), fetched once on [LunarAssets.pool] and
+ * Pictures Lunar names by URL (stickers in Lunar chats), fetched once on [LunarAssets.pool] and
  * kept as textures. Only https URLs on Lunar's own hosts are fetched.
  */
 object LunarImages {

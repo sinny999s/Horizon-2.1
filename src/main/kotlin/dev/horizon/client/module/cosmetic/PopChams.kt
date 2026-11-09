@@ -26,7 +26,7 @@ import org.joml.Matrix4f
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * The original's "pop-chams" (`rl`): when another player pops a totem, a copy of their pose stays where they stood, rising
+ * When another player pops a totem, a copy of their pose stays where they stood, rising
  * by [ySpeed] and fading by [alphaSpeed] a tick, in the theme colour: flat faces and edges (DEFAULT) or the skinned
  * model (GHOST).
  */
@@ -38,12 +38,12 @@ class PopChams : Module("pop-chams", Categories.COSMETIC) {
     val ySpeed = float("y-speed", 0.1f, -1.0f..1.0f)
     val alphaSpeed = float("alpha-speed", 5.0f, 1.0f..20.0f)
 
-    /** The original's `nv`: a frozen pose ([state]) of [model] with its own position and alpha (0..255). */
+    /** A frozen pose ([state]) of [model] with its own position and alpha (0..255). */
     private class Pop(val model: PlayerModel, val state: AvatarRenderState, var pos: Vec3, val skin: Identifier, var alpha: Float) {
         var prevAlpha = alpha
         var prevPos = pos
 
-        /** The original's `nv.D`: true once faded out. */
+        /** True once faded out. */
         fun tick(alphaSpeed: Float, ySpeed: Float): Boolean {
             if (alpha <= 0f) return true
             prevAlpha = alpha
@@ -53,14 +53,13 @@ class PopChams : Module("pop-chams", Categories.COSMETIC) {
             return false
         }
 
-        /** The original's `nv.h`: the interpolated alpha as 0..1. */
+        /** The interpolated alpha as 0..1. */
         fun alpha(): Float = Mth.clamp(Mth.lerp(World3D.partialTick, prevAlpha, alpha), 0.0f, 255.0f) / 255.0f
 
-        /** The original's `nv.l`. */
         fun pos(): Vec3 = prevPos.lerp(pos, World3D.partialTick.toDouble())
     }
 
-    /** The original's `j` (added from the network thread). */
+    /** Added from the network thread. */
     private val pops = CopyOnWriteArrayList<Pop>()
 
     init {
@@ -82,7 +81,7 @@ class PopChams : Module("pop-chams", Categories.COSMETIC) {
         on<ReceivePacketEvent> { e -> onPacket(e) }
     }
 
-    /** The original's `rl.e`: a totem pop (entity event 35) of another player freezes their current pose. */
+    /** A totem pop (entity event 35) of another player freezes their current pose. */
     private fun onPacket(e: ReceivePacketEvent) {
         if (mc.cameraEntity == null || mc.player == null) return
         val level = mc.level ?: return
@@ -96,7 +95,7 @@ class PopChams : Module("pop-chams", Categories.COSMETIC) {
         val renderer = mc.entityRenderDispatcher.getRenderer(player) as AvatarRenderer<AbstractClientPlayer>
         val model = renderer.model
         val rs = renderer.createRenderState(player as AbstractClientPlayer, World3D.partialTick) as AvatarRenderState
-        // The original copies only these; 26.3's swing (currentSwing, swingAnimation) replaces 26.2's attackTime.
+        // Only these are copied; 26.3's swing (currentSwing, swingAnimation) replaces 26.2's attackTime.
         val copy = AvatarRenderState()
         copy.capeFlap = rs.capeFlap
         copy.capeLean = rs.capeLean
@@ -118,7 +117,7 @@ class PopChams : Module("pop-chams", Categories.COSMETIC) {
         pops += Pop(model, copy, player.position(), player.skin.body().texturePath(), startAlpha.value.toFloat())
     }
 
-    /** The original's `k7.K`: the pose as flat faces or edges, overlay layers hidden, the camera rotation undone in the pose. */
+    /** The pose as flat faces or edges, overlay layers hidden, the camera rotation undone in the pose. */
     private fun flat(view: Matrix4f, p: Pop, out: Chams.FlatConsumer) {
         val stack = PoseStack()
         stack.last().pose().set(view)
@@ -146,7 +145,7 @@ class PopChams : Module("pop-chams", Categories.COSMETIC) {
         stack.popPose()
     }
 
-    /** The original's `rl.f`: the skinned pose, unlit, in the theme colour, through walls with back faces culled. */
+    /** The skinned pose, unlit, in the theme colour, through walls with back faces culled. */
     private fun ghost(view: Matrix4f, p: Pop) {
         val color = Colors.withAlpha(Theme.primary, p.alpha())
         val stack = PoseStack()

@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: Canvas.box's vertex shader, the same as rect.vsh (the corner coordinate comes in UV0).
+// Canvas.box's vertex shader, the same as rect.vsh (the corner coordinate comes in UV0).
 layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;
     mat4 TextureMat;

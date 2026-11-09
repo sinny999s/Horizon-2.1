@@ -41,7 +41,7 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
- * The original's "nuker" (`r9`): breaks the chosen blocks around the player. Survival: one target at a time, turned towards
+ * Breaks the chosen blocks around the player. Survival: one target at a time, turned towards
  * by at most `degrees-per-tick`, then handed to Speed Mine (or mined the vanilla way). Creative: START+STOP for every
  * matching block in range in one go. Nothing is reset on toggle.
  */
@@ -61,19 +61,19 @@ class Nuker : Module("nuker", Categories.WORLD) {
     val creative = bool("creative", false)
     val avoidLava = bool("avoid-lava", false)
 
-    /** The original's `zl`: the target block, the point to look at and the face to mine. Frozen at acquisition. */
+    /** The target block, the point to look at and the face to mine. Frozen at acquisition. */
     private class Target(val pos: BlockPos, val aim: Vec3, val face: Direction)
 
-    /** `G`: the block type picked by attacking a block in Select mode; never cleared. */
+    /** The block type picked by attacking a block in Select mode; never cleared. */
     private var selected: Block? = null
 
-    /** `C`: the survival target. */
+    /** The survival target. */
     private var target: Target? = null
 
-    /** `H`: the yaw is within one step of the target (mining waits for it; pitch doesn't count). */
+    /** The yaw is within one step of the target (mining waits for it; pitch doesn't count). */
     private var yawReady = false
 
-    /** `o`: gates both the creative pass and [mine]. */
+    /** Gates both the creative pass and [mine]. */
     private val timer = MsTimer()
 
     init {
@@ -84,8 +84,8 @@ class Nuker : Module("nuker", Categories.WORLD) {
             if (filter.value == Filter.Select && b != selected) selected = b
         }
         on<BlockStateEvent> { e ->
-            // The original's event stores the states swapped, so its "state" is the old one (previous): this fires when the
-            // target spot was air and got a block back (e.g. a break the server undid), not on a normal break.
+            // Checks the old state (previous) on purpose: this fires when the target spot was air and got a block back (e.g.
+            // a break the server undid), not on a normal break.
             if (target?.pos != e.pos) return@on
             val s = e.previous ?: return@on
             if (!s.isAir) return@on
@@ -102,7 +102,6 @@ class Nuker : Module("nuker", Categories.WORLD) {
         }
     }
 
-    /** `r9.c`. */
     private fun tick() {
         val p = mc.player ?: return
         val level = mc.level ?: return
@@ -126,7 +125,6 @@ class Nuker : Module("nuker", Categories.WORLD) {
         if (timer.passedAndReset(delay.value.toLong())) mine()
     }
 
-    /** `r9.y`. */
     private fun acquire() {
         if ((selected != null || filter.value != Filter.Select) && !mc.options.keyAttack.isDown && target == null) target = findTarget()
     }
@@ -147,14 +145,14 @@ class Nuker : Module("nuker", Categories.WORLD) {
         RotationManager.queue(RotationRequest(Rotation(yaw, pitch), 0) {})
     }
 
-    /** `r9.d`: hand the target to Speed Mine when it has room, else mine it the vanilla way and swing. */
+    /** Hand the target to Speed Mine when it has room, else mine it the vanilla way and swing. */
     @Synchronized
     private fun mine() {
         val t = target ?: return
         if (mc.options.keyAttack.isDown) return
         val gm = mc.gameMode ?: return
         val sm = Modules.get<SpeedMine>()
-        // The original gates this on its own enabled flag (always on here), not Speed Mine's: it hands off with Speed Mine off too.
+        // Not gated on Speed Mine being on (on purpose): it hands off with Speed Mine off too.
         if (sm.mode.value != SpeedMine.Mode.DAMAGE && !sm.busy()) {
             sm.startMining(t.pos, t.face)
             return
@@ -178,7 +176,7 @@ class Nuker : Module("nuker", Categories.WORLD) {
         }
     }
 
-    /** `r9.O()`: the first sorted block that passes the checks and can be seen (or any, with ignore-walls). */
+    /** The first sorted block that passes the checks and can be seen (or any, with ignore-walls). */
     private fun findTarget(): Target? {
         val p = mc.player ?: return null
         val level = mc.level ?: return null
@@ -206,7 +204,7 @@ class Nuker : Module("nuker", Categories.WORLD) {
         return null
     }
 
-    /** The cube of `floor(range) + 1` around the feet block (x outer, z inner), stably sorted by [sortKey] (`m9`/`f_`). */
+    /** The cube of `floor(range) + 1` around the feet block (x outer, z inner), stably sorted by [sortKey]. */
     private fun candidates(p: LocalPlayer): List<BlockPos> {
         val r = (floor(range.value.toDouble()).toFloat() + 1).toInt()
         val origin = BlockPos.containing(p.position())
@@ -222,7 +220,6 @@ class Nuker : Module("nuker", Categories.WORLD) {
         return abs(Mth.wrapDegrees(Math.toDegrees(atan2(c.z - p.z, c.x - p.x)) - 90.0) - Mth.wrapDegrees(p.yRot)).toFloat()
     }
 
-    /** `r9.O(Block)`. */
     private fun accepts(b: Block): Boolean = when (filter.value) {
         Filter.All -> b != Blocks.BEDROCK && b != Blocks.AIR && b != Blocks.CAVE_AIR && b !is LiquidBlock
         Filter.Select -> b == selected
@@ -231,10 +228,10 @@ class Nuker : Module("nuker", Categories.WORLD) {
             b !is LiquidBlock
     }
 
-    /** `r9.q`: lava (source or flowing) on any of the six sides. */
+    /** Lava (source or flowing) on any of the six sides. */
     private fun lavaAdjacent(level: ClientLevel, pos: BlockPos) = Direction.entries.any { level.getBlockState(pos.relative(it)).block == Blocks.LAVA }
 
-    /** The original's `kk.s`: squared distance from the eye cached at the start of the tick, as a float. */
+    /** Squared distance from the eye cached at the start of the tick, as a float. */
     private fun eyeDistSq(v: Vec3): Float {
         val e = PlayerState.eye
         val dx = v.x - e.x
@@ -243,10 +240,7 @@ class Nuker : Module("nuker", Categories.WORLD) {
         return (dx * dx + dy * dy + dz * dz).toFloat()
     }
 
-    /**
-     * The original's `w4.B`: a ray through a world where only [block] exists, as [state] (its shape for the context's block
-     * mode). The original also clips an empty fluid shape per block, which never hits.
-     */
+    /** A ray through a world where only [block] exists, as [state] (its shape for the context's block mode). */
     private fun clipOnly(level: ClientLevel, ctx: ClipContext, block: BlockPos, state: BlockState): BlockHitResult =
         BlockGetter.traverseBlocks<BlockHitResult, ClipContext>(ctx.from, ctx.to, ctx, { c, pos ->
             val s = if (pos != block) Blocks.AIR.defaultBlockState() else state
@@ -256,7 +250,7 @@ class Nuker : Module("nuker", Categories.WORLD) {
             BlockHitResult.miss(c.to, Direction.getApproximateNearest(d.x, d.y, d.z), BlockPos.containing(c.to))
         })
 
-    /** The original's `swing(MAIN_HAND)`; 26.3 has no swing packet (the server swings on its own). */
+    /** Swings the main hand; 26.3 has no swing packet (the server swings on its own). */
     private fun swing() {
         val p = mc.player ?: return
         p.swing(InteractionHand.MAIN_HAND, p.mainHandItem.attackAnimation, false)

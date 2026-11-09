@@ -17,8 +17,8 @@ import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's "no-push" (`bu`): no pushing out of blocks, by entities, by flowing liquids (falling liquid still pulls
- * down; like the original this applies to every flow while it's on), and no pull from a fishing hook caught in us.
+ * No pushing out of blocks, by entities, by flowing liquids (falling liquid still pulls
+ * down; this applies to every flow while it's on), and no pull from a fishing hook caught in us.
  */
 class NoPush : Module("no-push", Categories.BASIC) {
     val blocksSetting = bool("blocks", true)

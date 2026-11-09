@@ -15,11 +15,11 @@ import net.minecraft.commands.SharedSuggestionProvider
 import net.minecraft.network.chat.Component
 import java.util.concurrent.CompletableFuture
 
-/** The original's `d`: a module by id, suggesting every module's id. */
+/** A module by id, suggesting every module's id. */
 object ModuleArgument : ArgumentType<Module> {
     override fun parse(reader: StringReader): Module {
         val id = reader.readString()
-        // The original reads the string a second time for the error, so the message names the next word (usually nothing).
+        // The string is read a second time for the error (on purpose), so the message names the next word (usually nothing).
         return Modules.all.firstOrNull { it.id == id }
             ?: throw DynamicCommandExceptionType { Component.literal("Module %s does not exist".format(it)) }.create(reader.readString())
     }
@@ -28,7 +28,7 @@ object ModuleArgument : ArgumentType<Module> {
         SharedSuggestionProvider.suggest(Modules.all.stream().map { it.id }, builder)
 }
 
-/** The original's `g9`: one of the friends' names. */
+/** One of the friends' names. */
 object FriendArgument : ArgumentType<String> {
     override fun parse(reader: StringReader): String {
         val name = reader.readString()
@@ -42,7 +42,7 @@ object FriendArgument : ArgumentType<String> {
         SharedSuggestionProvider.suggest(Friends.names, builder)
 }
 
-/** The original's `kg`: the name of a module config. */
+/** The name of a module config. */
 object ConfigArgument : ArgumentType<String> {
     override fun parse(reader: StringReader): String {
         val name = reader.readString()
@@ -56,7 +56,7 @@ object ConfigArgument : ArgumentType<String> {
         SharedSuggestionProvider.suggest(Config.list.map { it.id }, builder)
 }
 
-/** The original's `cf`: any name, suggesting the players on the tab list. */
+/** Any name, suggesting the players on the tab list. */
 object PlayerArgument : ArgumentType<String> {
     override fun parse(reader: StringReader): String {
         val name = reader.readString()

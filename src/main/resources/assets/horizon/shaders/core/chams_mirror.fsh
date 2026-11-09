@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's post/mirror/mirror.fsh: the blurred screen (Sampler1) seen through the chams mask (Sampler0).
+// The blurred screen (Sampler1) seen through the chams mask (Sampler0).
 uniform sampler2D Sampler0;
 uniform sampler2D Sampler1;
 

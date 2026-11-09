@@ -27,21 +27,21 @@ import java.util.Optional
 import java.util.OptionalDouble
 
 /**
- * The original's immediate 2D renderer, in GUI units: every shape is drawn in call order (the original gave each its own render
- * pass). Draws are recorded during the frame and executed by [flush] in one pass on the main target, keeping the order.
- * Each primitive keeps the original's vertex order and its -1/+2 quad padding, which decide where edges and corners land.
+ * Immediate 2D renderer, in GUI units: every shape is drawn in call order. Draws are recorded during the frame and
+ * executed by [flush] in one pass on the main target, keeping the order.
+ * Each primitive's vertex order and -1/+2 quad padding decide where edges and corners land.
  */
 object Canvas {
     private val ownPose = Matrix3x2fStack(32)
 
     /**
-     * This frame's GUI graphics (the original's `ctx`): vanilla things the GUI draws (item icons) go through it, sharing its
+     * This frame's GUI graphics: vanilla things the GUI draws (item icons) go through it, sharing its
      * pose and scissor.
      */
     var graphics: GuiGraphicsExtractor? = null
         private set
 
-    /** The GUI pose (the original's `ctx.pose()`); every vertex is transformed by it. */
+    /** The GUI pose; every vertex is transformed by it. */
     var pose: Matrix3x2fStack = ownPose
         private set
 
@@ -50,7 +50,7 @@ object Canvas {
         pose = g.pose()
     }
 
-    /** The original's global alpha (`sf.q.r(...)` / `sf.q.u()`), applied to vertex alpha (and glass-rect colours). */
+    /** The global alpha, applied to vertex alpha (and glass-rect colours). */
     var alpha = 1f
 
     private val vertices = StagedVertexBuffer({ "HorizonClient canvas" }, 1 shl 16)
@@ -61,7 +61,7 @@ object Canvas {
     private val scissorStack = ArrayDeque<ScreenRectangle>()
     private val tmp = Vector2f()
 
-    /** NEAREST + clamp, as the original samples every texture. */
+    /** NEAREST + clamp, used for every texture. */
     fun sampler(): GpuSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
 
     private class Cmd(
@@ -79,9 +79,9 @@ object Canvas {
 
     private fun ubo(writer: (Std140Builder) -> Unit): GpuBufferSlice = uniforms.writeData(Ubo(writer))
 
-    // ---- scissor: GuiGraphicsExtractor.enableScissor + the original's pixel stack (sf.F / sf.X) ----
+    // ---- scissor: GuiGraphicsExtractor.enableScissor + a pixel stack ----
 
-    /** The original's `sf.F(ctx, _z(x1, y1, x2, y2))`: the rect is truncated to ints, transformed by the pose, intersected. */
+    /** The rect is truncated to ints, transformed by the pose, intersected. */
     fun pushScissor(x1: Float, y1: Float, x2: Float, y2: Float) {
         val x0 = x1.toInt()
         val y0 = y1.toInt()
@@ -113,7 +113,7 @@ object Canvas {
 
     // ---- recording ----
 
-    /** Starts a draw; null when the current scissor is empty (the original skips those draws). */
+    /** Starts a draw; null when the current scissor is empty (those draws are skipped). */
     private fun begin(pipeline: RenderPipeline, ubo: GpuBufferSlice?, texture: GpuTextureView?, scissor: IntArray? = currentScissor(),
                       merge: Boolean = false): VertexConsumer? {
         if (scissor != null && (scissor[2] == 0 || scissor[3] == 0)) return null
@@ -132,15 +132,15 @@ object Canvas {
         return addVertex(tmp.x, tmp.y, z)
     }
 
-    /** The original's `wg.Q`: alpha byte times the global alpha, truncated. */
+    /** Alpha byte times the global alpha, truncated. */
     private fun VertexConsumer.color(argb: Int): VertexConsumer {
         val a = minOf(((argb ushr 24) * alpha).toInt(), 255)
         return setColor(argb shr 16 and 255, argb shr 8 and 255, argb and 255, a)
     }
 
     /**
-     * The original's `li.M`: a rounded rect with a colour per corner ([bl] bottom-left, [tl] top-left, [br] bottom-right,
-     * [tr] top-right) and an optional border ([borderWidth] is halved, as the original does). The border colour is not
+     * A rounded rect with a colour per corner ([bl] bottom-left, [tl] top-left, [br] bottom-right,
+     * [tr] top-right) and an optional border ([borderWidth] is halved). The border colour is not
      * affected by the global alpha.
      */
     fun rect(x: Float, y: Float, w: Float, h: Float, radius: Float, bl: Int, tl: Int, br: Int, tr: Int,
@@ -157,7 +157,7 @@ object Canvas {
     }
 
     /**
-     * Not in the original: a rounded rect drawn as a browser draws one, for screens matched to an HTML mockup. Unlike [rect]
+     * A rounded rect drawn as a browser draws one, for screens matched to an HTML mockup. Unlike [rect]
      * the box is exactly [w] by [h], [color]'s alpha counts once (rect squares it), the edge fades over one screen pixel,
      * and the border, [borderWidth] wide (not halved), lies inside the box.
      */
@@ -173,7 +173,7 @@ object Canvas {
         vc.at(pose, x + w + 1, y - 1).setUv(1f, 0f).color(color)
     }
 
-    /** Not in the original: [box] with a colour per corner (a CSS linear-gradient along an edge or the diagonal), dithered. */
+    /** [box] with a colour per corner (a CSS linear-gradient along an edge or the diagonal), dithered. */
     fun box(x: Float, y: Float, w: Float, h: Float, radius: Float, tl: Int, tr: Int, br: Int, bl: Int, borderWidth: Float = 0f, outline: Int = 0) {
         val u = ubo {
             it.putVec2(w + 2f, h + 2f).putFloat(minOf(radius, w / 2f, h / 2f)).putFloat(borderWidth)
@@ -190,7 +190,7 @@ object Canvas {
         rect(x, y, w, h, radius, color, color, color, color, borderWidth, outline)
 
     /**
-     * The original's `q0.y`: the "glass" rect, the blurred screen tinted by [color] (mixed towards it by [mix]), with corner
+     * The "glass" rect, the blurred screen tinted by [color] (mixed towards it by [mix]), with corner
      * radii [r1] top-left, [r2] bottom-left, [r3] bottom-right, [r4] top-right. The global alpha applies to the vertex
      * alpha and to both UBO colours.
      */
@@ -215,7 +215,7 @@ object Canvas {
     }
 
     /**
-     * Not in the original: a soft light or shadow around a rounded box (see glow.fsh): [color] out to [inner] inside the box's
+     * A soft light or shadow around a rounded box (see glow.fsh): [color] out to [inner] inside the box's
      * edge, gone by [outer] outside it, optionally cut to the rounded box [mask] (x, y, w, h, radius).
      */
     fun glow(x: Float, y: Float, w: Float, h: Float, radius: Float, inner: Float, outer: Float, color: Int, mask: FloatArray? = null) {
@@ -231,7 +231,7 @@ object Canvas {
     }
 
     /**
-     * Not in the original: an ellipse of [color] at its middle, fading linearly to nothing at its edge (a CSS radial-gradient),
+     * An ellipse of [color] at its middle, fading linearly to nothing at its edge (a CSS radial-gradient),
      * optionally cut to the rounded box [mask] (x, y, w, h, radius).
      */
     fun radial(cx: Float, cy: Float, rx: Float, ry: Float, color: Int, mask: FloatArray? = null) {
@@ -252,7 +252,7 @@ object Canvas {
         vc.at(pose, x + w, y).setUv(1f, 0f).color(color)
     }
 
-    /** Not in the original: the blurred screen in exactly the shape [box] draws for the same arguments (see blur_box.fsh). */
+    /** The blurred screen in exactly the shape [box] draws for the same arguments (see blur_box.fsh). */
     fun blurBox(x: Float, y: Float, w: Float, h: Float, radius: Float) {
         val u = ubo { it.putVec2(w + 2f, h + 2f).putFloat(minOf(radius, w / 2f, h / 2f)).putFloat(alpha) }
         val vc = begin(Pipelines.BLUR_BOX, u, Blur.texture()) ?: return
@@ -262,7 +262,7 @@ object Canvas {
         vc.at(pose, x + w + 1, y - 1).setUv(1f, 0f).setColor(-1)
     }
 
-    /** The original's `sf.x`: a flat quad, colours bottom-left, bottom-right, top-right, top-left (no anti-aliasing). */
+    /** A flat quad, colours bottom-left, bottom-right, top-right, top-left (no anti-aliasing). */
     fun quad(x: Float, y: Float, w: Float, h: Float, c0: Int, c1: Int = c0, c2: Int = c0, c3: Int = c0) {
         val vc = begin(Pipelines.POS_COLOR, null, null) ?: return
         vc.at(pose, x, y + h).color(c0)
@@ -272,7 +272,7 @@ object Canvas {
     }
 
     /**
-     * The original's `wy.P`: [texture] clipped to a rounded rect, tinted by [color] (mixed towards it by [mix]), with an
+     * [texture] clipped to a rounded rect, tinted by [color] (mixed towards it by [mix]), with an
      * optional border. Not affected by the global alpha.
      */
     fun texturedRect(texture: GpuTextureView, x: Float, y: Float, w: Float, h: Float, radius: Float, borderWidth: Float, mix: Float,
@@ -291,7 +291,7 @@ object Canvas {
         vc.at(pose, x + w + 2, y - 1).setUv(1f, 0f).setColor(-1)
     }
 
-    /** The original's `sf.q.e`: a 1-pixel outline rectangle (GL lines, no anti-aliasing). */
+    /** A 1-pixel outline rectangle (GL lines, no anti-aliasing). */
     fun outline(x: Float, y: Float, w: Float, h: Float, color: Int) {
         val vc = begin(Pipelines.LINES, null, null) ?: return
         vc.at(pose, x, y).color(color)
@@ -304,7 +304,7 @@ object Canvas {
         vc.at(pose, x, y).color(color)
     }
 
-    /** The original's `sf.E(pose, x1, y1, x2, y2, c)`: a 1-pixel line. */
+    /** A 1-pixel line. */
     fun line(x1: Float, y1: Float, x2: Float, y2: Float, color: Int) {
         val vc = begin(Pipelines.LINES, null, null) ?: return
         vc.at(pose, x1, y1).color(color)
@@ -312,7 +312,7 @@ object Canvas {
     }
 
     /**
-     * The original's `sf.E`: a textured quad tinted by vertex colours ([c1] bottom-left, [c2] bottom-right, [c3] top-right,
+     * A textured quad tinted by vertex colours ([c1] bottom-left, [c2] bottom-right, [c3] top-right,
      * [c4] top-left), uv in 0..1. [additive] blends with (SRC_ALPHA, ONE).
      */
     fun texture(texture: GpuTextureView, x: Float, y: Float, w: Float, h: Float, c1: Int, c2: Int, c3: Int, c4: Int,
@@ -325,7 +325,7 @@ object Canvas {
     }
 
     /**
-     * Not in the original: [count] textured quads with any four corners, in one draw: [xy] and [uv] 8 floats per quad
+     * [count] textured quads with any four corners, in one draw: [xy] and [uv] 8 floats per quad
      * (corners in order), [tints] one colour per quad (the locker's 3D cosmetic thumbnails).
      */
     fun texturedQuads(texture: GpuTextureView, xy: FloatArray, uv: FloatArray, tints: IntArray, count: Int) {
@@ -342,7 +342,7 @@ object Canvas {
 
     /**
      * One glyph quad in the text's scaled pose [m] (pixel units). Consecutive glyphs with the same texture and scissor
-     * merge into one draw, like the original's one draw per glyph page. [argb] is the already-truncated text colour.
+     * merge into one draw (one draw per glyph page). [argb] is the already-truncated text colour.
      */
     fun glyph(texture: GpuTextureView, scissor: IntArray?, m: Matrix3x2f, x: Float, y: Float, w: Float, h: Float,
               u0: Float, v0: Float, u1: Float, v1: Float, argb: Int) {
@@ -353,7 +353,7 @@ object Canvas {
         vc.at(m, x, y).setUv(u0, v0).color(argb)
     }
 
-    /** Not in the original: [glyph] in a horizontal gradient, [left] to [right] (WebText's gradient text). */
+    /** [glyph] in a horizontal gradient, [left] to [right] (WebText's gradient text). */
     fun glyph(texture: GpuTextureView, scissor: IntArray?, m: Matrix3x2f, x: Float, y: Float, w: Float, h: Float,
               u0: Float, v0: Float, u1: Float, v1: Float, left: Int, right: Int) {
         val vc = begin(Pipelines.COLORED_TEXTURE, null, texture, scissor, merge = true) ?: return
@@ -372,7 +372,7 @@ object Canvas {
         for (c in cmds) vertices.requestIndexCount(c.draw)
         vertices.upload()
         RenderSystem.resizeAllAutoStorageIndexBuffers()
-        // The original: ortho(0, guiW, guiH, 0, -100, 100) and model-view = the pose (already applied to the vertices).
+        // Projection: ortho(0, guiW, guiH, 0, -100, 100) and model-view = the pose (already applied to the vertices).
         projection.setupOrtho(-100f, 100f, window.guiScaledWidth.toFloat(), window.guiScaledHeight.toFloat(), true)
         RenderSystem.backupProjectionMatrix()
         RenderSystem.setProjectionMatrix(projectionBuffer.getBuffer(projection), ProjectionType.ORTHOGRAPHIC)

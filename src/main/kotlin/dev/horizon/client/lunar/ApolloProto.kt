@@ -14,7 +14,7 @@ import com.lunarclient.apollo.transfer.v1.TransferRequest
 import com.lunarclient.apollo.transfer.v1.TransferResponse
 
 /**
- * Not in the original: the bytes of Lunar Client's server protocol, Apollo, after Moonlight's `ApolloHandler` and
+ * The bytes of Lunar Client's server protocol, Apollo, after Moonlight's `ApolloHandler` and
  * `ApolloMessageHandler`, corrected to what Lunar Client itself sends ([LunarProfile]). Game-free, so it's tested on its own; [LunarApollo] puts it on the wire.
  * Every message on [APOLLO] is a protobuf `Any` around an Apollo message.
  */

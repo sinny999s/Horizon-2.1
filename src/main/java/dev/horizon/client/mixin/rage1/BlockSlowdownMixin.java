@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** A block's speed factor and friction; cancelling the event gives dirt's (the original's BlockMixin). */
+/** A block's speed factor and friction; cancelling the event gives dirt's. */
 @Mixin(Block.class)
 public abstract class BlockSlowdownMixin {
 	@Inject(method = "getSpeedFactor", at = @At("HEAD"), cancellable = true)

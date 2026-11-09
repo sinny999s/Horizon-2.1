@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 import kotlin.math.hypot
 
 /**
- * The original's "search" (`es`): finds the chosen blocks chunk by chunk on a worker thread (re-scanning chunks that changed)
+ * Finds the chosen blocks chunk by chunk on a worker thread (re-scanning chunks that changed)
  * and boxes them, nearest first; boxes the chosen entity types too.
  */
 class Search : Module("search", Categories.ESP) {
@@ -35,10 +35,9 @@ class Search : Module("search", Categories.ESP) {
     val fill = bool("fill", true)
     val outline = bool("outline", true)
 
-    /** `me`. */
     private class Found(val pos: BlockPos, val color: Color)
 
-    /** `_d` (SearchChunk); a data class in the original, removed by equality. */
+    /** A data class, removed by equality. */
     private data class Chunk(val x: Int, val z: Int, val list: List<Found>, var recalc: Boolean)
 
     private val chunks = ArrayList<Chunk>()
@@ -46,11 +45,11 @@ class Search : Module("search", Categories.ESP) {
     private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "HorizonClient search").apply { isDaemon = true } }
     private val timer = MsTimer()
 
-    /** A scan pass is allowed to be queued (`g`). */
+    /** A scan pass is allowed to be queued. */
     @Volatile
     private var ready = false
 
-    /** The original hands its single BlockStateEvent object to the worker, which reads the position when it runs. */
+    /** Shared with the worker, which reads the position when it runs (on purpose). */
     @Volatile
     private var lastChanged: BlockPos = BlockPos.ZERO
 
@@ -67,7 +66,7 @@ class Search : Module("search", Categories.ESP) {
         }
         on<AfterReceivePacketEvent> { e ->
             val p = e.packet as? ClientboundLevelChunkWithLightPacket ?: return@on
-            // The original compares the chunk's x with the packet's z as well.
+            // Compares the chunk's x with the packet's z as well (on purpose).
             worker.submit { markChanged(p.z, p.z) }
         }
         on<Render3DEvent> { render() }
@@ -82,7 +81,7 @@ class Search : Module("search", Categories.ESP) {
         chunks.firstOrNull { it.z == cz && it.x == cx }?.recalc = true
     }
 
-    /** `es.t`: (re)scan every chunk around the player that is new, changed, or empty and due (every 1.5 s). */
+    /** (Re)scan every chunk around the player that is new, changed, or empty and due (every 1.5 s). */
     private fun scanAll() = synchronized(chunks) {
         val due = timer.passedAndReset(1500)
         for (cp in chunksAround()) {
@@ -94,13 +93,13 @@ class Search : Module("search", Categories.ESP) {
             val p = mc.player ?: break
             val px = p.x.toInt() shr 4
             val pz = p.z.toInt() shr 4
-            // Chunk coordinates against a distance in blocks: in the original nothing realistic is ever dropped.
+            // Chunk coordinates against a distance in blocks (on purpose): nothing realistic is ever dropped.
             chunks.removeIf { hypot(px.toDouble() - it.x, pz.toDouble() - it.z) - (mc.options.renderDistance().get() + 4) * 16 > 0 }
         }
         ready = true
     }
 
-    /** `ws.O`: the chunks within render distance + 2 of the player's chunk. */
+    /** The chunks within render distance + 2 of the player's chunk. */
     private fun chunksAround(): List<ChunkPos> {
         val p = mc.player ?: return emptyList()
         val r = mc.options.renderDistance().get() + 2
@@ -111,7 +110,7 @@ class Search : Module("search", Categories.ESP) {
         return list
     }
 
-    /** `es.s`: the chosen blocks in one chunk, y from -64 to 319. */
+    /** The chosen blocks in one chunk, y from -64 to 319. */
     private fun scan(cp: ChunkPos): List<Found> {
         val level = mc.level ?: return emptyList()
         val list = ArrayList<Found>()
@@ -128,7 +127,6 @@ class Search : Module("search", Categories.ESP) {
         return list
     }
 
-    /** `es.t` (Render3D). */
     private fun render() {
         val p = mc.player ?: return
         val level = mc.level ?: return

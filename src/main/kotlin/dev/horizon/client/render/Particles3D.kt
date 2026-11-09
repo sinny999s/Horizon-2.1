@@ -18,15 +18,15 @@ import org.joml.Quaternionfc
 import org.joml.Vector3f
 
 /**
- * The original's world particle system (`w7`): camera-facing atlas sprites with velocity, gravity and drag, ticked every
+ * World particle system: camera-facing atlas sprites with velocity, gravity and drag, ticked every
  * player tick and drawn additively (depth-tested) every frame. Always on once something was added.
  */
 object Particles3D {
     private val mc get() = Minecraft.getInstance()
 
     /**
-     * The original's `cx`: a sprite [tex] (u0, v0, u1, v1 on the atlas) of [size] blocks living [life] ticks, spinning [spin]
-     * degrees a tick. A [color] of 0 (the original's `Color.BLACK`) means the theme gradient. With [fade] it shrinks and
+     * A sprite [tex] (u0, v0, u1, v1 on the atlas) of [size] blocks living [life] ticks, spinning [spin]
+     * degrees a tick. A [color] of 0 (`Color.BLACK`) means the theme gradient. With [fade] it shrinks and
      * fades out over its life.
      */
     class Particle(val tex: FloatArray, var pos: Vec3, val spin: Float, val size: Float, var life: Int, var velocity: Vec3, val color: Int,
@@ -36,11 +36,11 @@ object Particles3D {
         private var rot = 0f
         private var prevRot = 0f
 
-        /** The original's `cx.O`: drawn from the shared RNG and never used. */
+        /** Drawn from the shared RNG and never used (on purpose). */
         @Suppress("unused")
         private val variant = Rng.int(0, 3)
 
-        /** The original's `cx.w(...)`: one tick; true once its life ran out. */
+        /** One tick; true once its life ran out. */
         fun tick(): Boolean {
             life--
             if (life < 0) return true
@@ -53,7 +53,6 @@ object Particles3D {
             return false
         }
 
-        /** The original's `cx.w(matrices, base, polygon)`. */
         fun render(stack: PoseStack, base: Quaternionfc, vc: VertexConsumer, t: Vector3f) {
             val pt = World3D.partialTick
             stack.pushPose()
@@ -81,7 +80,7 @@ object Particles3D {
         }
     }
 
-    /** `Color.BLACK`, which the original's particles take as "use the theme gradient". */
+    /** `Color.BLACK`, which particles take as "use the theme gradient". */
     const val BLACK = 0xFF000000.toInt()
 
     private val particles = ArrayList<Particle>()
@@ -91,13 +90,12 @@ object Particles3D {
         EventBus.on<PlayerUpdateEvent>(this) { particles.removeIf { it.tick() } }
     }
 
-    /** The original's `w7.s`. */
     fun add(p: Particle) {
         particles += p
     }
 
     /**
-     * The original's `w7.O`: every particle whose position is on screen (a point box, the same test as the original's point test),
+     * Every particle whose position is on screen (a point box),
      * in one additive depth-tested draw.
      */
     private fun render(e: Render3DEvent) {

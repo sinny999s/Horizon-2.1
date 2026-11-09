@@ -10,14 +10,14 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.PositionMoveRotation
 
 /**
- * The original's "no-server-rotate" (`ae`): a server teleport doesn't turn the camera. [legit]: the teleport is applied as
+ * A server teleport doesn't turn the camera. [legit]: the teleport is applied as
  * sent, then the rotation from the start of the tick (+1e-6) is put back; otherwise the packet's rotation is replaced
  * with the current one before it is handled.
  */
 class NoServerRotate : Module("no-server-rotate", Categories.PLAYER) {
     val legit = bool("legit", true)
 
-    /** The original's `F` / `c`: the rotation at the start of this player tick. */
+    /** The rotation at the start of this player tick. */
     private var yaw = 0f
     private var pitch = 0f
 
@@ -38,7 +38,7 @@ class NoServerRotate : Module("no-server-rotate", Categories.PLAYER) {
             if (legit.value) return@on
             val p = mc.player ?: return@on
             val c = packet.change()
-            // The relative flags are left alone, as in the original.
+            // The relative flags are left alone (on purpose).
             (packet as PlayerPositionPacketAccessor).horizonP2_setChange(PositionMoveRotation(c.position(), c.deltaMovement(), p.yRot, p.xRot))
         }
     }

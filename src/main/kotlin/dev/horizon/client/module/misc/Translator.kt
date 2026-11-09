@@ -20,11 +20,11 @@ import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
 /**
- * The original's "translator" (`ab`, with the tasks `w6` and `q1`): incoming system chat is translated to [yourLanguage]
+ * Incoming system chat is translated to [yourLanguage]
  * and printed under the original; our chat is held back and sent translated to [outMessages]. Both go through
  * Google Translate's mobile page on a virtual thread.
  *
- * As in the original, reading the page always ends in a NullPointerException (its loop asserts each line is non-null before
+ * Reading the page always ends in a NullPointerException (on purpose; its loop asserts each line is non-null before
  * testing for the end of the stream), which the tasks swallow: nothing incoming is printed and our cancelled chat is
  * never sent.
  */
@@ -63,7 +63,7 @@ class Translator : Module("translator", Categories.MISC) {
         }
     }
 
-    /** The original's `q1`: the message sent as translated (it's let through as [lastSent]). */
+    /** The message sent as translated (it's let through as [lastSent]). */
     private fun outgoing(message: String) {
         try {
             val translated = translate(message, outMessages.value.name.lowercase(Locale.ROOT))
@@ -74,7 +74,6 @@ class Translator : Module("translator", Categories.MISC) {
         }
     }
 
-    /** The original's `ab.z`. */
     private fun translate(text: String, lang: String): String {
         val page = StringBuilder()
         val uri = URI.create(String.format(URL, lang, URLEncoder.encode(text.trim { it <= ' ' }, "UTF-8")))
@@ -100,10 +99,9 @@ class Translator : Module("translator", Categories.MISC) {
         /** System messages that aren't translated. */
         val IGNORED = listOf("was killed by", "was destroyed by", "has joined a game", "has left the game")
 
-        /** The original's shared executor (`tf.r()`). */
         val executor = Executors.newVirtualThreadPerTaskExecutor()
 
-        /** Our last translated message (the original's `ab.u`). */
+        /** Our last translated message. */
         @Volatile
         var lastSent: String? = null
     }

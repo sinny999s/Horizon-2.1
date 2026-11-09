@@ -14,7 +14,7 @@ import net.minecraft.world.item.ItemStack
 class Found(val slot: Int, val stack: ItemStack)
 
 /**
- * The original's inventory helpers (`p2`, `y6`): hotbar switching that tracks the slot the server knows, number-key swaps
+ * Inventory helpers: hotbar switching that tracks the slot the server knows, number-key swaps
  * through the player's container, and searches.
  */
 object Inventory {
@@ -36,7 +36,7 @@ object Inventory {
 
     val selected: Int get() = mc.player?.inventory?.selectedSlot ?: 0
 
-    /** The original's `p2.T`: select hotbar slot [s] client-side, and tell the server if it doesn't know it yet. */
+    /** Select hotbar slot [s] client-side, and tell the server if it doesn't know it yet. */
     fun selectHotbar(s: Int) {
         val p = mc.player ?: return
         if (s !in 0..8 || s == p.inventory.selectedSlot) return
@@ -55,13 +55,13 @@ object Inventory {
         saved = -1
     }
 
-    /** The original's `p2.g`: a number-key swap of inventory index [s] (hotbar 0..8 or main 9..35) with the selected slot. */
+    /** A number-key swap of inventory index [s] (hotbar 0..8 or main 9..35) with the selected slot. */
     fun swapWithSelected(s: Int) {
         val p = mc.player ?: return
         mc.gameMode?.handleContainerInput(p.containerMenu.containerId, if (s < 9) s + 36 else s, p.inventory.selectedSlot, ContainerInput.SWAP, p)
     }
 
-    /** The original's `y6.Q`: a SWAP click on container slot [slotId] with hotbar [button] (40 = offhand), then optionally a close. */
+    /** A SWAP click on container slot [slotId] with hotbar [button] (40 = offhand), then optionally a close. */
     fun swap(slotId: Int, button: Int, close: Boolean) {
         val p = mc.player ?: return
         val id = p.containerMenu.containerId
@@ -69,7 +69,7 @@ object Inventory {
         if (close) Packets.send(ServerboundContainerClosePacket(id))
     }
 
-    /** The original's `y6.Q` with any input: a click on container slot [slotId], then optionally a close. */
+    /** A click with any input on container slot [slotId], then optionally a close. */
     fun click(slotId: Int, button: Int, input: ContainerInput, close: Boolean) {
         val p = mc.player ?: return
         val id = p.containerMenu.containerId
@@ -86,7 +86,7 @@ object Inventory {
 
     fun hotbarFind(item: Item): Found? = hotbarFind { it.`is`(item) }
 
-    /** The original's `p2.v`: inventory index 36 down to 0, as a container slot id (hotbar 0..8 become 36..44). */
+    /** Inventory index 36 down to 0, as a container slot id (hotbar 0..8 become 36..44). */
     fun find(pred: (ItemStack) -> Boolean): Found? {
         val inv = mc.player?.inventory ?: return null
         for (i in 36 downTo 0) {
@@ -98,7 +98,7 @@ object Inventory {
 
     fun find(item: Item): Found? = find { it.`is`(item) }
 
-    /** The original's `p2.N`: stacks of [item] in the open menu (the inventory menu with no screen), plus the cursor. */
+    /** Stacks of [item] in the open menu (the inventory menu with no screen), plus the cursor. */
     fun menuCount(item: Item): Int {
         val menu = mc.player?.containerMenu ?: return 0
         var n = 0
@@ -107,7 +107,7 @@ object Inventory {
         return n
     }
 
-    /** The original's `p2.count`: inventory indices 0..44 (main, armour, offhand). */
+    /** Inventory indices 0..44 (main, armour, offhand). */
     fun count(item: Item): Int {
         val inv = mc.player?.inventory ?: return 0
         var n = 0

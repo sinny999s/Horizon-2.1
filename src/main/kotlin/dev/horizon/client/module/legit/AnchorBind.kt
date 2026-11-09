@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 
 /**
- * The original's "anchor-bind" (`jf`): while the bind is held, every `delay * 5 + 10` ticks (2 with delay 0) it right-clicks
+ * While the bind is held, every `delay * 5 + 10` ticks (2 with delay 0) it right-clicks
  * a chain of hotbar slots: anchor, glowstone, detonate — or glowstone, detonate when looking at an anchor. Steps are
  * `delay − 2` (± 1) ticks apart, or one frame apart with delay 0.
  */
@@ -24,7 +24,7 @@ class AnchorBind : Module("anchor-bind", Categories.LEGIT) {
     val randomizeDelay = bool("randomize-delay", false)
     val anchorBind = bind("anchor-bind", Bind())
 
-    /** The repeat gate (the original's `v`). */
+    /** The repeat gate. */
     private val gate = TickTimer()
 
     init {
@@ -50,7 +50,7 @@ class AnchorBind : Module("anchor-bind", Categories.LEGIT) {
         }
     }
 
-    /** The original's `jf.m`: select → right-click → select → … one scheduled step at a time. */
+    /** Select → right-click → select → … one scheduled step at a time. */
     private fun chain(slots: IntArray) {
         var f: () -> Unit = {}
         for (s in slots.reversed()) {
@@ -60,13 +60,11 @@ class AnchorBind : Module("anchor-bind", Categories.LEGIT) {
         f()
     }
 
-    /** The original's `jf.A(int, f)`. */
     private fun select(slot: Int, next: () -> Unit) {
         Inventory.selectHotbar(slot)
         schedule { use(next) }
     }
 
-    /** The original's `jf.C(f)`. */
     private fun use(next: () -> Unit) {
         (mc as MinecraftAccessor).horizon_startUseItem()
         schedule(next)

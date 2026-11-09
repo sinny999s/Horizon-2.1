@@ -300,7 +300,7 @@ internal class ProfileMenu(private val ax: Float, private val ay: Float) : Popov
         }
         Ui.box(x + 4f, py + 2f, w - 8f, 0.5f, 0f, Tok.LINE)
         py += 5f
-        // Not in the original: Ghost Mode's switch, saved with the config above.
+        // Ghost Mode's switch, saved with the config above.
         val ghost = GhostMode.enabled
         option("ghost", x + 3f, py, w - 6f, "Ghost mode", ghost, "eyeoff") {
             GhostMode.toggle()

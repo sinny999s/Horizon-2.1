@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Every screen that would show the panorama shows the client's animated backdrop instead (not in the original). */
+/** Every screen that would show the panorama shows the client's animated backdrop instead. */
 @Mixin(Screen.class)
 public abstract class MenuPanoramaMixin {
 	@Shadow public int width;

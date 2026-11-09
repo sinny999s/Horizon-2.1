@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's EndCrystalMixin: a cancelled CrystalCreateEvent starts a new crystal's age at 0 instead of a random one. */
+/** A cancelled CrystalCreateEvent starts a new crystal's age at 0 instead of a random one. */
 @Mixin(EndCrystal.class)
 public abstract class EndCrystalMixin {
 	@Shadow

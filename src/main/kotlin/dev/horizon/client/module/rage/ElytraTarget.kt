@@ -43,9 +43,9 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 
 /**
- * The original's "elytra-target" (`bi`): fireworks while gliding slower than `min-speed`, a per-pitch firework boost, a
+ * Fireworks while gliding slower than `min-speed`, a per-pitch firework boost, a
  * look at open air after each aura hit (peek-assist, with blink between peeks for fake-lag), and the aura's prediction
- * of gliding targets ([resolve], the original's `vt.z.m`).
+ * of gliding targets ([resolve]).
  */
 class ElytraTarget : Module("elytra-target", Categories.RAGE) {
     val predictTicks = float("predict-ticks", 0.0f, 0.0f..5.0f)
@@ -80,31 +80,31 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
     val n85Degrees = float("85-degrees", 0.15f, 0.0f..1.0f) { boost.value && customSpeed.value }
     val n90Degrees = float("90-degrees", 0.15f, 0.0f..1.0f) { boost.value && customSpeed.value }
 
-    /** The original's `C`: peeking; PlayerUpdate asks for [peekRotation] meanwhile. */
+    /** Peeking; PlayerUpdate asks for [peekRotation] meanwhile. */
     @Volatile
     private var peeking = false
 
-    /** The original's `G` (never cleared). */
+    /** Never cleared. */
     private var peekRotation: Rotation? = null
 
-    /** The original's `T`: the last peek direction, skipped by the next peek. */
+    /** The last peek direction, skipped by the next peek. */
     private var lastPeekDirection: Direction? = null
 
-    /** The original's `M`: fake-lag turned blink on. */
+    /** Fake-lag turned blink on. */
     @Volatile
     private var blinkByUs = false
 
-    /** The original's `a` / `d`: the aura target's box (current / previous), written by [resolve]. */
+    /** The aura target's box (current / previous), written by [resolve]. */
     private var renderBox: AABB? = null
     private var prevRenderBox: AABB? = null
 
-    /** The original's `Q`: prediction anchor, shared by all targets, never cleared. */
+    /** Prediction anchor, shared by all targets, never cleared. */
     private var predictAnchor: Vec3? = null
 
     private val fireworkTimer = TickTimer()
     private val redeployTimer = TickTimer()
 
-    /** The original's `V`: reset when the aura target swings. */
+    /** Reset when the aura target swings. */
     private val targetSwing = TickTimer()
 
     private val aura get() = Modules.get<Aura>()
@@ -177,7 +177,7 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
             World3D.outline(box, Colors.withAlpha(Theme.gradient(0), 1f))
         }
 
-        // The original watched ClientboundAnimatePacket actions 0 / 3; 26.3 sends swings as their own packet.
+        // 26.3 sends swings as their own packet, not as ClientboundAnimatePacket actions 0 / 3.
         on<ReceivePacketEvent> { e ->
             val pk = e.packet
             val t = aura.target ?: return@on
@@ -193,7 +193,7 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
         }
     }
 
-    /** The original's `og.run`: 325 ms after a peek starts (on its own thread), stop peeking and restart fake-lag's blink. */
+    /** 325 ms after a peek starts (on its own thread), stop peeking and restart fake-lag's blink. */
     private fun peekEnd() {
         Thread.sleep(325)
         peeking = false
@@ -207,7 +207,7 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
         Notifications.silent = false
     }
 
-    /** The original's `bi.Qh`: how many ticks ahead to put a gliding aura target (0 right after it stopped moving). */
+    /** How many ticks ahead to put a gliding aura target (0 right after it stopped moving). */
     fun predictFactor(): Float {
         val t = aura.target ?: return 0f
         val tp = t.position()
@@ -223,14 +223,13 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
         return if (targetSwing.passed(15) || alwaysPredict.value) predictTicks.value else 0f
     }
 
-    /** The original's `bi.P`. */
     fun setRenderBox(box: AABB) {
         prevRenderBox = renderBox
         renderBox = box
     }
 
     /**
-     * The original's `vt.z.m` (the aura's resolver): every remote player that moved is put back to its own position after
+     * The aura's resolver: every remote player that moved is put back to its own position after
      * [action]; meanwhile a gliding one is moved ahead by [predictFactor] while elytra-target is on.
      */
     fun resolve(action: () -> Unit) {
@@ -256,7 +255,7 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
         for (p in remotes) saved[p]?.let { if (it != Vec3.ZERO) p.setPos(it) }
     }
 
-    /** The original's `bi.J`: the first face direction (not the last one) with 14 blocks of air at feet and head height. */
+    /** The first face direction (not the last one) with 14 blocks of air at feet and head height. */
     private fun choosePeekRotation(): Rotation {
         val p = mc.player ?: return Rotation(Rotation.lastYaw, -88.0f)
         val level = mc.level ?: return Rotation(Rotation.lastYaw, -88.0f)
@@ -279,7 +278,7 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
         return Rotation(Rotation.lastYaw, -88.0f)
     }
 
-    /** The original's `w4.o`: facing [dir], the yaw kept in the last sent yaw's turn. */
+    /** Facing [dir], the yaw kept in the last sent yaw's turn. */
     private fun faceRotation(dir: Direction): Rotation {
         val yaw = when (dir) {
             Direction.NORTH -> 180.0f
@@ -297,7 +296,7 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
         return Rotation(yaw + rev * 360, pitch)
     }
 
-    /** The original's `bi.L` (also used by other elytra modules): one firework, from the off-hand or the hotbar. */
+    /** One firework, from the off-hand or the hotbar (also used by other elytra modules). */
     fun useFirework(offhand: Boolean, altSwap: Boolean) {
         val p = mc.player ?: return
         val gm = mc.gameMode ?: return
@@ -329,7 +328,7 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
             return
         }
 
-        Inventory.saveAndSelect(Inventory.selected) // p2.O: remember the slot
+        Inventory.saveAndSelect(Inventory.selected) // remember the slot
         if (hot != null) {
             Inventory.selectHotbar(hot.slot)
         } else if (inv != null) {
@@ -342,11 +341,11 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
         }
         gm.useItem(p, hand())
         Inventory.restore()
-        // The restored slot, not b, as in the original.
+        // The restored slot, not b (on purpose).
         if (hot == null && inv != null) Inventory.swap(inv.slot, p.inventory.selectedSlot, true)
     }
 
-    /** The original's `_7.u`: turn off with a chat line. */
+    /** Turn off with a chat line. */
     private fun noFireworks() {
         disable()
         moduleMessage(name.trim(), "You've got no fireworks!")
@@ -361,13 +360,13 @@ class ElytraTarget : Module("elytra-target", Categories.RAGE) {
     private companion object {
         val PEEK_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor()
 
-        /** The original's `U`: firework strength by pitch (degrees from level). */
+        /** Firework strength by pitch (degrees from level). */
         val BOOST: Map<Float, Float> = mapOf(
             0f to 0.155f, 5f to 0.16f, 10f to 0.19f, 15f to 0.22f, 20f to 0.22f, 25f to 0.27f, 30f to 0.28f, 35f to 0.34f,
             40f to 0.37f, 45f to 0.37f, 50f to 0.34f, 55f to 0.34f, 60f to 0.2f, 65f to 0.18f, 70f to 0.16f, 75f to 0.16f,
             80f to 0.13f, 85f to 0.13f, 90f to 0.13f)
 
-        /** The keys in the original's HashMap iteration order: exact ties go to the first. */
+        /** The keys in HashMap iteration order (on purpose): exact ties go to the first. */
         val TABLE_ORDER = listOf(0f, 5f, 10f, 20f, 40f, 80f, 65f, 25f, 50f, 85f, 35f, 70f, 15f, 30f, 60f, 45f, 90f, 75f, 55f)
     }
 }

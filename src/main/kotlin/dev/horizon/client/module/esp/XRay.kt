@@ -18,7 +18,7 @@ import net.minecraft.tags.ItemTags
 import net.minecraft.world.phys.AABB
 
 /**
- * The original's "x-ray" (`ex`): chunks are rebuilt showing only the chosen blocks, full bright and without cave culling
+ * Chunks are rebuilt showing only the chosen blocks, full bright and without cave culling
  * (the esp2 mixins read [XRayState]). The deobfuscator pokes every block around the player (start + abort mining, one
  * every `delay` ms, in random order) so an anti-x-ray server reveals what is really there; the player stands still
  * meanwhile.
@@ -34,12 +34,12 @@ class XRay : Module("x-ray", Categories.ESP) {
 
     private val timer = MsTimer()
 
-    /** Blocks the deobfuscator still has to poke (`W`), the last one poked (`e`), and the area it covers (`S`). */
+    /** Blocks the deobfuscator still has to poke, the last one poked, and the area it covers. */
     private val queue = ArrayList<BlockPos>()
     private var current: BlockPos? = null
     private var area = AABB(BlockPos.ZERO)
 
-    /** The deobfuscator setting at the last player update (`H`). */
+    /** The deobfuscator setting at the last player update. */
     private var wasDeobfuscating = false
 
     init {
@@ -66,13 +66,12 @@ class XRay : Module("x-ray", Categories.ESP) {
     }
 
     override fun onDisable() {
-        // As in the original, turning it off outside a world leaves the render hooks on.
+        // Turning it off outside a world leaves the render hooks on (on purpose).
         if (mc.player == null || mc.level == null) return
         mc.levelExtractor.allChanged()
         XRayState.active = false
     }
 
-    /** `ex.E` (Render3D). */
     private fun deobfuscate() {
         if (!deobfuscator.value) return
         val p = mc.player ?: return
@@ -88,17 +87,17 @@ class XRay : Module("x-ray", Categories.ESP) {
         val gm = mc.gameMode ?: return
         gm.startDestroyBlock(pos, p.direction)
         gm.stopDestroyBlock()
-        // The original also sent a swing packet here; 26.3 has none.
+        // No swing packet: 26.3 has none.
     }
 
-    /** `ex.Q`: the deobfuscator's area around the player. */
+    /** The deobfuscator's area around the player. */
     private fun area(): AABB {
         val p = mc.player!!
         val r = radius.value.toDouble()
         return AABB(p.x - r, p.y - down.value, p.z - r, p.x + r, p.y + radius2.value, p.z + r)
     }
 
-    /** `ex.x`: every non-air block in the area (x, then y, then z); with "fast" only those odd on all three axes. */
+    /** Every non-air block in the area (x, then y, then z); with "fast" only those odd on all three axes. */
     private fun positions(): List<BlockPos> {
         val level = mc.level ?: return emptyList()
         val c = BlockPos.containing(mc.player!!.position())
@@ -116,7 +115,7 @@ class XRay : Module("x-ray", Categories.ESP) {
     }
 
     companion object {
-        /** x-ray's MoveEvent handler (`ex.e`): no horizontal movement while the deobfuscator has blocks left. */
+        /** x-ray's MoveEvent handler: no horizontal movement while the deobfuscator has blocks left. */
         @JvmStatic
         fun freezesMovement(): Boolean {
             val x = Modules.get<XRay>()

@@ -24,7 +24,7 @@ import kotlin.math.floor
 import kotlin.math.min
 
 /**
- * Not in the original: what the world looks like before anyone touched it, worked out from its seed with the game's own
+ * What the world looks like before anyone touched it, worked out from its seed with the game's own
  * generator (land shape, water and biomes; no trees, ores or structures). It draws the hunt map's parchment layer, and
  * checks recorded ground against it: where they differ, someone dug, built or flattened (or a structure stands there, or
  * the land is from an older version). Everything runs on low-priority background threads, newest request first.

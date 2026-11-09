@@ -19,9 +19,9 @@ import java.awt.Color
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * The original's "break-esp" (`e4`): the block the player is mining, and (with [external]) every block another player started
+ * The block the player is mining, and (with [external]) every block another player started
  * breaking within 12 blocks, as a box growing with the progress, coloured from [primary] to [secondary], with the percentage.
- * Other players' progress isn't known: The original counts it up by 0.025 a tick from the first destruction packet.
+ * Other players' progress isn't known: it's counted up by 0.025 a tick from the first destruction packet.
  */
 class BreakEsp : Module("break-esp", Categories.ESP) {
     enum class Mode { DEFAULT, GROW, SHRINK, FILL, EMPTY }
@@ -32,12 +32,12 @@ class BreakEsp : Module("break-esp", Categories.ESP) {
     val secondary = color("secondary", Color(0x64FFFFFF.toInt(), true))
     val text = color("text", Color(0xFFFFFFFF.toInt(), true))
 
-    /** The original's `c7`: a block someone else is breaking, its progress now ([cur]) and a tick ago ([prev]). */
+    /** A block someone else is breaking, its progress now ([cur]) and a tick ago ([prev]). */
     private class Breaking(val pos: BlockPos) {
         var cur = 0f
         var prev = 0f
 
-        /** `c7.J`, every tick: true once the block is gone or the count passed 2. */
+        /** Every tick: true once the block is gone or the count passed 2. */
         fun tick(): Boolean {
             prev = cur
             cur += 0.025f
@@ -75,7 +75,6 @@ class BreakEsp : Module("break-esp", Categories.ESP) {
         }
     }
 
-    /** `e4.v`. */
     private fun draw(pos: BlockPos, p: Float) {
         val box = box(pos, p)
         val c = Colors.lerp(primary.value.rgb, secondary.value.rgb, p)
@@ -84,7 +83,6 @@ class BreakEsp : Module("break-esp", Categories.ESP) {
         World3D.label("${(p * 100).toInt()}%", box.center, text.value.rgb)
     }
 
-    /** `e4.u`. */
     private fun box(pos: BlockPos, p: Float): AABB = when (mode.value) {
         Mode.DEFAULT -> AABB(pos)
         Mode.GROW -> {

@@ -56,7 +56,7 @@ import kotlin.random.Random
 
 private val mc get() = Minecraft.getInstance()
 
-/** The original's `gy`: something Aura runs every tick, before each hit and after it. */
+/** Something Aura runs every tick, before each hit and after it. */
 interface AuraHook {
     fun tick() {}
 
@@ -66,7 +66,7 @@ interface AuraHook {
 }
 
 /**
- * The original's `sm` (`while-shielding`): lower a raised shield or 1.8 sword block for the hit; UNPRESS raises it again
+ * `while-shielding`: lower a raised shield or 1.8 sword block for the hit; UNPRESS raises it again
  * straight after. Extended with 1.8 sword `auto-block` (`BLOCK_HIT` / `HOLD` / `LEGIT`).
  */
 class ShieldHook(private val aura: Aura) : AuraHook {
@@ -87,7 +87,7 @@ class ShieldHook(private val aura: Aura) : AuraHook {
     private var releasedAt = -10
 
     /**
-     * Not in the original: `auto-block` LEGIT lets Aura hit only when your hand is free: never while the block is held
+     * `auto-block` LEGIT lets Aura hit only when your hand is free: never while the block is held
      * or about to be, and not in the tick the key is let go (vanilla sends the unblock at the start of the next tick, so
      * a hit there would ride on it).
      */
@@ -194,7 +194,7 @@ class ShieldHook(private val aura: Aura) : AuraHook {
                 mc.gameMode?.useItem(p, InteractionHand.MAIN_HAND)
                 autoBlocking = true
             }
-            // Not in the original: block from the next tick or the one after (most of the time; a person misses some).
+            // Block from the next tick or the one after (most of the time; a person misses some).
             Aura.AutoBlock.LEGIT -> if (!legitHold && legitPending < 0 && Random.nextFloat() < 0.85f) legitPending = Random.nextInt(2)
             Aura.AutoBlock.BLOCK_HIT -> {
                 blockHitCounter++
@@ -209,11 +209,11 @@ class ShieldHook(private val aura: Aura) : AuraHook {
     }
 }
 
-/** The original's `he` (`auto-weapon`, `only-weapon`). */
+/** `auto-weapon` and `only-weapon`. */
 class WeaponHook(private val aura: Aura) : AuraHook {
     private var saved = -1
 
-    /** The original's `he.a`: the only-weapon gate. */
+    /** The only-weapon gate. */
     fun gate(): Boolean {
         if (!aura.onlyWeapon.value) return true
         val p = mc.player ?: return false
@@ -224,7 +224,7 @@ class WeaponHook(private val aura: Aura) : AuraHook {
     private fun isWeapon(s: ItemStack) =
         s.`is`(ItemTags.SWORDS) || s.`is`(ItemTags.AXES) || s.item is TridentItem || s.item is MaceItem
 
-    /** The original's `he.x`: the best sword in the hotbar (durability + Sharpness), else the best axe. */
+    /** The best sword in the hotbar (durability + Sharpness), else the best axe. */
     fun selectBest() {
         val slot = best(ItemTags.SWORDS) ?: best(ItemTags.AXES) ?: return
         Inventory.selectHotbar(slot)
@@ -265,12 +265,12 @@ class WeaponHook(private val aura: Aura) : AuraHook {
     }
 }
 
-/** The original's `uu` (`offhand-hit-swap`): the best off-hand attack-damage item goes to the off-hand for the hit. */
+/** `offhand-hit-swap`: the best off-hand attack-damage item goes to the off-hand for the hit. */
 class OffhandSwapHook(private val aura: Aura) : AuraHook {
     private var swapIn: (() -> Unit)? = null
     private var swapBack: (() -> Unit)? = null
 
-    /** The original's `uu.K`: the inventory index with the strongest off-hand attack-damage modifier, or −1. */
+    /** The inventory index with the strongest off-hand attack-damage modifier, or −1. */
     fun find(): Int {
         val p = mc.player ?: return -1
         var best = -1
@@ -289,7 +289,7 @@ class OffhandSwapHook(private val aura: Aura) : AuraHook {
         return if (best == 36) -1 else best
     }
 
-    /** The original's `uu.U`: line up the swap in (end of this tick) and the swap back (after the hit). */
+    /** Line up the swap in (end of this tick) and the swap back (after the hit). */
     fun schedule() {
         if (aura.isLegacyCombat() || !aura.offhandHitSwap.value) return
         val slot = find()
@@ -325,7 +325,7 @@ class OffhandSwapHook(private val aura: Aura) : AuraHook {
 }
 
 /**
- * The original's `ht` (`back-track`): while the target is a player, hold incoming packets back so it stays where it was,
+ * `back-track`: while the target is a player, hold incoming packets back so it stays where it was,
  * as long as that is farther from us than where it is now; let them go after `move-delay` ms.
  */
 class BackTrack(private val aura: Aura) {
@@ -431,7 +431,7 @@ class BackTrack(private val aura: Aura) {
         latest = null
     }
 
-    /** The original's `ht.c`: a pulsing ghost where the server has the target, once that is a block or more from where it shows. */
+    /** A pulsing ghost where the server has the target, once that is a block or more from where it shows. */
     fun render() {
         val p = player ?: return
         val z = latest ?: return
@@ -455,7 +455,7 @@ class BackTrack(private val aura: Aura) {
 }
 
 /**
- * The original's `kk.D`: vanilla's crosshair pick, but looking along [yaw]/[pitch] and reaching [entityRange] for entities.
+ * Vanilla's crosshair pick, but looking along [yaw]/[pitch] and reaching [entityRange] for entities.
  */
 fun pickAlong(blockRange: Double, entityRange: Double, yaw: Float, pitch: Float): HitResult? {
     val p = mc.player ?: return null

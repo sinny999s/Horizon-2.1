@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 /**
- * Not in the original: the Singleplayer screen in the client's style ([ListMenu] over vanilla's): each world as a pane with
+ * The Singleplayer screen in the client's style ([ListMenu] over vanilla's): each world as a pane with
  * its icon, name, folder, when it was last played and vanilla's info line (mode, cheats, version, or why it can't be
  * opened), and a search field (vanilla's search box, which typing goes to).
  */

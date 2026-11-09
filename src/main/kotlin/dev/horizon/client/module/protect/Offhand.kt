@@ -55,8 +55,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
 /**
- * The original's "offhand" (`j3`): once a frame picks what the off-hand should hold (a forced item, a totem when health is
- * low or something dangerous is near, a gapple for right-click eating, or the bind-swap item) and swaps it in.
+ * Once a frame picks what the off-hand should hold (a forced item, a totem when health is low or something dangerous is
+ * near, a gapple for right-click eating, or the bind-swap item) and swaps it in.
  */
 class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "autototem")) {
     enum class ForceItem { OFF, CRYSTAL, GAPPLE }
@@ -108,7 +108,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
     private var damage = 0f
     private var prevDamage = 0f
 
-    /** Meant as the last pop's time; never updated (as in the original), so the death message always says OK. */
+    /** Meant as the last pop's time; never updated (on purpose), so the death message always says OK. */
     private val lastPop = 1_000_000L
 
     /** The custom row's selection, counted from the left, and the next swapN to write. */
@@ -120,7 +120,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
     private val bindRepeat = MsTimer()
     private var hiddenOffhand: ItemStack = ItemStack.EMPTY
 
-    /** The original's `y5`: what the off-hand should hold. */
+    /** What the off-hand should hold. */
     private data class Wish(val item: Item, val another: Boolean = false, val enchanted: Boolean = false, val name: String = "")
 
     private val swapNames get() = listOf(swap1, swap2, swap3, swap4, swap5, swap6, swap7, swap8, swap9)
@@ -177,7 +177,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
 
     private fun menuToIndex(slot: Int) = if (slot >= 36) slot - 36 else slot
 
-    /** The original's `j3.U`: the inventory index whose stack goes into the off-hand now, or −1. */
+    /** The inventory index whose stack goes into the off-hand now, or −1. */
     private fun decide(): Int {
         val p = mc.player ?: return -1
         if (mc.level == null) return -1
@@ -248,7 +248,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         return -1
     }
 
-    /** The original's `j3.J`: the bind-swap wish (force-item OFF). */
+    /** The bind-swap wish (force-item OFF). */
     private fun bindSwapWish(offItem: Item, offGap: Boolean): Wish? {
         val p = mc.player ?: return null
         if (!bindSwap.value) return null
@@ -276,7 +276,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         }
     }
 
-    /** The original's `j3.B`: the safety factors, each of which can only ask for a totem. */
+    /** The safety factors, each of which can only ask for a totem. */
     private fun safety(want: Wish?): Wish? {
         val p = mc.player ?: return want
         val level = mc.level ?: return want
@@ -307,7 +307,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
             }
         }
         if (onAnchors.value) {
-            // Around the world origin, not the player (as in the original); the break only leaves the z loop.
+            // Around the world origin, not the player (on purpose); the break only leaves the z loop.
             for (x in -6..6) for (y in -6..6) for (z in -6..6) {
                 if (level.getBlockState(BlockPos(x, y, z)).block == Blocks.RESPAWN_ANCHOR) {
                     r = totem
@@ -334,7 +334,6 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
 
     private fun dangerous(s: ItemStack) = s.`is`(Items.OBSIDIAN) || s.`is`(Items.END_CRYSTAL)
 
-    /** The original's `j3.W`. */
     private fun swap(idx: Int) {
         val p = mc.player ?: return
         if (mc.level == null) return
@@ -368,7 +367,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         }
     }
 
-    /** The original's `j3.f`: holding use with a sword (not at a container) eats an off-hand gapple. */
+    /** Holding use with a sword (not at a container) eats an off-hand gapple. */
     private fun rcGapActive(): Boolean {
         val p = mc.player ?: return false
         val level = mc.level ?: return false
@@ -379,7 +378,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         return ok && ((target !is BaseEntityBlock && target != Blocks.CRAFTING_TABLE) || Modules.get<NoInteract>().enabled)
     }
 
-    /** The original's `j3.Ur`: the stacks swap1..9 name (off-hand first, else the first inventory match). */
+    /** The stacks swap1..9 name (off-hand first, else the first inventory match). */
     private fun customList(): List<ItemStack> {
         val p = mc.player ?: return emptyList()
         val out = ArrayList<ItemStack>()
@@ -401,7 +400,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         return out
     }
 
-    /** The original's `j3.j`: the scroll wheel and number keys pick from the custom row while the bind is held. */
+    /** The scroll wheel and number keys pick from the custom row while the bind is held. */
     private fun selectCustom(e: SelectSlotEvent) {
         val p = mc.player ?: return
         if (mc.level == null || busy.get()) return
@@ -419,7 +418,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         e.cancel()
     }
 
-    /** The original's `j3.f(ClickSlotEvent)`: clicking items with the bind held adds them to (or removes them from) the row. */
+    /** Clicking items with the bind held adds them to (or removes them from) the row. */
     private fun editCustom(e: ContainerClickEvent) {
         val p = mc.player ?: return
         if (swap.value != Swap.CUSTOM) return
@@ -431,7 +430,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         if (name == "Air") return
         val names = swapNames
         val exists = names.any { it.value == name }
-        // swap9 is never cleared and swap8 is checked twice (as in the original).
+        // swap9 is never cleared and swap8 is checked twice (on purpose).
         for (i in 0..7) if (names[i].value == name) names[i].value = ""
         if (names[7].value == name) names[7].value = ""
         if (exists) {
@@ -443,7 +442,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         e.cancel()
     }
 
-    /** The original's `j3.d`: the custom row left of the hotbar, element 0 where vanilla's off-hand slot goes. */
+    /** The custom row left of the hotbar, element 0 where vanilla's off-hand slot goes. */
     private fun drawCustomRow(e: Render2DEvent) {
         if (!bindSwap.value || swap.value != Swap.CUSTOM) return
         val g = e.graphics
@@ -464,7 +463,7 @@ class Offhand : Module("offhand", Categories.PROTECT, listOf("auto-totem", "auto
         g.blitSprite(RenderPipelines.GUI_TEXTURED, SELECTION, sx - 1, y, 24, 23)
     }
 
-    /** The original's `j3.t`: the "[Death Analysis]" chat block. */
+    /** The "[Death Analysis]" chat block. */
     private fun deathAnalysis() {
         val p = mc.player ?: return
         val ping = PlayerState.ping

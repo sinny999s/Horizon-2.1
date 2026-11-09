@@ -29,10 +29,10 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Not in the original: the HUD editor in the new style (UI > Style: New), built from design/clickgui/hud.js and hud.css.
- * The original's editor (hud/HudEditor) redesigned: a dashed frame 5 units inside the screen, and a Widgets panel in place of
- * its checkbox list, with a switch, a line on what it shows and a settings gear per widget, a search, All / On / Off,
- * and the HUD config. Widgets are dragged as in the original, snapping within 3 units to accent guides, and a right click
+ * The HUD editor in the new style (UI > Style: New), built from design/clickgui/hud.js and hud.css.
+ * A dashed frame 5 units inside the screen, and a Widgets panel
+ * with a switch, a line on what it shows and a settings gear per widget, a search, All / On / Off,
+ * and the HUD config. Widgets are dragged, snapping within 3 units to accent guides, and a right click
  * opens their settings. Hovering a row outlines its widget; clicking it makes the widget flash. The panel and the top
  * bar sit on the mockup's 800x450 stage like the Windows screen's; the panel moves by its header and stays where it is
  * left until the game closes.
@@ -72,7 +72,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
     private var nextPeek: HudWidget? = null
     private val flashAt = HashMap<HudWidget, Long>()
 
-    /** hud.js's names: The original lists the ids ("Fps Widget", "Coord Widget"). */
+    /** hud.js's names, shown in place of the ids ("Fps Widget", "Coord Widget"). */
     private val NAMES = mapOf("coord-widget" to "Coords", "fps-widget" to "FPS", "tps-widget" to "TPS", "keybinds-widget" to "Key Binds",
         "pvp-resources-widget" to "PvP Resources", "array-list-widget" to "ArrayList", "keystrokes-widget" to "Keystrokes",
         "hypixel-stats-widget" to "Hypixel Stats")
@@ -95,7 +95,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
         "hypixel-stats-widget" to "Your Hypixel level and Bedwars stars, FKDR, W/L, finals and wins (^hypixel key)",
     )
 
-    /** The widgets without an icon of the original's get one drawn after what they show (assets/horizon/vector/gui). */
+    /** The widgets without an icon get one drawn after what they show (assets/horizon/vector/gui). */
     private val FALLBACK = mapOf("pvp-resources-widget" to "totem", "notifications" to "bell", "media-player-widget" to "music",
         "crosshair" to "cross", "flight-widget" to "wings", "phase-widget" to "phasewall", "macro-widget" to "key")
 
@@ -491,7 +491,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
         }
     }
 
-    /** A widget's settings: its booleans, each with a switch (the original's popup of checkboxes). */
+    /** A widget's settings: its booleans, each with a switch. */
     private class SettingsPop(val widget: HudWidget, ax: Float, ay: Float, aw: Float, ah: Float) : Pop(ax, ay, aw, ah) {
         override fun draw(): Boolean {
             val list = bools(widget)

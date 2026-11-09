@@ -36,7 +36,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * The original's "crystal-chams" (`rd`): end crystals drawn as flat models ([default]), boxes ([box]), 2D frames ([frame])
+ * End crystals drawn as flat models ([default]), boxes ([box]), 2D frames ([frame])
  * and/or through the chams shader ([shader]); the real model can be hidden ([texture] off), scaled, grown in with age
  * and bob at its own [speed] and [amplitude].
  */
@@ -74,7 +74,7 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
     val speed = float("speed", 0.2f, 0.0f..1.0f)
     val amplitude = float("amplitude", 0.4f, 0.0f..1.0f)
 
-    /** The original's `C` (`fn`): the crystals' chams mask. */
+    /** The crystals' chams mask. */
     private val mask = Chams.EntityMask()
 
     init {
@@ -103,20 +103,20 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `rd.Y`: [scale], grown in over the first 10 ticks (OUT_EXPO) with [ageScale]. */
+    /** [scale], grown in over the first 10 ticks (OUT_EXPO) with [ageScale]. */
     fun scaleAt(age: Float): Float {
         if (!ageScale.value) return scale.value
         return scale.value * Easing.OUT_EXPO.apply((age / 10.0).coerceIn(0.0, 1.0)).toFloat()
     }
 
-    /** The original's `rd.B`: vanilla's bob height formula with [speed] and [amplitude] instead of 0.2 and 0.4. */
+    /** Vanilla's bob height formula with [speed] and [amplitude] instead of 0.2 and 0.4. */
     private fun yOffset(age: Float): Float {
         var f = sin((age * speed.value).toDouble()).toFloat() / 2.0f + 0.5f
         f = (f * f + f) * amplitude.value
         return f - 1.4f
     }
 
-    /** The crystals within the distance settings of the camera entity (the original's filter in `oj.m` and `k7.E`). */
+    /** The crystals within the distance settings of the camera entity. */
     private fun nearCrystals(): List<EndCrystal> {
         val level = mc.level ?: return emptyList()
         val origin = (mc.cameraEntity ?: mc.player ?: return emptyList()).position()
@@ -125,7 +125,7 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `oj.m`: each crystal's bounding box filled and/or outlined (world renderer queue). */
+    /** Each crystal's bounding box filled and/or outlined (world renderer queue). */
     private fun boxes() {
         val mode = renderMode.value
         for (c in nearCrystals()) {
@@ -134,7 +134,7 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `k7.E`: every crystal's model as flat faces (through walls, translucent) and/or 1-pixel edges. */
+    /** Every crystal's model as flat faces (through walls, translucent) and/or 1-pixel edges. */
     private fun models(view: Matrix4f) {
         val crystals = nearCrystals()
         if (crystals.isEmpty()) return
@@ -154,7 +154,7 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
     }
 
     /**
-     * The original's `k7.A`: the crystal's model at its (not interpolated) position, the camera rotation undone in the pose so
+     * The crystal's model at its (not interpolated) position, the camera rotation undone in the pose so
      * the draw's model-view applies it once.
      */
     private fun model(view: Matrix4f, crystal: EndCrystal, out: Chams.FlatConsumer, s: Float) {
@@ -177,7 +177,7 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
         stack.popPose()
     }
 
-    /** The original's `ek.Z`: a 2D box (black-edged) around each crystal's on-screen render box, every crystal loaded. */
+    /** A 2D box (black-edged) around each crystal's on-screen render box, every crystal loaded. */
     private fun frames() {
         val level = mc.level ?: return
         for (c in level.entitiesForRendering()) {
@@ -199,7 +199,7 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `h3.W`: the interpolated bounding box, 0.05 wider on each side and 0.15 taller. */
+    /** The interpolated bounding box, 0.05 wider on each side and 0.15 taller. */
     private fun renderBox(e: Entity): AABB {
         val pt = World3D.partialTick.toDouble()
         val x = Mth.lerp(pt, e.xo, e.x)
@@ -210,7 +210,7 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
             bb.maxY - e.y + y + 0.15, bb.maxZ - e.z + z + 0.05)
     }
 
-    /** The original's `sf.j`: four black bars, then four half-unit bars in [color]. */
+    /** Four black bars, then four half-unit bars in [color]. */
     private fun espBox(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
         val black = 0xFF000000.toInt()
         bar(x - 1.0f, y, x + 0.5f, y2 + 0.5f, black)
@@ -223,6 +223,6 @@ class CrystalChams : Module("crystal-chams", Categories.COSMETIC) {
         bar(x2 - 0.5f, y, x2, y2, color)
     }
 
-    /** The original's `sf.p`: one flat quad from (x1, y1) to (x2, y2). */
+    /** One flat quad from (x1, y1) to (x2, y2). */
     private fun bar(x1: Float, y1: Float, x2: Float, y2: Float, color: Int) = Canvas.quad(x1, y1, x2 - x1, y2 - y1, color)
 }

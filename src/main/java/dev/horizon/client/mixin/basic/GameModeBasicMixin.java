@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Letting go of a used item (the original's StopUsingItemEvent; here only for the chorus timestamp). */
+/** Letting go of a used item (only for the chorus timestamp). */
 @Mixin(MultiPlayerGameMode.class)
 public abstract class GameModeBasicMixin {
 	@Inject(method = "releaseUsingItem", at = @At("HEAD"))

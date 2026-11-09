@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * The original's MixinCommandSuggestions: chat input that starts with the client's command prefix is parsed and completed
+ * Chat input that starts with the client's command prefix is parsed and completed
  * against the client's own dispatcher (InputSuggestorEvent) instead of the server's commands.
  */
 @Mixin(CommandSuggestions.class)
@@ -45,7 +45,7 @@ public abstract class CommandSuggestionsMixin {
 		e.setCancelled(false);
 		if (!EventBus.INSTANCE.post(e).getCancelled()) return;
 		if (!reader.canRead(e.getPrefix().length()) || !reader.getString().startsWith(e.getPrefix(), reader.getCursor())) return;
-		// The original steps over one character whatever the prefix's length.
+		// Steps over one character whatever the prefix's length (on purpose).
 		reader.setCursor(reader.getCursor() + 1);
 		if (currentParse == null) currentParse = Objects.requireNonNull(e.getDispatcher()).parse(reader, Objects.requireNonNull(e.getSource()));
 		int cursor = input.getCursorPosition();

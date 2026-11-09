@@ -4,7 +4,7 @@ import dev.horizon.client.event.BasicProjectionMatrixEvent
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 
-/** The original's "aspect" (`rk`): the level is projected with [ratio] as its aspect ratio. */
+/** The level is projected with [ratio] as its aspect ratio. */
 class Aspect : Module("aspect", Categories.COSMETIC) {
     val ratio = float("ratio", 1.0f, 0.1f..10.0f)
 

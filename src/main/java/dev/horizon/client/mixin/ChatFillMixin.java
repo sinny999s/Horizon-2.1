@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Better Chat: the black strip behind each chat line goes into its pane instead, without the tag strips (not in the original). */
+/** Better Chat: the black strip behind each chat line goes into its pane instead, without the tag strips. */
 @Mixin(targets = {
 	"net.minecraft.client.gui.components.ChatComponent$DrawingBackgroundGraphicsAccess",
 	"net.minecraft.client.gui.components.ChatComponent$DrawingFocusedGraphicsAccess"

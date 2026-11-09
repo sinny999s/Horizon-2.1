@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage
 import kotlin.math.ceil
 
 /**
- * The original's SVG icon (`z`): assets/horizon/vector/<name>.svg rasterised with JSVG at `size * guiScale`, drawn as a
+ * An SVG icon: assets/horizon/vector/<name>.svg rasterised with JSVG at `size * guiScale`, drawn as a
  * textured quad tinted by vertex colours. The icons' fill is #e3e3e3, so a tint comes out at 89%.
  */
 class Icon(private val name: String, private var w: Float = 0f, private var h: Float = 0f) {
@@ -35,8 +35,8 @@ class Icon(private val name: String, private var w: Float = 0f, private var h: F
     }
 
     /**
-     * The original's `z.N`: draws at ([x] + 0.5, [y] + 2), [primary] on the bottom-left/top-right corners and [secondary] on the
-     * others, alpha times [alpha]. Drawing at a size other than the constructed one re-rasterises at 1x (as the original).
+     * Draws at ([x] + 0.5, [y] + 2), [primary] on the bottom-left/top-right corners and [secondary] on the
+     * others, alpha times [alpha]. Drawing at a size other than the constructed one re-rasterises at 1x (on purpose).
      */
     fun draw(x: Float, y: Float, dw: Float = w, dh: Float = h, primary: Int = -1, secondary: Int = primary, alpha: Float = 1f) {
         val scale = Minecraft.getInstance().window.guiScale

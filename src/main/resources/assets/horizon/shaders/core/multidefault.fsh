@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's post/multidefault/multidefault.fsh: shader boxes, a translucent fill with a 2-pixel solid edge.
+// Shader boxes, a translucent fill with a 2-pixel solid edge.
 uniform sampler2D Sampler0;
 
 layout(std140) uniform UBO {

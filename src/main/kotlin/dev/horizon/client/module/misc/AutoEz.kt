@@ -20,14 +20,14 @@ import java.io.File
 import kotlin.random.Random
 
 /**
- * The original's "auto-ez" (`as`): when Aura's or AutoCrystal's target dies (entity events 3/60, or seen dead on a tick) a
+ * When Aura's or AutoCrystal's target dies (entity events 3/60, or seen dead on a tick) a
  * random line of autoez.txt goes out, and when it pops a totem (event 35) one of autoez_totem.txt; at most one line per
  * 450 ms. "%name%" is the player, "%count%" their pops; a line starting with "/" is sent as a command.
  */
 class AutoEz : Module("auto-ez", Categories.MISC) {
     enum class Mode { GLOBAL, LOCAL, WHISPERS, SILENT }
 
-    // The original kept these in ~/.ctl; here they live in the horizon folder with the rest of the data.
+    // These live in the horizon folder with the rest of the data.
     private val deathFile get() = Storage.root.resolve("autoez.txt").toFile()
     private val popFile get() = Storage.root.resolve("autoez_totem.txt").toFile()
 
@@ -82,7 +82,6 @@ class AutoEz : Module("auto-ez", Categories.MISC) {
 
     private fun isTarget(e: Entity) = e == Modules.get<AutoCrystal>().target || e == Modules.get<Aura>().target
 
-    /** The original's `as.f`. */
     private fun say(name: String, lines: List<String>) {
         teamChatBypass.set(true)
         if (timer.passed(450) && lines.isNotEmpty()) {
@@ -100,13 +99,13 @@ class AutoEz : Module("auto-ez", Categories.MISC) {
             }
             timer.reset()
         } else if (lines.isEmpty()) {
-            // The translation key the original shows: it has no English line for it.
+            // The raw translation key (on purpose): it has no English line.
             moduleChat(this, "modules.misc.auto-ez.empty")
         }
         teamChatBypass.set(false)
     }
 
-    /** The original's `as.I`: the trimmed non-blank lines; a missing file is created and counts as empty. */
+    /** The trimmed non-blank lines; a missing file is created and counts as empty. */
     private fun read(file: File): List<String> {
         file.parentFile?.mkdirs()
         if (file.createNewFile()) return emptyList()

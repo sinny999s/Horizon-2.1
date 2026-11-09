@@ -7,7 +7,7 @@ import dev.horizon.client.config.Storage
 import java.nio.file.Files
 
 /**
- * Not in the original: the cosmetics you wear yourself, chosen in the locker (`gui/modern/LunarLockerScreen`), one per
+ * The cosmetics you wear yourself, chosen in the locker (`gui/modern/LunarLockerScreen`), one per
  * kind as Lunar's locker allows. They're drawn on your own player by this client. Ones your Lunar account owns (from
  * Lunar's Login answer, [owned]) also go on your Lunar outfit ([LunarAccount]), so other Lunar players see them; the
  * rest only you see. Kept in Storage's `lunar-cosmetics/locker.json`.

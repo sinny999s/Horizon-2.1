@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-/** The original's `ClientboundPlayerPositionPacketAccessor.setChange`: rewrite a teleport's position and rotation. */
+/** Rewrite a teleport's position and rotation. */
 @Mixin(ClientboundPlayerPositionPacket.class)
 public interface PlayerPositionPacketAccessor {
 	@Mutable

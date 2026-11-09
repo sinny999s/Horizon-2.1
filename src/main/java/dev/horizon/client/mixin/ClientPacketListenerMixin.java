@@ -50,7 +50,7 @@ public abstract class ClientPacketListenerMixin {
 		if (EventBus.INSTANCE.post(new SendMessageEvent(message)).getCancelled()) ci.cancel();
 	}
 
-	/** On joining 6b6t (or another anarchy server), the message AnarchyMod sends ({@link AnarchyServers}; not in the original). */
+	/** On joining 6b6t (or another anarchy server), the message AnarchyMod sends ({@link AnarchyServers}). */
 	@Inject(method = "handleLogin", at = @At("RETURN"))
 	private void horizon$anarchyJoin(ClientboundLoginPacket packet, CallbackInfo ci) {
 		var server = Minecraft.getInstance().getCurrentServer();

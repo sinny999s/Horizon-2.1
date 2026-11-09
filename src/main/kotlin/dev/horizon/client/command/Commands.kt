@@ -23,22 +23,19 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 /**
- * The original's command manager (`vc`): chat lines starting with [prefix] run a client command instead of being sent, the
+ * The command manager: chat lines starting with [prefix] run a client command instead of being sent, the
  * chat box completes them, and [gps] (set by `gps`, or by Team Communication) draws a compass arrow at the top.
  */
 object Commands {
     private val mc get() = Minecraft.getInstance()
 
-    /** `vc.N`. */
     var prefix = "^"
 
-    /** `vc.L`: where the GPS arrow points (y unused). */
+    /** Where the GPS arrow points (y unused). */
     var gps: BlockPos? = null
 
-    /** `vc.g`. */
     val list = ArrayList<ClientCommand>()
 
-    /** `vc.C`. */
     val dispatcher = CommandDispatcher<ClientSuggestionProvider>()
 
     fun init() {
@@ -61,14 +58,14 @@ object Commands {
         EventBus.on<Render2DEvent>(this) { gpsArrow() }
     }
 
-    /** `vc.c`: registered once per name. */
+    /** Registered once per name. */
     fun add(c: ClientCommand) {
         if (list.any { it.name == c.name }) return
         c.register(dispatcher)
         list += c
     }
 
-    /** `vc.y` (Render2D): the arrow towards [gps], tilted with the pitch like Tracers', and the distance under it. */
+    /** Render2D: the arrow towards [gps], tilted with the pitch like Tracers', and the distance under it. */
     private fun gpsArrow() {
         val target = gps ?: return
         val p = mc.player ?: return

@@ -12,7 +12,7 @@ import java.util.Locale
 import kotlin.math.max
 
 /**
- * Not in the original: a row per enabled module (not the ClickGUI), built like the original's list widgets but with no header: a
+ * A row per enabled module (not the ClickGUI), built like the other list widgets but with no header: a
  * plate with the name and, with [modes], another with the module's mode; rows slide in and out over 250 ms, and on the
  * right half of the screen it's right-aligned. Rows go widest first (or by name) and glide to their new places when
  * the order changes. Empty, it shows a faint "Array List" plate in chat or the HUD editor, to be grabbed.

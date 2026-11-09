@@ -10,11 +10,11 @@ import dev.horizon.client.module.attack.Aura
 import net.minecraft.world.entity.player.Input
 
 /**
- * The original's "sprint" (`bf`), extended with [Mode.VANILLA]:
+ * Two modes:
  * - [Mode.VANILLA] presses sprint through [KeyboardInputEvent] (both `input.keyPresses` for 26.3 and `options.keySprint`
  *   for ViaFabricPlus `<= 1.21.4` / `1.8.9`) when moving forward so `LocalPlayer.aiStep` applies all normal vanilla
  *   sprint rules (forward-only, hunger, sneak, item use, collisions, no omni FOV zoom).
- * - [Mode.OMNI] preserves the original's `TickEvent` omni-sprint behaviour whenever moving in any direction.
+ * - [Mode.OMNI] sprints from `TickEvent` whenever moving in any direction.
  */
 class Sprint : Module("sprint", Categories.BASIC) {
     enum class Mode { VANILLA, OMNI }
@@ -23,8 +23,8 @@ class Sprint : Module("sprint", Categories.BASIC) {
     val pauseInWater = bool("pause-in-water", false)
 
     /**
-     * Skip the next forced sprint (the original's `bf.F`): set by Aura's sprint reset. Only this module's tick clears it, so
-     * with Sprint off it stays set and Aura keeps sprinting off (as in the original).
+     * Skip the next forced sprint: set by Aura's sprint reset. Only this module's tick clears it, so
+     * with Sprint off it stays set and Aura keeps sprinting off (on purpose).
      */
     @Volatile
     var skipOnce = false

@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
 /**
- * Not in the original: sends rich Discord webhook alerts to your private Discord server for visual range (players
+ * Sends rich Discord webhook alerts to your private Discord server for visual range (players
  * entering render distance), totem pops, low health, and base/stash finds. Webhook URL is left blank by default.
  */
 class DiscordAlerts : Module("discord-alerts", Categories.MISC) {

@@ -19,7 +19,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import net.minecraft.client.Minecraft
 
 /**
- * Not in the original: Horizon's built-in Lunar features and their settings, kept once for every config in
+ * Horizon's built-in Lunar features and their settings, kept once for every config in
  * `horizon/lunar.hzn` and set from the ClickGUI's Lunar menu (`gui/modern/LunarMenu`). [network] signs in to Lunar's
  * services with your account ([LunarNetwork]); the rest need it: Lunar's logo and badges by Lunar players' names, your
  * friends list and messages ([LunarFriends]), other players' cosmetics ([LunarCosmetics]) and the locker. None of this is

@@ -11,19 +11,19 @@ import dev.horizon.client.render.VectorIcon
 import net.minecraft.client.Minecraft
 import net.minecraft.world.item.ItemStack
 
-/** The original's notification types (`gi`) and their icons. */
+/** Notification types and their icons. */
 enum class NotificationType(iconName: String) {
     SUCCESS("success"), INFO("info"), WARNING("warning"), ERROR("error"), ENABLED("on"), DISABLED("off");
 
-    /** Not in the original: drawn in the theme colour, as the widgets' icons are. */
+    /** Drawn in the theme colour, as the widgets' icons are. */
     val vicon by lazy { VectorIcon(iconName, 10f, mask = true) }
 }
 
 /**
- * The original's notifications (`vo`): centred plates below the crosshair, the newest on top pushing older ones down,
+ * Centred plates below the crosshair, the newest on top pushing older ones down,
  * at most 8. Shown only while the Notifications widget is on; module toggles post one and play the toggle sound
- * through it, so with the widget off toggles are silent (as in the original).
- * Not in the original: the plates take the widgets' new look (the one-line widget's layout).
+ * through it, so with the widget off toggles are silent (on purpose).
+ * The plates take the widgets' new look (the one-line widget's layout).
  */
 object Notifications {
     private class Notification(val title: String, val content: String, val type: NotificationType, val duration: Long,
@@ -75,8 +75,8 @@ object Notifications {
     }
 
     /**
-     * Not in the original: the plate in the new look, laid out as the one-line widgets are (the icon in the theme colour, the
-     * divider, the text), popping in and out as the original's.
+     * The plate in the new look, laid out as the one-line widgets are (the icon in the theme colour, the
+     * divider, the text), popping in and out.
      */
     private fun drawModern(n: Notification, v: Float, screenW: Int) {
         val text = if (n.item == null) n.title + n.content else n.content

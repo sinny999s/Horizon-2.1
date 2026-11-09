@@ -13,11 +13,11 @@ import net.minecraft.world.phys.Vec2
 import kotlin.math.roundToInt
 
 /**
- * The original's "legit-strafe" (`b1`): while moving any way but straight forward, the server yaw turns to the way the keys
+ * While moving any way but straight forward, the server yaw turns to the way the keys
  * point (a FORCE request, so travel uses it) and the input is turned to match, so the player walks forward.
  */
 class LegitStrafe : Module("legit-strafe", Categories.BASIC) {
-    /** A rotation was requested this tick (the original's `U`); the next input tick uses it up. */
+    /** A rotation was requested this tick; the next input tick uses it up. */
     private var rotated = false
 
     init {

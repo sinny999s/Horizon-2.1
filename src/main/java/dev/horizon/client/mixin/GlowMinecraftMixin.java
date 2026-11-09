@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Entities the Glow ESP picks glow, as if from a spectral arrow (not in the original). */
+/** Entities the Glow ESP picks glow, as if from a spectral arrow. */
 @Mixin(Minecraft.class)
 public abstract class GlowMinecraftMixin {
 	@Inject(method = "shouldEntityAppearGlowing", at = @At("RETURN"), cancellable = true)

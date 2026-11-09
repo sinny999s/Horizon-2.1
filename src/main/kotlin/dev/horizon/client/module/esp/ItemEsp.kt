@@ -27,7 +27,7 @@ import java.awt.Color
 import dev.horizon.client.module.ShaderMode as ChamsMode
 
 /**
- * The original's "item-esp" (`en`): a tag over every dropped item (or, with [merge], over each cluster of items within 3
+ * A tag over every dropped item (or, with [merge], over each cluster of items within 3
  * blocks: "name xcount" lines), fading in over the item's first 15 ticks, with a shulker's contents beside it; plus the
  * [highlight] (boxes, outlines or 2D frames in [highlightColor]). [filter] picks which items count.
  */
@@ -50,12 +50,12 @@ class ItemEsp : Module("item-esp", Categories.ESP) {
 
     private val plates = GlassPlates()
 
-    /** The original's `N`: the items' mask for the SHADER highlight (drawn by [maskItems], put on the screen in Render2D). */
+    /** The items' mask for the SHADER highlight (drawn by [maskItems], put on the screen in Render2D). */
     private var mask: TextureTarget? = null
 
-    /** The original's `ux`: items tagged together. */
+    /** Items tagged together. */
     private data class Cluster(val items: MutableList<ItemEntity>) {
-        /** `ux.y`: the items' average interpolated position, 0.7 up. */
+        /** The items' average interpolated position, 0.7 up. */
         fun pos(): Vec3 {
             if (items.isEmpty()) return Vec3.ZERO
             val pt = World3D.partialTick.toDouble()
@@ -71,7 +71,7 @@ class ItemEsp : Module("item-esp", Categories.ESP) {
             return Vec3(x / items.size, y / items.size + 0.7, z / items.size)
         }
 
-        /** `ux.a`: "name xcount" per item name (with its colours), in first-seen order. */
+        /** "name xcount" per item name (with its colours), in first-seen order. */
         fun lines(): List<String> {
             val counts = LinkedHashMap<String, Int>()
             for (i in items) {
@@ -146,14 +146,14 @@ class ItemEsp : Module("item-esp", Categories.ESP) {
             }
             val m = mask
             if (highlight.value == Highlight.SHADER && m != null) {
-                // `rp.G` with the mask as its own scratch target; SELECT puts nothing on the screen, as in the original.
+                // The mask as its own scratch target; SELECT puts nothing on the screen (on purpose).
                 Chams.composite(if (shaderMode.value == ShaderMode.DEFAULT) ChamsMode.DEFAULT else null, highlightColor.value.rgb, m, m,
                     false, false, 0.0f, 0.0f, 0.0f, lineWidth.value, 0, Color.WHITE.rgb, Color.WHITE.rgb, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f)
             }
         }
     }
 
-    /** `en.I`: the [items]' real models drawn into [mask] (shadows off) at their interpolated positions, through walls. */
+    /** The [items]' real models drawn into [mask] (shadows off) at their interpolated positions, through walls. */
     private fun maskItems(view: Matrix4f) {
         val target = mask ?: return
         val cam = mc.gameRenderer.mainCamera().position()
@@ -175,7 +175,7 @@ class ItemEsp : Module("item-esp", Categories.ESP) {
         mc.options.entityShadows().set(shadows)
     }
 
-    /** `en.A`: the dropped items that pass the [filter]. */
+    /** The dropped items that pass the [filter]. */
     private fun items(): List<ItemEntity> = mc.level!!.entitiesForRendering().filterIsInstance<ItemEntity>().filter { e ->
         when (filter.value) {
             Filter.NONE -> true
@@ -185,7 +185,7 @@ class ItemEsp : Module("item-esp", Categories.ESP) {
     }
 
     /**
-     * `en.Q`: for each item not yet taken, a cluster of it and the untaken items closer than 3 blocks (none without
+     * For each item not yet taken, a cluster of it and the untaken items closer than 3 blocks (none without
      * [merge]); the first item itself isn't marked taken, so it can end up in a later cluster too.
      */
     private fun clusters(): List<Cluster> {
@@ -207,7 +207,7 @@ class ItemEsp : Module("item-esp", Categories.ESP) {
         return out.distinct()
     }
 
-    /** `en.E`: a shulker box's contents on a plate, nine to a row. */
+    /** A shulker box's contents on a plate, nine to a row. */
     private fun shulker(stack: ItemStack) {
         val contents = stack.get(DataComponents.CONTAINER) ?: return
         val item = stack.item

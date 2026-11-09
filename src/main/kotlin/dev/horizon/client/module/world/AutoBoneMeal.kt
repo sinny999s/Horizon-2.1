@@ -13,10 +13,10 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.CropBlock
 
 /**
- * The original's "auto-bone-meal" (`r4`): every `delay` ticks, bone-meals the closest unripe selected crop within reach.
+ * Every `delay` ticks, bone-meals the closest unripe selected crop within reach.
  *
- * The original casts every selected block to CropBlock to read its age; melon and pumpkin stems aren't crops, so with those
- * selected a stem in reach throws out of the handler (a crash in the original). The port ends the tick there instead.
+ * Every selected block is read as a CropBlock for its age; melon and pumpkin stems aren't crops, so with those selected a
+ * stem in reach ends the tick there (on purpose).
  */
 class AutoBoneMeal : Module("auto-bone-meal", Categories.WORLD) {
     val switch = enum("switch", Switch.SILENT_FULL)
@@ -54,7 +54,7 @@ class AutoBoneMeal : Module("auto-bone-meal", Categories.WORLD) {
         }
     }
 
-    /** The original's `f()`: the selected blocks, in this order. */
+    /** The selected blocks, in this order. */
     private fun crops(): List<Block> {
         val l = ArrayList<Block>()
         if (wheat.value) l += Blocks.WHEAT

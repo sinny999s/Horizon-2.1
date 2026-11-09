@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Not in the original: Lunar's cosmetic files, from Lunar's public texture CDN as Lunar Client gets them. Lunar's
+ * Lunar's cosmetic files, from Lunar's public texture CDN as Lunar Client gets them. Lunar's
  * launcher API names the current asset index (`textures.jitIndexUrl`, every file's path and sha1) and the CDN's base
  * URL; a file is `baseUrl + sha1`. No sign-in: anyone can fetch these. Each file is kept under Storage's
  * `lunar-cosmetics` folder by its sha1 (checked on download), so a cosmetic is fetched once. Network work runs on

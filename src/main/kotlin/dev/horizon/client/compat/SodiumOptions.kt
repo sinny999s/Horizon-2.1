@@ -7,7 +7,7 @@ import java.lang.reflect.Method
 import java.util.function.Consumer
 
 /**
- * Not in the original: Sodium's options, its own and those of every mod that adds pages through Sodium's config API, when
+ * Sodium's options, its own and those of every mod that adds pages through Sodium's config API, when
  * Sodium is installed, for the client's Options menu to draw in its own style. Reached by reflection, so the client
  * neither needs nor bundles Sodium. Sodium holds a change until it's applied; [Opt.set] applies it at once, as Sodium's
  * Apply button would (renderer reloads and saving included).

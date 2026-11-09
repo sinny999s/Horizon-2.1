@@ -16,7 +16,7 @@ import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
- * Not in the original: hits incoming fireballs back the way a player does. A fireball whose path passes within
+ * Hits incoming fireballs back the way a player does. A fireball whose path passes within
  * [THREAT_RADIUS] blocks of you (one you didn't throw) gets a camera flick in whole mouse counts onto where it is
  * heading, and vanilla's own left click once the crosshair is really on it; then, with [returnAim], the camera turns
  * back to where you were looking, unless you move the mouse yourself.

@@ -25,7 +25,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 
 /**
- * The original's "attribute-swap" (`j6`): swaps the hotbar slot on `ServerboundAttackPacket` to an axe, mace, or knockback
+ * Swaps the hotbar slot on `ServerboundAttackPacket` to an axe, mace, or knockback
  * item (or schedules a follow-up mace hit after an axe hit with [axeMaceHit]), then restores the previous slot after
  * [delay] ticks (or immediately on `AfterSendPacketEvent` when [delay] is 0).
  */
@@ -40,7 +40,7 @@ class AttributeSwap : Module("attribute-swap", Categories.ATTACK) {
     val axeMaceHit = bool("axe-mace-hit", true)
     val axeMaceHitDelay = int("axe-mace-hit-delay", 4, 1..8) { axeMaceHit.value }
 
-    /** The original's `j6.G`: hotbar slot before the swap, or -1. */
+    /** Hotbar slot before the swap, or -1. */
     private var prevSlot = -1
 
     init {
@@ -103,7 +103,7 @@ class AttributeSwap : Module("attribute-swap", Categories.ATTACK) {
         }
     }
 
-    /** The original's `p2.N.C()`: highest `(maxDamage + sharpness)` axe in hotbar `0..8`. */
+    /** Highest `(maxDamage + sharpness)` axe in hotbar `0..8`. */
     private fun bestHotbarAxe(): Found? {
         val inv = mc.player?.inventory ?: return null
         var bestSlot = -1
@@ -122,7 +122,6 @@ class AttributeSwap : Module("attribute-swap", Categories.ATTACK) {
         return if (bestSlot == -1) null else Found(bestSlot, inv.getItem(bestSlot))
     }
 
-    /** The original's `sh.H`. */
     private fun enchantLevel(stack: ItemStack, key: ResourceKey<Enchantment>): Int {
         val level = mc.level ?: return 0
         val holder = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key)

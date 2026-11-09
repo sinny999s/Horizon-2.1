@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Set;
 
 /**
- * Not in the original: body parts an Apollo server hides on a player (Apollo's limb module, HideBodyPartMessage), each
+ * Body parts an Apollo server hides on a player (Apollo's limb module, HideBodyPartMessage), each
  * with its outer layer. The model is shared between players, so parts hidden for one are shown again for the next.
  */
 @Mixin(PlayerModel.class)

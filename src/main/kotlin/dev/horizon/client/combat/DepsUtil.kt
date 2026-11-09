@@ -16,9 +16,8 @@ import kotlin.math.sqrt
 private val mc get() = Minecraft.getInstance()
 
 /**
- * The original's `kk` lag-back clock (`kk.q`, `kk.S`, read through `kk.e()`): the last server teleport that came more than
- * 10 s after a pearl-throw sound (anyone's) or a chorus fruit of ours. Its handlers are on the bus from the first
- * [start] (a module constructor) on, like `kk`, which the original plugs at client init.
+ * Lag-back clock: the last server teleport that came more than 10 s after a pearl-throw sound (anyone's) or a chorus
+ * fruit of ours. Its handlers are on the bus from the first [start] (a module constructor) on.
  */
 object LagBack {
     @Volatile
@@ -27,7 +26,7 @@ object LagBack {
     @Volatile
     private var intentional = -1L
 
-    /** `kk.e()`: ms since the last lag-back (huge before the first). */
+    /** Ms since the last lag-back (huge before the first). */
     fun msSince() = System.currentTimeMillis() - last
 
     fun start() {}
@@ -52,14 +51,14 @@ object LagBack {
     }
 }
 
-/** The original's `kk` movement bits: movement input (`kk.s`) and the 3D speed of the last tick (`kk.C`, `kk.U()`). */
+/** Movement bits: movement input and the 3D speed of the last tick. */
 object Motion {
-    /** Blocks moved between the last two ticks, measured at TickEvent (`kk.C`). */
+    /** Blocks moved between the last two ticks, measured at TickEvent. */
     @Volatile
     var speed3D = 0f
         private set
 
-    /** `kk.s`: any WASD movement input (not velocity). */
+    /** Any WASD movement input (not velocity). */
     fun isMoving(): Boolean {
         val p = mc.player ?: return false
         if (mc.level == null) return false

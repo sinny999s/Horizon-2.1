@@ -10,7 +10,7 @@ import net.minecraft.world.item.Item
 import java.nio.file.Files
 
 /**
- * Not in the original: what the Dupe Stash schematic needs crafted and smelted (Auto Craft's and Auto Smelt's Stash mode)
+ * What the Dupe Stash schematic needs crafted and smelted (Auto Craft's and Auto Smelt's Stash mode)
  * and how much of it they've made so far, kept in `horizon/stash-progress.json` across restarts.
  */
 object StashPlan {

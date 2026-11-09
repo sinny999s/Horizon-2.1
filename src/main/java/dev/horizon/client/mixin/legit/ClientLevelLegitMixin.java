@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** An entity about to be added to the client level (the original's `ClientLevelMixin.addEntityHook`). */
+/** An entity about to be added to the client level. */
 @Mixin(ClientLevel.class)
 public abstract class ClientLevelLegitMixin {
 	@Inject(method = "addEntity", at = @At("HEAD"), cancellable = true)

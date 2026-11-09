@@ -12,10 +12,10 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Not in the original: an SVG drawn as a browser draws it, for screens matched to an HTML mockup. [Icon] keeps the original's
+ * An SVG drawn as a browser draws it, for screens matched to an HTML mockup. [Icon] has its
  * quirks (a (0.5, 2) offset, and a fractional size re-rasterised at 1x, so a 6.5 icon comes out at half resolution);
  * this one is rasterised at the screen's pixel size for any size and drawn exactly where asked, on whole pixels.
- * With [mask] only the shape is kept (every pixel white), as a CSS mask-image: The original's widget icons are #e8eaed.
+ * With [mask] only the shape is kept (every pixel white), as a CSS mask-image: the widget icons are #e8eaed.
  */
 class VectorIcon(private val name: String, private val size: Float, private val mask: Boolean = false) {
     private var texture: DynamicTexture? = null

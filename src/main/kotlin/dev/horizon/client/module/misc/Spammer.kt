@@ -13,9 +13,9 @@ import java.util.regex.Pattern
 import kotlin.random.Random
 
 /**
- * The original's "spammer" (`a_`): every [delay] seconds a random line of `spammer.txt` (in the client folder, the original's
- * `~/.ctl`; re-read every 60 ticks when it changed) to global ("!" first), local chat or a whisper to a random tab-list
- * player; a line starting with "/" is sent as a command. With nothing to send it turns itself off.
+ * Every [delay] seconds a random line of `spammer.txt` (in the client folder; re-read every 60 ticks when it changed) to
+ * global ("!" first), local chat or a whisper to a random tab-list player; a line starting with "/" is sent as a command.
+ * With nothing to send it turns itself off.
  */
 class Spammer : Module("spammer", Categories.MISC) {
     enum class Mode { GLOBAL, LOCAL, WHISPERS }
@@ -65,7 +65,7 @@ class Spammer : Module("spammer", Categories.MISC) {
         }
     }
 
-    /** The original's `a_.t`: the file's trimmed non-blank lines; a file that had to be created gives none. */
+    /** The file's trimmed non-blank lines; a file that had to be created gives none. */
     private fun load(): List<String> {
         if (file.createNewFile()) return emptyList()
         loadedAt = file.lastModified()
@@ -73,7 +73,7 @@ class Spammer : Module("spammer", Categories.MISC) {
         return file.readLines().map { it.trim() }.filter { it.isNotBlank() }
     }
 
-    /** The original's `a_.N`: "[a1b]", against anti-spam filters. */
+    /** "[a1b]", against anti-spam filters. */
     private fun tag() = "[" + (Random.nextInt(26) + 97).toChar() + Random.nextInt(10) + (Random.nextInt(26) + 97).toChar() + "]"
 
     /** A random tab-list name that is a valid username, or "null" when there's none. */

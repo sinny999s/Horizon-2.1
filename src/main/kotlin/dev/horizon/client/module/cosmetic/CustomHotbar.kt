@@ -13,7 +13,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import java.awt.Color
 
 /**
- * Not in the original: modern sleek bottom HUD overhaul tailored to the original's glassmorphism aesthetic.
+ * Modern sleek bottom HUD overhaul with a glassmorphism aesthetic.
  * Replaces vanilla hotbar, selection box, XP bar, health and hunger with a floating rounded glass dock,
  * smooth sliding animated selector, offhand dock, and modern status pills.
  */

@@ -15,13 +15,13 @@ import kotlin.io.path.nameWithoutExtension
 
 /**
  * On the first start (no config folder yet) the client starts from what came before it: everything in the game folder's
- * old `kclient` folder if there is one, else the original client's data in `~/.ctl`. Both are only read. From `~/.ctl`,
+ * old `kclient` folder if there is one, else the data in `~/.ctl`. Both are only read. From `~/.ctl`,
  * binds are converted from GLFW key codes to the game's.
  */
 object ConfigImport {
     private const val OLD_EXTENSION = "ctl" + "on"
 
-    /** What was named after the original client in a config, as it was saved. */
+    /** Old names in a config, as they were saved. */
     private val OLD_VALUES = listOf(
         "\"value\": \"catlean.su\"" to "\"value\": \"Horizon\"",
         "\"value\": \" [CatLean]\"" to "\"value\": \" [Horizon]\"",
@@ -33,7 +33,7 @@ object ConfigImport {
     /** `~/.ctl`; `-Dhorizon.ctl=<folder>` points the import elsewhere (used by the comparison runs). */
     private val source: Path get() = System.getProperty("horizon.ctl")?.let { Path.of(it) } ?: Path.of(System.getProperty("user.home"), ".ctl")
 
-    /** The original's key names by GLFW code (`c6`). */
+    /** Key names by GLFW code. */
     private val glfwNames: Map<Int, String> = buildMap {
         put(32, "Space"); put(39, "Apostrophe"); put(44, "Comma"); put(45, "Minus"); put(46, "Period"); put(47, "Slash")
         for (i in 0..9) put(48 + i, i.toString())

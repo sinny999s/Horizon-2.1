@@ -12,7 +12,7 @@ import kotlin.io.path.extension
 import kotlin.io.path.nameWithoutExtension
 
 /**
- * The client's files, laid out like the original's `~/.ctl`: `modules/`, `widgets/` and `themes/` hold named configs
+ * The client's files, laid out like `~/.ctl`: `modules/`, `widgets/` and `themes/` hold named configs
  * (`<name>.hzn`), `shared.hzn` the ones in use, and `waypoints.hzn`, `proxy.hzn`, `macro.hzn`, `homies.hzn`
  * the window data. The folder is `<game dir>/horizon`.
  */
@@ -27,7 +27,7 @@ object Storage {
         prettyPrintIndent = "    "
     }
 
-    /** The original's `shared.hzn`: which named configs are in use. */
+    /** `shared.hzn`: which named configs are in use. */
     @Serializable
     data class Shared(
         var modulesConfig: String = "default",
@@ -35,11 +35,11 @@ object Storage {
         var inventoriesConfig: String = "default",
         var themeConfig: String = "Horizon",
         var rpcAsked: Boolean = false,
-        /** Not in the original: the redesign's themes (ThemeData.presets) were added to the list once. */
+        /** The redesign's themes (ThemeData.presets) were added to the list once. */
         var themePresets: Boolean = false,
-        /** Not in the original: the Monochrome theme (added after the redesign's) was added to the list once. */
+        /** The Monochrome theme (added after the redesign's) was added to the list once. */
         var themeMonochrome: Boolean = false,
-        /** Not in the original: the server last joined (its name and address), for the title screen's Rejoin row. */
+        /** The server last joined (its name and address), for the title screen's Rejoin row. */
         var lastServerName: String = "",
         var lastServerIp: String = "",
         var autoUpdate: Boolean = true,

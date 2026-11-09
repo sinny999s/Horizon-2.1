@@ -18,7 +18,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's trap base (`_w`), shared by trap and self-trap: encloses a player's feet and head ring, the block over the
+ * The trap base, shared by trap and self-trap: encloses a player's feet and head ring, the block over the
  * head and the open block under the feet, growing around any cell another living entity stands in, with one helper
  * block where a cell has nothing to be placed against.
  */
@@ -28,14 +28,13 @@ abstract class TrapBase(id: String, subCategory: SubCategory) : PlacerModule(id,
 
     override fun blocks(): List<Block> = blocksSetting.value
 
-    /** The original's `_w.I`: a crystal in a cell is broken only if its explosion leaves us above 4 HP. */
+    /** A crystal in a cell is broken only if its explosion leaves us above 4 HP. */
     override fun mayBreak(crystal: Entity): Boolean {
         val p = mc.player ?: return false
         val dmg = Explosions.damage(crystal.position(), p, 0, false, emptyList(), emptyList())
         return dmg + 4.0f - (p.health + p.absorptionAmount) < 0
     }
 
-    /** The original's `_w.e`. */
     protected fun trapPlayer(target: Player?) {
         val self = mc.player ?: return
         if (target === self && self.isVisuallySwimming && onlyStanding.value) return
@@ -58,7 +57,7 @@ abstract class TrapBase(id: String, subCategory: SubCategory) : PlacerModule(id,
     }
 
     /**
-     * The original's `_w.P`: depth-first over the six neighbours; an occupied cell is searched around, a clickable one
+     * Depth-first over the six neighbours; an occupied cell is searched around, a clickable one
      * added, otherwise the first helper (not UP) that can be placed goes first, then the cell.
      */
     private fun search(pos: BlockPos, visited: LinkedHashSet<BlockPos>): List<BlockPos> {
@@ -102,7 +101,7 @@ abstract class TrapBase(id: String, subCategory: SubCategory) : PlacerModule(id,
     }
 }
 
-/** The original's "trap" (`_r`): traps the target finder's pick (FOV sort). */
+/** Traps the target finder's pick (FOV sort). */
 class Trap : TrapBase("trap", Categories.ATTACK) {
     init {
         on<PlayerUpdateEvent> { trapPlayer(TargetFinder.find(range.value.toDouble(), TargetFinder.Sort.FOV, false, false)) }

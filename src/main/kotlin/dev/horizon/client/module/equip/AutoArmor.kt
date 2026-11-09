@@ -23,7 +23,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import net.minecraft.world.item.enchantment.Enchantments
 
 /**
- * The original's "auto-armor" (`j5`): every [delay] ticks, scores the worn armour and every main-inventory/hotbar piece
+ * Every [delay] ticks, scores the worn armour and every main-inventory/hotbar piece
  * (protection or blast protection doubled per slot setting, armour and toughness modifiers, elytra priority, cursed
  * pieces at -999) and puts on the first better piece found: right-click from the hotbar, else three pickup clicks.
  */
@@ -43,12 +43,12 @@ class AutoArmor : Module("auto-armor", Categories.EQUIP) {
     val ignoreCurse = bool("ignore-curse", true)
     val facePlaceBait = bool("face-place-bait", false)
 
-    /** Ticks since the last equip (the original's `j5.c()`, read by other modules). */
+    /** Ticks since the last equip (read by other modules). */
     val delayTimer = TickTimer()
     /** Ticks since face-place-bait took the helmet off. */
     private val baitTimer = TickTimer()
 
-    /** The original's `wi`: an armour slot, its inventory index, the worn piece's score and the best candidate this tick. */
+    /** An armour slot, its inventory index, the worn piece's score and the best candidate this tick. */
     private class ArmorSlot(val slot: EquipmentSlot, val index: Int) {
         var worn = -1
         var best = -1
@@ -91,7 +91,7 @@ class AutoArmor : Module("auto-armor", Categories.EQUIP) {
                 val i = s.best
                 if (i == -1) continue
                 if ((s.worn == -1 || !oldVersion.value) && i < 9) {
-                    // The original also sent a swing packet after the use; 26.3 has none.
+                    // No swing packet after the use; 26.3 has none.
                     Inventory.saveAndSelect(i)
                     EquipUtil.use()
                     Inventory.restore()
@@ -109,11 +109,10 @@ class AutoArmor : Module("auto-armor", Categories.EQUIP) {
         }
     }
 
-    /** The original's `n5.e`. */
     private fun isArmor(s: ItemStack) =
         s.`is`(ItemTags.FOOT_ARMOR) || s.`is`(ItemTags.LEG_ARMOR) || s.`is`(ItemTags.CHEST_ARMOR) || s.`is`(ItemTags.HEAD_ARMOR)
 
-    /** The original's `j5.t`: gliders go on the chest, everything else where its equippable component says. */
+    /** Gliders go on the chest, everything else where its equippable component says. */
     private fun slotOf(s: ItemStack): EquipmentSlot {
         if (s.has(DataComponents.GLIDER)) return EquipmentSlot.CHEST
         return when (s.get(DataComponents.EQUIPPABLE)!!.slot().index) {
@@ -124,13 +123,13 @@ class AutoArmor : Module("auto-armor", Categories.EQUIP) {
         }
     }
 
-    /** The original's `j5.d`: -1 for an empty slot, 0 for anything that isn't armour or an elytra. */
+    /** -1 for an empty slot, 0 for anything that isn't armour or an elytra. */
     private fun score(s: ItemStack): Int {
         if (!isArmor(s) && !s.`is`(Items.ELYTRA)) return if (s.isEmpty) -1 else 0
         var score = 0
         val slot = slotOf(s)
         if (s.`is`(Items.ELYTRA)) {
-            // The original's `bk.C`: a glider with at least two uses left.
+            // A glider with at least two uses left.
             if (s.damageValue >= s.maxDamage - 1 || !s.has(DataComponents.GLIDER)) return 0
             val plus = elytraPriority.value == ElytraPriority.ELYTRA_PLUS &&
                 (Modules.get<ElytraRecast>().enabled || Modules.get<ElytraPlus>().enabled)
@@ -139,7 +138,7 @@ class AutoArmor : Module("auto-armor", Categories.EQUIP) {
         }
         var blastMul = 1
         var protMul = 1
-        // The original matches "body" against EquipmentSlot.BODY (animal armour), so chestplates get no multiplier.
+        // "body" matches EquipmentSlot.BODY (animal armour), so chestplates get no multiplier (on purpose).
         val setting = when (slot) {
             EquipmentSlot.HEAD -> head
             EquipmentSlot.BODY -> body

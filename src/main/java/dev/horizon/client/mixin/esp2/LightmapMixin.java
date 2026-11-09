@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's LightTextureMixin: a cancelled LightMapUpdateEvent makes the lightmap plain white. */
+/** A cancelled LightMapUpdateEvent makes the lightmap plain white. */
 @Mixin(Lightmap.class)
 public abstract class LightmapMixin {
 	@Shadow

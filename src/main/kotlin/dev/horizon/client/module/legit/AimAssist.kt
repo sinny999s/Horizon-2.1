@@ -31,7 +31,7 @@ import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
- * Not in the original: standalone ghost mouse aim assist. Never attacks or sends silent rotations — gently nudges the
+ * Standalone ghost mouse aim assist. Never attacks or sends silent rotations — gently nudges the
  * real camera each frame in whole sensitivity-GCD mouse counts, yielding automatically if [Aura] is fighting.
  */
 class AimAssist : Module("aim-assist", Categories.LEGIT, listOf("aimbot", "smooth-aim")) {

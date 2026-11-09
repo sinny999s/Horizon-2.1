@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's CameraMixin camera-distance hooks: the third-person camera distance from CameraOffsetEvent, unclipped. */
+/** The third-person camera distance from CameraOffsetEvent, unclipped. */
 @Mixin(Camera.class)
 public abstract class CameraMixin {
 	@Shadow

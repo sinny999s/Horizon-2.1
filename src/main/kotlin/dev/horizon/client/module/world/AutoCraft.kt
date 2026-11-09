@@ -13,7 +13,7 @@ import net.minecraft.world.inventory.CraftingMenu
 import net.minecraft.world.item.Item
 
 /**
- * Not in the original: at an open crafting table, crafts everything it can from your inventory, working through whole
+ * At an open crafting table, crafts everything it can from your inventory, working through whole
  * chains (logs → planks → chests; cobbled deepslate → polished → bricks → tiles; [CraftPlanner]). Stash: the Dupe
  * Stash's blocks, up to what it still needs ([StashPlan], progress kept across trips); Litematica: what your Litematica
  * placement's material list says is missing, less what you carry, plus what furnaces need to make the missing smelted

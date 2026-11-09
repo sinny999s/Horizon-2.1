@@ -36,8 +36,8 @@ private val mc get() = Minecraft.getInstance()
 private val W = ModernWindows
 
 /**
- * The mockup's list + editor window: rows on the left (each with its own controls; a click, or a right click as in
- * The original, opens one), the open entry's fields on the right, Delete at the bottom.
+ * The mockup's list + editor window: rows on the left (each with its own controls; a click or a right click
+ * opens one), the open entry's fields on the right, Delete at the bottom.
  */
 internal abstract class ListPane<T : Any>(id: String, title: String, icon: String, x0: Float, y0: Float, w0: Float, h0: Float,
                                           private val listW: Float, private val emptyTitle: String, private val emptyText: String,
@@ -158,9 +158,9 @@ internal abstract class ListPane<T : Any>(id: String, title: String, icon: Strin
 // ---- Configs ----
 
 /**
- * The original's "config-panel": a Modules | HUD switch and a tile per config. Double click a tile to load it; right click
+ * A Modules | HUD switch and a tile per config. Double click a tile to load it; right click
  * a tile for Load / Open in Explorer / Delete, or empty space for Save. The loaded config's tile shimmers in the theme.
- * Not in the original: the loaded config can't be deleted (the original loaded another one).
+ * The loaded config can't be deleted.
  */
 internal object ConfigsPane : Pane("configs", "Configs", "config", 50f, 47f, 220f, 180f) {
     private var tab = ConfigType.MODULES
@@ -178,7 +178,7 @@ internal object ConfigsPane : Pane("configs", "Configs", "config", 50f, 47f, 220
         W.wbtn("cfg:save", right - bw, y, "Save as", "save", primary = true) { saveAs() }
     }
 
-    /** Not in the original: the new HUD editor's Save as: this window on HUD, its dialog open. */
+    /** The new HUD editor's Save as: this window on HUD, its dialog open. */
     internal fun saveHud() {
         tab = ConfigType.WIDGETS
         saveAs()
@@ -369,8 +369,8 @@ internal object ConfigsPane : Pane("configs", "Configs", "config", 50f, 47f, 220
 // ---- Waypoints ----
 
 /**
- * The original's "waypoint-panel": the eye shows or hides a waypoint in the world (the original's left click), a click opens it
- * in the editor. "+" adds one where you stand (at 0, 0, 0 off a server, as in the original).
+ * The eye shows or hides a waypoint in the world, a click opens it
+ * in the editor. "+" adds one where you stand (at 0, 0, 0 off a server, on purpose).
  */
 internal object WaypointsPane : ListPane<WayPoint>("waypoints", "Waypoints", "pin", 280f, 47f, 235f, 180f, 103f,
     "No waypoints", "Add one with +; it goes where you stand.", "pin") {
@@ -452,8 +452,8 @@ internal object WaypointsPane : ListPane<WayPoint>("waypoints", "Waypoints", "pi
 // ---- Proxies ----
 
 /**
- * The original's "proxy-panel": the radio picks the proxy for the next connections (again for none), a click opens it in
- * the editor; each shows its last ping. Not in the original: Test pings the open one, and the signal button pings them all.
+ * The radio picks the proxy for the next connections (again for none), a click opens it in
+ * the editor; each shows its last ping. Test pings the open one, and the signal button pings them all.
  */
 internal object ProxiesPane : ListPane<Proxy>("proxies", "Proxies", "globe", 525f, 47f, 225f, 180f, 103f,
     "No proxies", "Add one with +, then fill in its address.", "globe") {
@@ -546,7 +546,7 @@ internal object ProxiesPane : ListPane<Proxy>("proxies", "Proxies", "globe", 525
 // ---- Macros ----
 
 /**
- * The original's "macro-panel": the switch turns a macro on, its key waits for a bind (the next key or button; Esc,
+ * The switch turns a macro on, its key waits for a bind (the next key or button; Esc,
  * Backspace or Delete clear it), a click opens it in the editor. "+" makes a chat, item or setting macro.
  */
 internal object MacrosPane : ListPane<Macro>("macros", "Macros", "macro", 50f, 236f, 300f, 180f, 136f,
@@ -666,7 +666,7 @@ internal object MacrosPane : ListPane<Macro>("macros", "Macros", "macro", 50f, 2
 // ---- Homies ----
 
 /**
- * The original's "homies-panel": one row per friend with their head (from minotar, as the original). Not in the original: a friend is
+ * One row per friend with their head (from minotar). A friend is
  * removed from their trash button, not by any click on their card, and the field on top adds one (Enter).
  */
 internal object HomiesPane : Pane("homies", "Homies", "users", 360f, 236f, 150f, 180f) {

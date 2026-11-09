@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.properties.BedPart
 
 /**
- * Not in the original: whose bed is whose, for Bedwars (Bed Plates, Bed Breaker). A bed is yours when
+ * Whose bed is whose, for Bedwars (Bed Plates, Bed Breaker). A bed is yours when
  * its colour is your team's (from your dyed armour, else your name / scoreboard team colour). Two things make that
  * unreliable, and are handled:
  * - A server that shows every bed in one colour (a 1.8 server translated for new clients can): when two or more beds

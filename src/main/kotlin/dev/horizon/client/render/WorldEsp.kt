@@ -17,17 +17,17 @@ import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.sin
 
-/** The original's world sprites and TECHNO walls (`dz`, `ma`), drawn straight away during Render3D. */
+/** World sprites and TECHNO walls, drawn straight away during Render3D. */
 object WorldEsp {
     private val mc get() = Minecraft.getInstance()
 
-    /** The FIREFLY glow on the original's atlas (u0, v0, u1, v1). */
+    /** The FIREFLY glow on the atlas (u0, v0, u1, v1). */
     private val FIREFLY = floatArrayOf(0.8906f, 0.1875f, 0.9531f, 0.25f)
     private val BLOCK: Identifier = Identifier.fromNamespaceAndPath(HorizonClient.ID, "textures/exclude/block.png")
 
     private class Sprite(val p: Vec3, val s: Float, val color: Int)
 
-    /** The original's sprite batch: camera-facing quads at camera-relative points, additive, depth-tested only when [seen]. */
+    /** A sprite batch: camera-facing quads at camera-relative points, additive, depth-tested only when [seen]. */
     private fun sprites(list: List<Sprite>, seen: Boolean) {
         if (list.isEmpty()) return
         val cam = mc.gameRenderer.mainCamera()
@@ -68,7 +68,7 @@ object WorldEsp {
         return p to t
     }
 
-    /** The original's `dz.v`: three comets of 15 glows circling the target. */
+    /** Three comets of 15 glows circling the target. */
     fun comets(target: Entity, alpha: Float) {
         val (p0, t) = base(target)
         val bbW = target.bbWidth.toDouble()
@@ -84,7 +84,7 @@ object WorldEsp {
         sprites(list, mc.player!!.hasLineOfSight(target))
     }
 
-    /** The original's `dz.h`: eight trailing rings of 67 glows around the target. */
+    /** Eight trailing rings of 67 glows around the target. */
     fun bloomCircle(target: Entity, alpha: Float) {
         val (p0, t) = base(target)
         val bbW = target.bbWidth.toDouble()
@@ -99,7 +99,7 @@ object WorldEsp {
         sprites(list, mc.player!!.hasLineOfSight(target))
     }
 
-    /** The original's `ma.j`: TECHNO's scrolling walls, glowing top and ripples on the base [box]. */
+    /** TECHNO's scrolling walls, glowing top and ripples on the base [box]. */
     fun techno(box: AABB, ripples: List<IntArray>) {
         val p = mc.player ?: return
         val bottom = PlaceBoxes.withAlpha(Theme.gradient(0), 0.1f)

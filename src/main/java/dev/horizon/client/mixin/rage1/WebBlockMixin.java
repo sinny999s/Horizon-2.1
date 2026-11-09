@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Cobweb slowdown (for any entity, as in the original). */
+/** Cobweb slowdown (for any entity, on purpose). */
 @Mixin(WebBlock.class)
 public abstract class WebBlockMixin {
 	@Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)

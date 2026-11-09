@@ -7,7 +7,7 @@ import dev.horizon.client.module.Module
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 
 /**
- * Not in the original: environmental control over time of day and weather. Allows locking the world time to midnight,
+ * Environmental control over time of day and weather. Allows locking the world time to midnight,
  * sunset, or noon, and forcing clear weather to eliminate rain FPS drops and gloomy skies.
  */
 class Ambience : Module("ambience", Categories.COSMETIC) {

@@ -39,7 +39,7 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /**
- * The original's "phase" (`b0`). VANILLA: collisions see air everywhere but the block under the feet (and that too while
+ * VANILLA: collisions see air everywhere but the block under the feet (and that too while
  * sneaking). PEARL: walking into a wall, throws a pearl at the block ahead, nearly straight down (after filling it and
  * the one below with obsidian, and breaking an item frame or crystal in the way). STEP: on enable, clips through the
  * wall ahead with a few position packets (several in one tick, which is the point of it).
@@ -55,7 +55,7 @@ class Phase : Module("phase", Categories.RAGE) {
     val grim = bool("grim", true) { mode.value == Mode.PEARL && fill.value }
     val switch = enum("switch", Switch.SILENT_FULL) { mode.value == Mode.PEARL }
 
-    /** The original's `W`: since the last pearl. */
+    /** Since the last pearl. */
     private val pearlTimer = MsTimer()
 
     init {
@@ -88,8 +88,8 @@ class Phase : Module("phase", Categories.RAGE) {
     }
 
     /**
-     * The original's `b0.S`: up 2 and over by [through]. The original raycasts 0.44 ahead to climb 1 when clear, but compares the
-     * hit result itself with `Type.MISS`, so it always climbs 2.
+     * Up 2 and over by [through]. A raycast 0.44 ahead was meant to climb 1 when clear, but it compared the hit result
+     * itself with `Type.MISS`, so it always climbs 2 (on purpose).
      */
     private fun stepUp(through: DoubleArray) {
         val p = mc.player ?: return
@@ -97,7 +97,7 @@ class Phase : Module("phase", Categories.RAGE) {
         Packets.send(ServerboundMovePlayerPacket.Pos(p.x, p.y, p.z, true, p.horizontalCollision))
     }
 
-    /** The original's `b0.Q`: down 2 if the block 2 under the first offset is air, else 1. */
+    /** Down 2 if the block 2 under the first offset is air, else 1. */
     private fun stepDown(into: DoubleArray, through: DoubleArray) {
         val p = mc.player ?: return
         val level = mc.level ?: return
@@ -106,7 +106,7 @@ class Phase : Module("phase", Categories.RAGE) {
         Packets.send(ServerboundMovePlayerPacket.Pos(p.x, p.y, p.z, true, p.horizontalCollision))
     }
 
-    /** The original's `b0.m` (PlayerUpdate −10). */
+    /** Runs at PlayerUpdate −10. */
     private fun pearl() {
         if (mode.value != Mode.PEARL) return
         val p = mc.player ?: return
@@ -126,7 +126,7 @@ class Phase : Module("phase", Categories.RAGE) {
         RotationManager.queue(RotationRequest(rot, 201) { throwPearl(target, rot, found.slot) })
     }
 
-    /** The original's lambda `b0.B`: fill, clear the way, throw, then (auto-disable) turn off. */
+    /** Fill, clear the way, throw, then (auto-disable) turn off. */
     private fun throwPearl(target: BlockPos, rot: Rotation, slot: Int) {
         val p = mc.player ?: return
         if (fill.value) {
@@ -135,17 +135,17 @@ class Phase : Module("phase", Categories.RAGE) {
         }
         val e = entityAhead(rot.yaw, rot.pitch, 3.0f)
         if (e != null) {
-            // The original also sends a swing packet after each attack; 26.3 has none (servers swing on their own).
+            // No swing packet after each attack; 26.3 has none (servers swing on their own).
             if (e is ItemFrame && !e.item.isEmpty) mc.gameMode?.attack(p, e)
             if (e is ItemFrame || e is EndCrystal) mc.gameMode?.attack(p, e)
         }
-        // The original sends a swing packet after the throw too (none in 26.3).
+        // No swing packet after the throw either (none in 26.3).
         switchAnd(slot, switch.value) { mc.gameMode?.useItem(p, InteractionHand.MAIN_HAND) }
         if (autoDisable.value) disable()
         pearlTimer.reset()
     }
 
-    /** The original's `b0.B(pos)`: obsidian into [pos] if it's replaceable and there's a face to click. */
+    /** Obsidian into [pos] if it's replaceable and there's a face to click. */
     private fun fillBlock(pos: BlockPos) {
         val p = mc.player ?: return
         val level = mc.level ?: return
@@ -159,13 +159,13 @@ class Phase : Module("phase", Categories.RAGE) {
         }
     }
 
-    /** The original's `b0.A`: the pitch: 81 off a block's top, else 85 (the original's ladder check compares a state with a block, so never 80). */
+    /** The pitch: 81 off a block's top, else 85 (the ladder check compares a state with a block, so never 80). */
     private fun pitch(): Float {
         val p = mc.player ?: return 85.0f
         return if (abs(p.y) - floor(p.y) > 0.1) 81.0f else 85.0f
     }
 
-    /** The original's `b0.M`: the state at the feet (y rounded) collides there but not one block up, and isn't a ladder. */
+    /** The state at the feet (y rounded) collides there but not one block up, and isn't a ladder. */
     private fun insideBlock(): Boolean {
         val p = mc.player ?: return false
         val level = mc.level ?: return false
@@ -176,7 +176,7 @@ class Phase : Module("phase", Categories.RAGE) {
         return here && !above && state.block != Blocks.LADDER
     }
 
-    /** The original's `kk.P`: the pickable entity [range] along [yaw]/[pitch] from the eyes, unless a block is nearer. */
+    /** The pickable entity [range] along [yaw]/[pitch] from the eyes, unless a block is nearer. */
     private fun entityAhead(yaw: Float, pitch: Float, range: Float): Entity? {
         val p = mc.player ?: return null
         val level = mc.level ?: return null
@@ -192,7 +192,7 @@ class Phase : Module("phase", Categories.RAGE) {
         return if (!(eye.distanceToSqr(hit.location) < maxSq)) null else hit.entity
     }
 
-    /** The original's `kk.T`: the look vector (float maths). */
+    /** The look vector (float maths). */
     private fun look(pitch: Float, yaw: Float): Vec3 {
         val r = (Math.PI / 180.0).toFloat()
         return Vec3(

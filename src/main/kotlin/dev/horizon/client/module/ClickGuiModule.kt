@@ -5,7 +5,7 @@ import dev.horizon.client.gui.modern.ModernGui
 import dev.horizon.client.setting.Bind
 import net.minecraft.client.gui.screens.Screen
 
-/** The original's "UI" (`az`): the ClickGUI's bind and 3D line mode, and [opacity], the window's opacity. */
+/** The ClickGUI's bind and 3D line mode, and [opacity], the window's opacity. */
 class ClickGuiModule : Module("UI", Categories.MISC, defaultBind = Bind(InputConstants.KEY_P)) {
     enum class LinesMode { OLD, NEW }
 

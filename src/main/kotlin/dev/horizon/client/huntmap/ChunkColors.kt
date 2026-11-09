@@ -9,7 +9,7 @@ import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.level.material.MapColor
 
 /**
- * Not in the original: turns a loaded chunk into the hunt map's colours, the way vanilla's filled maps do (the top block's map
+ * Turns a loaded chunk into the hunt map's colours, the way vanilla's filled maps do (the top block's map
  * colour, darker or lighter by its height against the block north of it, water by its depth). Under a roof (the nether)
  * it looks below the roof instead: down through it to the first open space, then to the floor of that space.
  */

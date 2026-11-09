@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's core/rect/rect.vsh. The corner coordinate comes in UV0 instead of from gl_VertexID.
+// The corner coordinate comes in UV0.
 layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;
     mat4 TextureMat;

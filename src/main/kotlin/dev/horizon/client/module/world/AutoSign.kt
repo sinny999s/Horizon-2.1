@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 /**
- * The original's "auto-sign" (`r2`): instead of opening a (standing or wall) sign's edit screen, sends the four lines at once;
+ * Instead of opening a (standing or wall) sign's edit screen, sends the four lines at once;
  * with glowing on it then uses a glow ink sac on a front side that isn't glowing yet.
  */
 class AutoSign : Module("auto-sign", Categories.WORLD) {
@@ -53,12 +53,12 @@ class AutoSign : Module("auto-sign", Categories.WORLD) {
             mc.gameMode?.useItemOn(player, hand,
                 BlockHitResult(Vec3.atCenterOf(sign.blockPos).add(0.0, 0.5, 0.0), Direction.UP, sign.blockPos, false))
             if (sneaking) PlayerState.setSneak(true)
-            // The original sends a swing packet here; 26.3 has none.
+            // No swing packet here; 26.3 has none.
             Inventory.restore()
         }
     }
 
-    /** The original's `E`: <player> → the account name, <date> → today in date-format (dd/MM/yyyy when the format is bad). */
+    /** <player> → the account name, <date> → today in date-format (dd/MM/yyyy when the format is bad). */
     private fun fill(line: String): String {
         var date = "dd/MM/yyyy"
         try {

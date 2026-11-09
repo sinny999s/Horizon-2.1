@@ -11,9 +11,8 @@ import java.awt.Color
 import java.time.ZonedDateTime
 
 /**
- * The original's "world-renderer" (`ev`): fog with its own colour and distances, and a fixed (or real-world) time of day.
+ * Fog with its own colour and distances, and a fixed (or real-world) time of day.
  * While the time changer is on, the server's time packets are dropped (their game time kept for when it is turned off).
- * The original's ClearColorEvent handler is left out: nothing fires that event.
  */
 class WorldRenderer : Module("world-renderer", Categories.COSMETIC) {
     val fogModify = bool("fog-modify", true)
@@ -24,7 +23,7 @@ class WorldRenderer : Module("world-renderer", Categories.COSMETIC) {
     val realTime = bool("real-time", false) { timeChanger.value }
     val time = int("time", 21000, 0..23000) { timeChanger.value }
 
-    /** The server's game time (the original's `L`), put back on disable. */
+    /** The server's game time, put back on disable. */
     private var serverTime = 0L
 
     init {
@@ -60,7 +59,7 @@ class WorldRenderer : Module("world-renderer", Categories.COSMETIC) {
         mc.level?.setTimeFromServer(serverTime)
     }
 
-    /** The original's `ev.a`: the local time of day in ticks (6 am = 0). */
+    /** The local time of day in ticks (6 am = 0). */
     fun realTimeTicks(): Int {
         val ticks = ZonedDateTime.now().toLocalTime().toSecondOfDay().toDouble() / 86400.0 * 24000.0
         return ((ticks - 6000 + 24000) % 24000).toInt()

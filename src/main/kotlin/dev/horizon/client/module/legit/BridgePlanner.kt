@@ -8,7 +8,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Not in the original: GodBridge's jump timing, kept free of the game so it can be tested on its own.
+ * GodBridge's jump timing, kept free of the game so it can be tested on its own.
  *
  * With the camera held still, a click only extends the bridge while the eyes are a little past its end: before that
  * the crosshair is on the top of the last block, and once the feet have left that block the player sinks too low to

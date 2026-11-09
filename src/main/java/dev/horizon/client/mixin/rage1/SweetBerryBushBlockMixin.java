@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Sweet berry bush slowdown and damage (for any entity, as in the original). */
+/** Sweet berry bush slowdown and damage (for any entity, on purpose). */
 @Mixin(SweetBerryBushBlock.class)
 public abstract class SweetBerryBushBlockMixin {
 	@Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)

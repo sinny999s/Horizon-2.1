@@ -21,7 +21,7 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 /**
- * Not in the original: Bedwars bed plates. Over every bed in range, a plate with the bed's colour and the blocks
+ * Bedwars bed plates. Over every bed in range, a plate with the bed's colour and the blocks
  * defending it, layer by layer outwards (wool, then wood, then end stone...), so you know what to bring before you rush.
  * Each layer is the blocks a step further from the bed (on top and to the sides; nothing under it), its block types
  * most-placed first. A layer with a gap straight to the bed is marked open, your own team's bed "yours" ([BedTeams] says

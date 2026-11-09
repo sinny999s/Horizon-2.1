@@ -8,7 +8,7 @@ import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
 /**
- * The original's "no-server-slot" (`ji`): the server may not change the selected hotbar slot. Its slot packet is dropped
+ * The server may not change the selected hotbar slot. Its slot packet is dropped
  * (on the network thread) and the slot we have selected is sent back instead.
  */
 class NoServerSlot : Module("no-server-slot", Categories.EQUIP) {

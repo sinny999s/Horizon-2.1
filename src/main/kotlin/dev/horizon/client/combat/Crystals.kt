@@ -17,7 +17,7 @@ import kotlin.math.max
 
 private val mc get() = Minecraft.getInstance()
 
-/** The original's `f9`: tries at breaking a crystal or placing on a base; too many and AutoCrystal gives up on it. */
+/** Tries at breaking a crystal or placing on a base; too many and AutoCrystal gives up on it. */
 class Attempt(val time: Long, val pos: Vec3, val place: Boolean, private val notify: () -> Boolean) {
     var attempts = 1
         private set
@@ -37,7 +37,7 @@ class Attempt(val time: Long, val pos: Vec3, val place: Boolean, private val not
     }
 }
 
-/** The original's `ta`: crystals attacked (or doomed), attack and place attempts, and boxes recently placed into. */
+/** Crystals attacked (or doomed), attack and place attempts, and boxes recently placed into. */
 object CrystalTracker {
     /** Entity id → when it was attacked (or marked doomed by an explosion). */
     val attacked = ConcurrentHashMap<Int, Long>()
@@ -76,13 +76,13 @@ object CrystalTracker {
         boxes.putIfAbsent(boxOf(pos), System.currentTimeMillis())
     }
 
-    /** The original's `ta.Z(BlockPos)`: a crystal was placed into an overlapping box just now. */
+    /** A crystal was placed into an overlapping box just now. */
     fun recentBoxConflict(pos: BlockPos, limitPlace: Boolean): Boolean {
         val box = boxOf(pos)
         return boxes.keys.any { it.intersects(box) && (limitPlace || it.center != box.center) }
     }
 
-    /** The original's `ta.Z(Vec3)`: the place attempt a crystal spawning at [spawn] answers, if any. */
+    /** The place attempt a crystal spawning at [spawn] answers, if any. */
     fun matchSpawn(spawn: Vec3): Attempt? {
         var rec: Attempt? = null
         for ((base, a) in placeAttempts) {
@@ -115,7 +115,7 @@ object CrystalTracker {
     }
 }
 
-/** The original's `fv`: holds back a place that isn't clearly better than the last one until ~510 ms have passed. */
+/** Holds back a place that isn't clearly better than the last one until ~510 ms have passed. */
 object DamageSync {
     enum class Mode { ALWAYS, CONDITIONS, OFF }
 
@@ -151,14 +151,14 @@ object DamageSync {
         return false
     }
 
-    /** Crystals in the inventory (main, armour, off-hand), with the off-hand counted twice (as the original did). */
+    /** Crystals in the inventory (main, armour, off-hand), with the off-hand counted twice (on purpose). */
     private fun crystalCount(): Int {
         val p = mc.player ?: return 0
         return Inventory.count(Items.END_CRYSTAL) + p.offhandItem.let { if (it.`is`(Items.END_CRYSTAL)) it.count else 0 }
     }
 }
 
-/** The original's `nn`: attacks the entity ids the next crystals will get, right after placing. */
+/** Attacks the entity ids the next crystals will get, right after placing. */
 object IdPredict {
     @Volatile
     var highest = -1
@@ -178,7 +178,7 @@ object IdPredict {
             val e = level.getEntity(id)
             if (e != null && e !is EndCrystal) continue
             Packets.send(ServerboundAttackPacket(id))
-            // The original sent a swing packet after each (or only the last, with swing-once); 26.3 has none.
+            // No swing packet after each (or only the last, with swing-once): 26.3 has none.
         }
     }
 }

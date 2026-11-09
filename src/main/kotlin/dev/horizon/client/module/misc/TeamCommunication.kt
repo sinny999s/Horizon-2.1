@@ -18,7 +18,7 @@ import java.util.Base64
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The original's "team-communication" (`ao`): every chat message goes out XOR-encrypted with [key] as
+ * Every chat message goes out XOR-encrypted with [key] as
  * "!cat_<base64>_lean"; such messages from others are decrypted into chat (and hidden when a friend sent them).
  * [sendCoords] shares our x/z (a teammate's go to the compass), [tpHere] makes teammates /tpa (or /marry tp) to us.
  */
@@ -28,7 +28,7 @@ class TeamCommunication : Module("team-communication", Categories.MISC) {
     val tpHere = bind("tp-here", Bind())
     val marryTp = bool("marry-tp", false)
 
-    /** Set while our own encrypted message is being sent, so it isn't encrypted again (the original's `ao.J()`). */
+    /** Set while our own encrypted message is being sent, so it isn't encrypted again. */
     val sending = AtomicBoolean(false)
 
     init {
@@ -52,7 +52,7 @@ class TeamCommunication : Module("team-communication", Categories.MISC) {
         on<ReceivePacketEvent> { e -> Misc2Util.received(e) { p -> received(p) } }
     }
 
-    /** The original compared the key code only; here the device must match too, as for module binds. */
+    /** The key code and the device must both match, as for module binds. */
     private fun pressed(b: Bind, e: InputEvent) = b.key != -1 && b.key == e.key && b.mouse == (e.device == InputEvent.Device.Mouse)
 
     /** Whether to hide the message: a decrypted one from a friend. */
@@ -84,10 +84,8 @@ class TeamCommunication : Module("team-communication", Categories.MISC) {
         return Friends.isFriend(from)
     }
 
-    /** The original's `ao.A`. */
     fun encrypt(input: String): String = "!cat_" + encode(xor(input.toByteArray(Charsets.UTF_8))) + "_lean"
 
-    /** The original's `ao.E(String)`. */
     fun decrypt(input: String): String = String(xor(decode(input)), Charsets.UTF_8)
 
     private fun xor(bytes: ByteArray): ByteArray {
@@ -100,7 +98,7 @@ class TeamCommunication : Module("team-communication", Categories.MISC) {
 
     private fun decode(s: String): ByteArray = Base64.getDecoder().decode(s.replace('(', '+').replace(')', '/').replace('%', '='))
 
-    /** The original's `ao.M`: the last tab-list name the message contains. */
+    /** The last tab-list name the message contains. */
     private fun sender(message: String): String {
         var found = "FATAL ERROR"
         for (info in mc.connection!!.listedOnlinePlayers) if (message.contains(info.profile.name)) found = info.profile.name

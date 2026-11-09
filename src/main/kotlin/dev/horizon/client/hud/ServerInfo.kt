@@ -12,13 +12,13 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 /**
- * What the HUD widgets read about the world and the server: The original's `ws` (block entities around the player, ping,
- * TPS from time packets), `kk` (movement speed), `t5` (totem pops) and `p2` (inventory counts).
+ * What the HUD widgets read about the world and the server: block entities around the player, ping,
+ * TPS from time packets, movement speed, totem pops and inventory counts.
  */
 object ServerInfo {
     private val mc get() = Minecraft.getInstance()
 
-    /** Block entities of every loaded chunk within render distance, rebuilt every tick at PlayerUpdate +10 (as `ws`). */
+    /** Block entities of every loaded chunk within render distance, rebuilt every tick at PlayerUpdate +10. */
     var blockEntities: List<BlockEntity> = emptyList()
         private set
 
@@ -42,7 +42,7 @@ object ServerInfo {
         val p = mc.player ?: return
         val level = mc.level ?: return
         val rd = mc.options.renderDistance().get()
-        // The original divides with truncation, so the square is off by one chunk at negative coordinates.
+        // Divides with truncation, so the square is off by one chunk at negative coordinates (on purpose).
         val cx = p.x.toInt() / 16
         val cz = p.z.toInt() / 16
         val list = ArrayList<BlockEntity>()
@@ -106,7 +106,7 @@ object ServerInfo {
 
     fun pops(p: Player) = pops[p.gameProfile.name] ?: 0
 
-    /** The original's `p2.count(item)`: the whole inventory, armour and offhand included. */
+    /** The whole inventory, armour and offhand included. */
     fun count(item: Item): Int {
         val inv = mc.player?.inventory ?: return 0
         var n = 0

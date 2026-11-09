@@ -4,7 +4,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * Not in the original: game-free team-matching primitives across multi-server formats (legacy `§0`..`§f` and Bungee
+ * Game-free team-matching primitives across multi-server formats (legacy `§0`..`§f` and Bungee
  * `§x§R§R§G§G§B§B` hex codes, rank/level-prefixed display names where only the colour active on the username matters,
  * dyed leather armour RGB tolerance with undyed-leather filtering, and clan `[TAG]` prefixes).
  */

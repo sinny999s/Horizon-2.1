@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's EntityRenderDispatcherMixin `submit` hook: the flames drawn on a burning entity. */
+/** The flames drawn on a burning entity. */
 @Mixin(EntityRenderDispatcher.class)
 public abstract class NoRenderFireMixin {
 	@Inject(method = "submit", at = @At("HEAD"))

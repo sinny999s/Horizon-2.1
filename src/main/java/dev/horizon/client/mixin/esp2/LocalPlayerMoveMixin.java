@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 /**
- * x-ray's MoveEvent handler (the original cancels the move and replays it with x = z = 0): the deobfuscator stands still
- * while it works through its list. Same call the original hooked (`super.move` inside `LocalPlayer.move`).
+ * x-ray's MoveEvent handler (the move is made with x = z = 0): the deobfuscator stands still
+ * while it works through its list. Hooks `super.move` inside `LocalPlayer.move`.
  */
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMoveMixin {

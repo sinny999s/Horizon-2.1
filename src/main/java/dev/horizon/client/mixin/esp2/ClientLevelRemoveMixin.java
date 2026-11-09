@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's ClientLevelMixin.removeEntityHook: an entity is about to leave the client level. */
+/** An entity is about to leave the client level. */
 @Mixin(ClientLevel.class)
 public abstract class ClientLevelRemoveMixin {
 	@Inject(method = "removeEntity", at = @At("HEAD"), cancellable = true)

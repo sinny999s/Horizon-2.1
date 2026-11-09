@@ -32,7 +32,7 @@ import net.minecraft.world.level.block.Block
 import java.awt.Color
 
 /**
- * A module (the original's `_7`). Its settings are kept in declaration order, which is the order the ClickGUI shows them;
+ * A module. Its settings are kept in declaration order, which is the order the ClickGUI shows them;
  * the first two are always "enabled" and "bind" (not shown as widgets).
  */
 abstract class Module(override val id: String, val subCategory: SubCategory, val aliases: List<String> = emptyList(),
@@ -41,7 +41,7 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
     val enabledSetting = bool("enabled", false)
     val bindSetting = bind("bind", defaultBind)
 
-    /** The original's display name: each id part capitalised and followed by a space ("Auto Crystal "). */
+    /** The display name: each id part capitalised and followed by a space ("Auto Crystal "). */
     val name: String = id.split("-").joinToString("") { it.replaceFirstChar { c -> c.uppercaseChar() } + " " }
 
     val mc: Minecraft get() = Minecraft.getInstance()
@@ -65,7 +65,7 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
         handlers += Handler(type, priority, fn)
     }
 
-    /** A handler that is on the event bus only while the module is enabled (the original's `@Flow`). */
+    /** A handler that is on the event bus only while the module is enabled. */
     protected inline fun <reified E : Event> on(priority: Int = 0, noinline fn: (E) -> Unit) {
         @Suppress("UNCHECKED_CAST")
         addHandler(E::class.java, priority, fn as (Event) -> Unit)
@@ -77,7 +77,7 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
 
     fun unplug() = EventBus.unregister(this)
 
-    /** The original's `z()`: on, re-plugged on the bus, the enable hook, then the notification. */
+    /** On, re-plugged on the bus, the enable hook, then the notification. */
     fun enable() {
         if (enabledSetting.value) return
         if (dev.horizon.client.module.legit.GhostMode.blocks(this)) {
@@ -91,7 +91,7 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
         Notifications.post(name, "was enabled", 1f, NotificationType.ENABLED)
     }
 
-    /** The original's `p()`: off, unplugged, the disable hook, then the notification. */
+    /** Off, unplugged, the disable hook, then the notification. */
     fun disable() {
         if (!enabledSetting.value) return
         enabledSetting.value = false
@@ -106,7 +106,7 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
 
     open fun onDisable() {}
 
-    // ---- setting builders (the original's z0): each appends to [settings] ----
+    // ---- setting builders: each appends to [settings] ----
 
     protected fun <S : Setting<*>> add(s: S): S = s.also { settings += it }
 
@@ -150,7 +150,7 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
     protected fun items(id: String, default: MutableList<Item> = ArrayList(), parent: Group? = null, visible: () -> Boolean = { true }) =
         add(ItemsSetting(id, default, parent, visible))
 
-    // Default lists by description id ("block.minecraft.obsidian"), the way the original saves them.
+    // Default lists by description id ("block.minecraft.obsidian").
     protected fun entityList(vararg ids: String): MutableList<EntityType<*>> =
         ids.mapNotNullTo(ArrayList()) { id -> BuiltInRegistries.ENTITY_TYPE.firstOrNull { it.descriptionId == id } }
 

@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: Canvas.glow and Canvas.radial, a soft light or shadow worked out per pixel instead of stacked boxes,
+// Canvas.glow and Canvas.radial, a soft light or shadow worked out per pixel instead of stacked boxes,
 // whose edges show as rings. Output is premultiplied, with about one colour level of noise (see below): 8 bits only have
 // a few levels across a faint gradient, and the noise hides the steps between them.
 //

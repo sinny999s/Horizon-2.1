@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's LevelChunkMixin: a block changed in a client chunk (search re-scans that chunk). */
+/** A block changed in a client chunk (search re-scans that chunk). */
 @Mixin(LevelChunk.class)
 public abstract class LevelChunkMixin {
 	@Shadow

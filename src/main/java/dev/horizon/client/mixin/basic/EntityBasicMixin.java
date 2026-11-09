@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The local player's pose, and both pushes inside its `push(Entity)` (the original zeroes their arguments). */
+/** The local player's pose, and both pushes inside its `push(Entity)` (their arguments can be zeroed). */
 @Mixin(Entity.class)
 public abstract class EntityBasicMixin {
 	@WrapOperation(method = "push(Lnet/minecraft/world/entity/Entity;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;push(DDD)V"))

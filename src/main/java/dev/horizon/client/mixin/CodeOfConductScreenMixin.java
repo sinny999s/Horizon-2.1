@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Not in the original: a server's code of conduct, shown while joining, keeps ticking the connecting screen under it
+ * A server's code of conduct, shown while joining, keeps ticking the connecting screen under it
  * (which drives the connection) only when that is vanilla's ConnectScreen; with the client's {@code ConnectMenu} in its
  * place, this ticks that one instead.
  */

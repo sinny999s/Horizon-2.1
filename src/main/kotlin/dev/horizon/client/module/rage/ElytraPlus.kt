@@ -67,15 +67,15 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * The original's "elytra-plus" (`bk`): every handler forwards to the selected mode's handler object (`fy` → `qf`):
- * - `FIRE_WORK` (`wh`): auto-equips elytra on fall, fires fireworks on `START_FALL_FLYING` and [fireDelay], strafes at
+ * Every handler forwards to the selected mode's handler:
+ * - `FIRE_WORK`: auto-equips elytra on fall, fires fireworks on `START_FALL_FLYING` and [fireDelay], strafes at
  *   [xZSpeed]/[ySpeed] with [antiKick] and [groundSafe], and restores chestplate/firework slots on disable.
- * - `BOOST` (`_v`): pitch/glide physics boost with optional [cruiseControl], [vanilla] boost, [lift] bind, and
+ * - `BOOST`: pitch/glide physics boost with optional [cruiseControl], [vanilla] boost, [lift] bind, and
  *   [speedLimit].
- * - `CONTROL` (`hr`): speed-set flight with up/down keys and instant re-deploy.
- * - `INFINITE` (`dt`): pitch swing that trades height for speed.
- * - `PACKET` (`od`): creative-style flight while `START_FALL_FLYING` is resent every tick, with NCP-strict vertical spoofs.
- * - `SILENT_FIRE_WORK` (`v9`): silent elytra swap + firework bursts without staying in fall-flying state, with custom
+ * - `CONTROL`: speed-set flight with up/down keys and instant re-deploy.
+ * - `INFINITE`: pitch swing that trades height for speed.
+ * - `PACKET`: creative-style flight while `START_FALL_FLYING` is resent every tick, with NCP-strict vertical spoofs.
+ * - `SILENT_FIRE_WORK`: silent elytra swap + firework bursts without staying in fall-flying state, with custom
  *   pitch-based firework velocity boost.
  */
 class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
@@ -152,31 +152,31 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
     val n85Degrees = float("85-degrees", 0.15f, 0.0f..1.0f) { mode.value == Mode.SILENT_FIRE_WORK && boost.value && customSpeed.value }
     val n90Degrees = float("90-degrees", 0.15f, 0.0f..1.0f) { mode.value == Mode.SILENT_FIRE_WORK && boost.value && customSpeed.value }
 
-    /** Re-deploy armed by touching the ground (the original's `bk.V`). */
+    /** Re-deploy armed by touching the ground. */
     private var redeployArmed = false
 
-    /** The original's `bk.L`: whether FIRE_WORK swapped an elytra onto the chest slot. */
+    /** Whether FIRE_WORK swapped an elytra onto the chest slot. */
     private var elytraSwapped = false
 
-    /** CONTROL / FIRE_WORK / PACKET acceleration, in percent of [xZSpeed] (the original's `bk.S`). */
+    /** CONTROL / FIRE_WORK / PACKET acceleration, in percent of [xZSpeed]. */
     private var accel = 0f
 
-    /** BOOST's target cruise altitude (the original's `bk.PR`). */
+    /** BOOST's target cruise altitude. */
     private var cruiseHeight = 0f
 
-    /** The pitch INFINITE puts on the player around travel, and the real one meanwhile (the original's `dt.w`, `bk.PQ`). */
+    /** The pitch INFINITE puts on the player around travel, and the real one meanwhile. */
     private var targetPitch = 0f
     private var savedPitch = 0f
 
-    /** INFINITE: climbing phase (`dt.P`) and the pitch it swings (`dt.L`). */
+    /** INFINITE: climbing phase and the pitch it swings. */
     private var climbing = false
     private var swing = 0f
 
-    /** The original's `bk.w` and `bk.t`: timers for instant re-deploy. */
+    /** Timers for instant re-deploy. */
     private val redeployTimer = MsTimer()
     private val secondTimer = MsTimer()
 
-    // --- FIRE_WORK (`wh`) state ---
+    // --- FIRE_WORK state ---
     private var fwStarted = false
     private var fwSentStartFlying = false
     private var fwYAccel = 0f
@@ -188,18 +188,18 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
     private var fwLastFireworkSlot = -1
     private var fwLastFireworkTime = 0L
 
-    // --- BOOST (`_v`) state ---
+    // --- BOOST state ---
     private val boostTimeoutTimer = MsTimer()
     private val boostLiftTimer = MsTimer()
 
-    // --- SILENT_FIRE_WORK (`v9`) state ---
+    // --- SILENT_FIRE_WORK state ---
     private var silentSavedYaw = 0f
     private var silentSavedPitch = 0f
     private val silentFireworkTimer = TickTimer()
     private val silentElytraTimer = TickTimer()
     private val silentCustomTable = HashMap<Float, Float>()
 
-    /** The original's `od.c`: ground just under the feet. */
+    /** Ground just under the feet. */
     private fun groundBelow(): Boolean {
         val p = mc.player ?: return false
         val level = mc.level ?: return false
@@ -208,7 +208,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
 
     private fun chestElytra() = mc.player?.inventory?.getItem(38)?.`is`(Items.ELYTRA) == true
 
-    /** The original's `bk.C(ItemStack)`: usable glider in slot. */
+    /** Usable glider in slot. */
     private fun isUsableElytra(stack: ItemStack): Boolean =
         stack.damageValue < stack.maxDamage - 1 && stack.has(DataComponents.GLIDER)
 
@@ -244,7 +244,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
     }
 
     // ========================================================================
-    // Mode.FIRE_WORK (`wh.java`)
+    // Mode.FIRE_WORK
     // ========================================================================
 
     private fun findFirework(hotbarOnly: Boolean): Int =
@@ -535,7 +535,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
     }
 
     // ========================================================================
-    // Mode.BOOST (`_v.java`)
+    // Mode.BOOST
     // ========================================================================
 
     private fun boostPreSync() {
@@ -660,7 +660,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
     }
 
     // ========================================================================
-    // Mode.SILENT_FIRE_WORK (`v9.java`)
+    // Mode.SILENT_FIRE_WORK
     // ========================================================================
 
     private fun anyMoveKeyDown(): Boolean {
@@ -797,7 +797,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
         )
     }
 
-    /** The original's `hr.M(PreSyncEvent)`: arm on the ground, run 0.3 timer while falling, re-deploy instantly. */
+    /** Arm on the ground, run 0.3 timer while falling, re-deploy instantly. */
     private fun controlPreSync() {
         val p = mc.player ?: return
         if (p.onGround()) redeployArmed = true
@@ -813,7 +813,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
         }
     }
 
-    /** The original's `hr.L(MoveEvent)`: while gliding the move is set from the input, up/down keys and glide. */
+    /** While gliding the move is set from the input, up/down keys and glide. */
     private fun controlMove(e: MoveEvent) {
         val p = mc.player ?: return
         if (!chestElytra() || !p.isFallFlying) return
@@ -839,7 +839,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
         e.cancel()
     }
 
-    /** The original's `dt.t`: swing the pitch down (speed) or up (height), turning back at 25 / 150 km/h below the cap. */
+    /** Swing the pitch down (speed) or up (height), turning back at 25 / 150 km/h below the cap. */
     private fun infinitePitch(): Float {
         val p = mc.player ?: return swing
         val level = mc.level ?: return swing
@@ -862,7 +862,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
         return swing
     }
 
-    /** The original's `dt.M(PreSyncEvent)`: the pitch for the packet, and a warning when the elytra is nearly broken. */
+    /** The pitch for the packet, and a warning when the elytra is nearly broken. */
     private fun infinitePreSync() {
         val p = mc.player ?: return
         val chest = p.getItemBySlot(EquipmentSlot.CHEST)
@@ -874,7 +874,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
         }
     }
 
-    /** The original's `od.M(PreSyncEvent)`: START_FALL_FLYING every tick (or when not gliding); NCP Motion skips 2 of 3 moves. */
+    /** START_FALL_FLYING every tick (or when not gliding); NCP Motion skips 2 of 3 moves. */
     private fun packetPreSync(e: PreSyncEvent) {
         val p = mc.player ?: return
         if (groundBelow() && stopOnGround.value) return
@@ -886,7 +886,7 @@ class ElytraPlus : Module("elytra-plus", Categories.RAGE) {
         if (p.tickCount % 3 != 0 && ncpStrict.value == NcpStrict.Motion) e.cancel()
     }
 
-    /** The original's `od.L(MoveEvent)`: abilities flight at [xZSpeed] / 15, vertical keys, NCP spoofs and a durability circle. */
+    /** Abilities flight at [xZSpeed] / 15, vertical keys, NCP spoofs and a durability circle. */
     private fun packetMove(e: MoveEvent) {
         val p = mc.player ?: return
         p.abilities.flying = false

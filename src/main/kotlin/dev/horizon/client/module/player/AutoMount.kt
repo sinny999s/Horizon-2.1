@@ -20,7 +20,7 @@ import net.minecraft.world.entity.vehicle.boat.AbstractBoat
 import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart
 
 /**
- * Not in the original: automatically mounts nearby rideable entities (horses, donkeys, boats, minecarts, etc.)
+ * Automatically mounts nearby rideable entities (horses, donkeys, boats, minecarts, etc.)
  * upon approach or keybind. Includes sneak bypass to allow effortless dismounting.
  */
 class AutoMount : Module("auto-mount", Categories.PLAYER) {

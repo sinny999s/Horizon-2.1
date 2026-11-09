@@ -16,7 +16,7 @@ import net.minecraft.world.item.Items
 import kotlin.random.Random
 
 /**
- * The original's "auto-fish" (`a7`): reels in when a fish bites (the hook's biting flag, or a splash sound near the hook in
+ * Reels in when a fish bites (the hook's biting flag, or a splash sound near the hook in
  * 1.12.2 mode) and casts again; casts by itself when nothing happened for 45 s. Rod Save stops (or swaps rods) before
  * the rod breaks.
  */
@@ -28,13 +28,13 @@ class AutoFish : Module("auto-fish", Categories.PLAYER) {
     val changeRod = bool("change-rod", false)
     val legit = bool("legit", true)
 
-    /** The original's `a7.V`: this bite was already reeled in. */
+    /** This bite was already reeled in. */
     private var reeled = false
 
-    /** `a7.J`: since the last cast or reel; a cast is forced once it reaches 45 s. */
+    /** Since the last cast or reel; a cast is forced once it reaches 45 s. */
     private val castTimer = MsTimer()
 
-    /** `a7.U`: since the last forced cast or rod swap; the tick does nothing for 1 s after one. */
+    /** Since the last forced cast or rod swap; the tick does nothing for 1 s after one. */
     private val pauseTimer = MsTimer()
 
     override fun onDisable() {
@@ -42,7 +42,7 @@ class AutoFish : Module("auto-fish", Categories.PLAYER) {
     }
 
     init {
-        // `a7.x` (network thread, as the original's ReceivePacket)
+        // On the network thread.
         on<ReceivePacketEvent> { e ->
             val p = e.packet as? ClientboundSoundPacket ?: return@on
             if (detectMode.value != DetectMode.V1_12_2) return@on
@@ -50,7 +50,6 @@ class AutoFish : Module("auto-fish", Categories.PLAYER) {
             val hook = mc.player?.fishing ?: return@on
             if (hook.distanceToSqr(p.x, p.y, p.z) < 4.0) reel()
         }
-        // `a7.V`
         on<PlayerUpdateEvent>(-10) {
             val p = mc.player ?: return@on
             if (p.mainHandItem.item is FishingRodItem && p.mainHandItem.damageValue > 52 && rodSave.value) {
@@ -60,7 +59,7 @@ class AutoFish : Module("auto-fish", Categories.PLAYER) {
                     Inventory.selectHotbar(rod)
                     pauseTimer.reset()
                 } else {
-                    // `_7.u`: off, then the message; the rest of this tick still runs.
+                    // Off, then the message; the rest of this tick still runs.
                     disable()
                     moduleMessage(name.trim(), "Saving the rod...")
                 }
@@ -85,9 +84,8 @@ class AutoFish : Module("auto-fish", Categories.PLAYER) {
     }
 
     /**
-     * The original's `a7.n`. Legit: reel in after 200..350 ms and cast again after twice that, each from a sleeping virtual
-     * thread handing the use to the main thread (`sb` / `uo`, which run `sg` / `qt`); only the cast restarts the 45 s
-     * timer. Otherwise reel and cast at once.
+     * Legit: reel in after 200..350 ms and cast again after twice that, each from a sleeping virtual thread handing the
+     * use to the main thread; only the cast restarts the 45 s timer. Otherwise reel and cast at once.
      */
     private fun reel() {
         if (legit.value) {
@@ -111,7 +109,7 @@ class AutoFish : Module("auto-fish", Categories.PLAYER) {
     }
 
     /**
-     * `y6.x(MAIN_HAND)` then `swing(MAIN_HAND)`. 26.3 has no swing packet (the server swings on a used item by
+     * `useItem(MAIN_HAND)` then `swing(MAIN_HAND)`. 26.3 has no swing packet (the server swings on a used item by
      * itself), so the swing is the local animation only.
      */
     private fun use() {
@@ -121,7 +119,7 @@ class AutoFish : Module("auto-fish", Categories.PLAYER) {
         p.swing(InteractionHand.MAIN_HAND, stack.interactAnimation, false)
     }
 
-    /** `a7.S`: the first hotbar rod with damage below 52, else -1. */
+    /** The first hotbar rod with damage below 52, else -1. */
     private fun findRod(): Int {
         val inv = mc.player?.inventory ?: return -1
         for (i in 0 until 9) {

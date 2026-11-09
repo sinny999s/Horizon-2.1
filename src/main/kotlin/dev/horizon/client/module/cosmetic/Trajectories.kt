@@ -44,20 +44,20 @@ import kotlin.math.max
 import kotlin.math.sin
 
 /**
- * The original's "trajectories" (`re`): the flight path of whatever bow, crossbow or throwable every player holds, up to 300
+ * The flight path of whatever bow, crossbow or throwable every player holds, up to 300
  * ticks, with a ring where it lands. Holding "preview" moves the camera to where your pearl would land.
  */
 class Trajectories : Module("trajectories", Categories.COSMETIC) {
     val preview = bind("preview", Bind())
     val handOffset = bool("hand-offset", false)
 
-    /** Where the local player's pearl lands, from the last frame (`o`). */
+    /** Where the local player's pearl lands, from the last frame. */
     private var landing: Vec3? = null
 
-    /** The camera's slide towards [landing] while "preview" is held (`O`). */
+    /** The camera's slide towards [landing] while "preview" is held. */
     private val slide = Animation(Easing.OUT_QUINT, 300)
 
-    /** The local player's motion at the start of the tick (`h`). */
+    /** The local player's motion at the start of the tick. */
     private var motion: Vec3 = Vec3.ZERO
 
     init {
@@ -66,14 +66,13 @@ class Trajectories : Module("trajectories", Categories.COSMETIC) {
         on<Render3DEvent> { render() }
     }
 
-    /** The original's `qo.a` on the preview bind: is its key or mouse button held. */
+    /** Is the preview bind's key or mouse button held. */
     private fun previewHeld(): Boolean {
         val b = preview.value
         if (b.key == -1) return false
         return if (b.mouse) b.key in Keys.heldMouse else Keys.down(b.key)
     }
 
-    /** `re.l`. */
     private fun previewCamera(e: FreecamStateEvent) {
         val at = landing ?: return
         if (preview.value.key == -1 || !previewHeld()) return
@@ -90,7 +89,6 @@ class Trajectories : Module("trajectories", Categories.COSMETIC) {
         e.pitch = 0f
     }
 
-    /** `re.V`. */
     private fun render() {
         val level = mc.level ?: return
         slide.update(if (previewHeld()) 1f else 0f)
@@ -120,14 +118,13 @@ class Trajectories : Module("trajectories", Categories.COSMETIC) {
         mc.options.bobView().set(bob)
     }
 
-    /** `re.p`. */
     private fun throwable(item: Item) = item is EnderpearlItem || item is TridentItem || item is ExperienceBottleItem ||
         item is SnowballItem || item is EggItem || item is SplashPotionItem || item is LingeringPotionItem
 
-    /** `re.o`: the aim vector's length before normalising. */
+    /** The aim vector's length before normalising. */
     private fun aimScale(item: Item) = if (item is BowItem) 1.0f else 0.4f
 
-    /** `re.H`: launch speed. */
+    /** Launch speed. */
     private fun speed(item: Item) = when (item) {
         is SplashPotionItem, is LingeringPotionItem -> 0.39f
         is ExperienceBottleItem -> 0.59f
@@ -135,13 +132,13 @@ class Trajectories : Module("trajectories", Categories.COSMETIC) {
         else -> 1.5f
     }
 
-    /** `re.g`: thrown up by 20 degrees. */
+    /** Thrown up by 20 degrees. */
     private fun pitchOffset(item: Item) = if (item is SplashPotionItem || item is LingeringPotionItem || item is ExperienceBottleItem) 20 else 0
 
-    /** `re.d`: the landing ring's radius. */
+    /** The landing ring's radius. */
     private fun ringRadius(item: Item) = if (item is SplashPotionItem || item is LingeringPotionItem || item is ExperienceBottleItem) 4.0f else 0.5f
 
-    /** The original's `j_.J` (bow-minecart is on and you hold a Flame bow): mark the block a flaming arrow would ignite. */
+    /** Bow-minecart is on and you hold a Flame bow: mark the block a flaming arrow would ignite. */
     private fun bowMinecartAims(): Boolean {
         val p = mc.player ?: return false
         if (!Modules.get<BowMinecart>().enabled) return false
@@ -149,7 +146,7 @@ class Trajectories : Module("trajectories", Categories.COSMETIC) {
         return bow.item == Items.BOW && Esp2.hasEnchant(bow, Enchantments.FLAME)
     }
 
-    /** `re.c`: one path from [player]'s eyes at [yaw]. */
+    /** One path from [player]'s eyes at [yaw]. */
     fun path(player: Player, item: Item, yaw: Float) {
         val level = mc.level ?: return
         landing = null
@@ -246,7 +243,7 @@ class Trajectories : Module("trajectories", Categories.COSMETIC) {
         }
     }
 
-    /** `re.b`: a ring of 37 points (every 10 degrees) facing [side], drawn as lines. */
+    /** A ring of 37 points (every 10 degrees) facing [side], drawn as lines. */
     private fun ring(at: Vec3, r: Float, side: Direction, color: Int) {
         val points = ArrayList<Vec3>()
         for (deg in 0..360 step 10) {

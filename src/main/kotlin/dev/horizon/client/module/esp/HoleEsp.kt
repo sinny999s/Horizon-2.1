@@ -22,7 +22,7 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
- * The original's "hole-esp" (`ej`): every hole in the shared hole cache ([Holes]), as boxes [height] tall in the [safe] or
+ * Every hole in the shared hole cache ([Holes]), as boxes [height] tall in the [safe] or
  * [unsafe] colour, faded out past half of `range--x-y` with [rangeFade]; BLOOM instead runs glows around each hole's rim.
  */
 class HoleEsp : Module("hole-esp", Categories.ESP) {
@@ -41,7 +41,7 @@ class HoleEsp : Module("hole-esp", Categories.ESP) {
     val distribution = float("distribution", 0.4f, 0.0f..1.0f) { bloomAnimation.value }
     val amount = int("amount", 2, 1..10) { bloomAnimation.value }
 
-    /** The FIREFLY glow on the original's atlas (u0, v0, u1, v1). */
+    /** The FIREFLY glow on the atlas (u0, v0, u1, v1). */
     private val firefly = floatArrayOf(0.8906f, 0.1875f, 0.9531f, 0.25f)
 
     init {
@@ -73,7 +73,7 @@ class HoleEsp : Module("hole-esp", Categories.ESP) {
     }
 
     /**
-     * `ej.L`: [color] with alpha [alpha], times the range fade: full up to half of `range--x-y` (horizontally from the
+     * [color] with alpha [alpha], times the range fade: full up to half of `range--x-y` (horizontally from the
      * player), then down to 0 at the full range.
      */
     private fun faded(box: AABB, color: Int, alpha: Int = color ushr 24): Int {
@@ -87,7 +87,7 @@ class HoleEsp : Module("hole-esp", Categories.ESP) {
         return Colors.withAlpha(color, (f * (alpha / 255.0)).toFloat())
     }
 
-    /** `ej.v`: six rings of 49 glows around each visible hole's rim, 1/15 apart and dimmer upwards, additive, through walls. */
+    /** Six rings of 49 glows around each visible hole's rim, 1/15 apart and dimmer upwards, additive, through walls. */
     private fun bloom(pt: Float) {
         val p = mc.player ?: return
         val cam = mc.gameRenderer.mainCamera()

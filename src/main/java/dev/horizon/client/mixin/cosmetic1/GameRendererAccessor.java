@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-/** The original's GameRendererAccessor: what drawing the first-person hands needs. */
+/** What drawing the first-person hands needs. */
 @Mixin(GameRenderer.class)
 public interface GameRendererAccessor {
 	@Accessor("hudProjection")

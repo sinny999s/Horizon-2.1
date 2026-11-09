@@ -83,7 +83,7 @@ import kotlin.math.min
 import dev.horizon.client.combat.DamageSync as Sync
 
 /**
- * The original's "auto-crystal" (`js`): each tick picks a target, finds the best base to put a crystal on and the best crystal
+ * Each tick picks a target, finds the best base to put a crystal on and the best crystal
  * to break, and does both (or one) with the configured timing, switching and rotations; reacts to crystals spawning.
  */
 class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
@@ -174,19 +174,18 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
     val textPattern = string("text-pattern", "damage / self", parent = render.value)
     val alpha = float("alpha", 0.4f, 0.0f..1.0f, parent = render.value)
 
-    /** The original's `kn`: what a crystal there does to the target and to us. */
+    /** What a crystal there does to the target and to us. */
     data class DamageResult(val damage: Float, val self: Float, val override: Boolean, val lethal: Boolean)
 
-    /** The original's `wv`: a placement (a [BlockHitResult]) or a crystal, with its damage. */
+    /** A placement (a [BlockHitResult]) or a crystal, with its damage. */
     data class Scored<T>(val data: T, val res: DamageResult)
 
-    /** The original's `ue`. */
     class BreakTarget(val crystal: EndCrystal, val forced: Boolean)
 
-    /** The original's `or`: the base last placed on, for the render. */
+    /** The base last placed on, for the render. */
     class RenderRecord(val pos: BlockPos, val side: Direction, val damage: Float, val self: Float)
 
-    /** The original's `gr`: what one calculation sees (the entity list and the target are taken once). */
+    /** What one calculation sees (the entity list and the target are taken once). */
     private class Calc(val entities: List<Entity>, val target: Player)
 
     @Volatile
@@ -232,11 +231,11 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
     @Volatile
     private var ignoreSlotPackets = 0
 
-    /** The original's `us.z`: a crystal that blocked a placement; the next break search tries it first. */
+    /** A crystal that blocked a placement; the next break search tries it first. */
     @Volatile
     private var forcedNext: EndCrystal? = null
 
-    /** The render fade (the original's `ch`, OUT_BACK over 1 s), restarted from 1 on each place. */
+    /** The render fade (OUT_BACK over 1 s), restarted from 1 on each place. */
     val fade = Fade()
 
     /** TECHNO's ripples: a counter from 8 per place, ticked down while TECHNO is the render mode. */
@@ -323,14 +322,14 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         }
     }
 
-    /** Prediction ticks for the target (the original's `dt()`). */
+    /** Prediction ticks for the target. */
     private fun targetTicks(): Int = when (predict.value) {
         Predict.AUTO -> min(floor(PlayerState.ping * 1.5 / 50.0).toInt(), 10)
         Predict.CUSTOM -> predictTicks.value
         Predict.OFF -> 0
     }
 
-    /** Prediction ticks for ourselves (the original's `Q(self)`). */
+    /** Prediction ticks for ourselves. */
     private fun selfTicks(self: Boolean): Int = when (predict.value) {
         Predict.AUTO -> if (self) min(floor(PlayerState.ping / 50.0).toInt(), 10) else 0
         Predict.CUSTOM -> if (self) predictTicks.value else 0
@@ -378,7 +377,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         breakResult.set(bestBreak(c))
     }
 
-    /** The original's `tq.y`: every base within place range, best by [select]. */
+    /** Every base within place range, best by [select]. */
     private fun bestPlace(c: Calc): Scored<BlockHitResult>? {
         if (mc.player == null) return null
         val t0 = System.currentTimeMillis()
@@ -387,7 +386,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return best
     }
 
-    /** The original's `tq.R`: [evaluatePlacement] over the place-range cube around the eye block. */
+    /** [evaluatePlacement] over the place-range cube around the eye block. */
     private fun search(c: Calc, support: Boolean, allowWater: Boolean): List<Scored<BlockHitResult>> {
         val player = mc.player ?: return emptyList()
         val center = BlockPos.containing(player.eyePosition)
@@ -401,12 +400,12 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
     }
 
     /**
-     * The original's `tq.c`, for auto-base-place (on its worker thread): the best base that isn't one yet ([support]: Auto
+     * For auto-base-place (on its worker thread): the best base that isn't one yet ([support]: Auto
      * Base Place can place obsidian there), if it beats our current placement and, by more than 1, every real base.
      */
     fun supportSearch(onlyNoPositions: Boolean, allowWater: Boolean): BlockHitResult? {
         val c = calc(target ?: throw IllegalStateException("no target"))
-        // Float comparisons as the original's sign tests: NaN counts as "greater".
+        // Float comparisons as sign tests: NaN counts as "greater".
         fun sign(f: Float) = if (f == 0.0f) 0 else if (f < 0.0f) -1 else 1
         val nd = select(search(c, false, allowWater), c)?.res?.damage ?: 0.0f
         if (onlyNoPositions && sign(nd) != 0) return null
@@ -418,7 +417,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return if (sign(abs(sd - nd) - 1.0f) > 0) sup?.data else null
     }
 
-    /** The original's `tq.t`; [support] and [allowWater] only come from [supportSearch]. */
+    /** [support] and [allowWater] only come from [supportSearch]. */
     private fun evaluatePlacement(pos: BlockPos, predictedFeet: Vec3, c: Calc, support: Boolean = false,
                                   allowWater: Boolean = false): Scored<BlockHitResult>? {
         val level = mc.level ?: return null
@@ -470,13 +469,13 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
 
     private fun dist(x: Double, y: Double, z: Double) = Vec3(x, y, z).distanceTo(PlayerState.eye)
 
-    /** The original's `tq.l`: where to click the base ([support]: the planned base counts as a full block for the ray). */
+    /** Where to click the base ([support]: the planned base counts as a full block for the ray). */
     private fun placementHit(pos: BlockPos, support: Boolean = false): BlockHitResult? {
         val level = mc.level ?: return null
         val eye = PlayerState.eye
         val range = placeRange.value
         if (rayTrace.value) {
-            // A TreeMap by distance in the original: offsets the same distance away collapse into the first.
+            // A TreeMap by distance on purpose: offsets the same distance away collapse into the first.
             val sorted = java.util.TreeMap<Double, Vec3>()
             for (off in RAY_OFFSETS) sorted.putIfAbsent(dist(pos.x + off.x, pos.y + off.y, pos.z + off.z), off)
             for (off in sorted.values) {
@@ -512,7 +511,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return BlockHitResult(Vec3.atCenterOf(pos).add(b.stepX * 0.5, b.stepY * 0.5, b.stepZ * 0.5), b, pos, false)
     }
 
-    /** The original's `tq.w`: something is (or will be) in the crystal's space. */
+    /** Something is (or will be) in the crystal's space. */
     private fun placementBlocked(base: BlockPos, ignoreBreakable: Boolean, c: Calc): Boolean {
         val box = if (mc.currentServer?.ip?.contains("crystalpvp.cc") == true) AABB(base.above()) else AABB(base.above()).inflate(0.0, 1.0, 0.0)
         val pr = placeResult.get()
@@ -547,7 +546,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return false
     }
 
-    /** The original's `k5.l`: the most damage, unless another one saves enough self-damage; avoids bases about to be mined. */
+    /** The most damage, unless another one saves enough self-damage; avoids bases about to be mined. */
     private fun <T> select(list: List<Scored<T>>, c: Calc): Scored<T>? {
         if (list.isEmpty()) return null
         var best = list[0]
@@ -582,7 +581,6 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return best
     }
 
-    /** The original's `us.Z`. */
     private fun bestBreak(c: Calc): BreakTarget? {
         val player = mc.player ?: return null
         val forced = forcedNext
@@ -600,7 +598,6 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return select(cands, c)?.let { BreakTarget(it.data, false) }
     }
 
-    /** The original's `us.a`. */
     private fun evaluateBreak(crystal: Vec3, c: Calc, force: Boolean, tickCount: Int): DamageResult? {
         val base = BlockPos.containing(crystal.subtract(0.0, 0.1, 0.0))
         if (randomizeDelay.value) {
@@ -625,7 +622,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return evaluateDamage(base, c, force, false)
     }
 
-    /** The original's `us.l`: a point of the crystal's box to aim at (with ray-trace, one no block is in front of). */
+    /** A point of the crystal's box to aim at (with ray-trace, one no block is in front of). */
     private fun visiblePoint(v: Vec3, eyes: Vec3): Vec3? {
         if (rayTrace.value) {
             val pts = ArrayList<Vec3>(27)
@@ -641,7 +638,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return Vec3(Mth.clamp(e.x, v.x - 1, v.x + 1), Mth.clamp(e.y, v.y, v.y + 2), Mth.clamp(e.z, v.z - 1, v.z + 1))
     }
 
-    /** The original's `k5.d`; [support]: the base isn't there yet, so it counts as a full block, and nothing as mined. */
+    /** [support]: the base isn't there yet, so it counts as a full block, and nothing as mined. */
     private fun evaluateDamage(pos: BlockPos, c: Calc, force: Boolean, usePrediction: Boolean, support: Boolean = false): DamageResult? {
         val player = mc.player ?: return null
         val center = Vec3.atCenterOf(pos).add(0.0, 0.5, 0.0)
@@ -673,7 +670,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return DamageResult(dmg, self, overrideSelf, dmg >= t.health + t.absorptionAmount)
     }
 
-    /** The original's `k5.z`: face-place, worn-armour and lethal reasons to go under min-damage. */
+    /** Face-place, worn-armour and lethal reasons to go under min-damage. */
     private fun overrideMin(dmg: Float, c: Calc): Boolean {
         if (dmg < 0.6f || !overrideMinDamage.value) return false
         val t = c.target
@@ -700,7 +697,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return !aura.isAttacking()
     }
 
-    /** The original's `js.dE`: a stack of 8+ obsidian lies at the target's feet (they're farming ender chests). */
+    /** A stack of 8+ obsidian lies at the target's feet (they're farming ender chests). */
     fun eChestFarm(): Boolean {
         val t = target ?: return false
         val level = mc.level ?: return false
@@ -711,7 +708,6 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         }
     }
 
-    /** The original's `du`. */
     private fun doActions() {
         val p = placeResult.get()
         val b = breakResult.get()
@@ -727,7 +723,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         if (p != null && placeTimer.ticks >= placeDelay.value) place(p.data, false)
     }
 
-    /** The original's `dg`: with ray-trace, the click wouldn't land where it was planned. */
+    /** With ray-trace, the click wouldn't land where it was planned. */
     private fun placeRayBlocked(): Boolean {
         if (!rayTrace.value) return false
         val p = placeResult.get() ?: return false
@@ -746,7 +742,6 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         rotationTimer.reset()
     }
 
-    /** The original's `js.A`. */
     private fun attack(id: Int, pos: Vec3, fromSpawn: Boolean) {
         val player = mc.player ?: return
         if (CrystalTracker.isAttacked(id) && limitBreak.value) return
@@ -781,7 +776,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         for (e in level.entitiesForRendering()) {
             if (e is ItemEntity && pos.distanceToSqr(e.position()) < 2.25) CrystalTracker.attacked.putIfAbsent(e.id, now)
         }
-        // The original sent a swing packet here; 26.3 has none.
+        // A swing packet belongs here; 26.3 has none.
         breakTimer.reset()
         breakCount++
         if (prev != -1) when (antiWeakness.value) {
@@ -804,7 +799,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return Inventory.hotbarFind(::isWeapon)
     }
 
-    /** The original's `js.i`: switch to a weapon; returns the slot to switch back to. */
+    /** Switch to a weapon; returns the slot to switch back to. */
     private fun weaponSwap(hotbar: Found?, inv: Found?, mode: Switch): Int {
         val p = mc.player ?: return -1
         if (mode == Switch.INVENTORY) {
@@ -818,7 +813,6 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         return prev
     }
 
-    /** The original's `js.j`. */
     private fun place(hit: BlockHitResult, fromSpawn: Boolean) {
         if (paused(true)) return
         if (CrystalTracker.recentBoxConflict(hit.blockPos, limitPlace.value)) return
@@ -913,7 +907,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         }
     }
 
-    /** The original's `js.U`: put string (or redstone, or a torch) on the lava, then break it. */
+    /** Put string (or redstone, or a torch) on the lava, then break it. */
     private fun clearLava(pos: BlockPos) {
         val player = mc.player ?: return
         val item = Inventory.hotbarFind(Items.STRING) ?: Inventory.hotbarFind(Items.REDSTONE) ?: Inventory.hotbarFind(Items.TORCH) ?: return
@@ -924,7 +918,6 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         Inventory.restore()
     }
 
-    /** The original's `js.I`. */
     private fun paused(isPlace: Boolean): Boolean {
         val player = mc.player ?: return true
         if (!deathPause.passed(500)) return true
@@ -952,7 +945,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
             (main.`is`(Items.ENCHANTED_GOLDEN_APPLE) || main.`is`(Items.GOLDEN_APPLE)) && switch.value != Switch.SILENT && switch.value != Switch.INVENTORY
     }
 
-    /** The original's `js.z`: a crystal appeared; react without waiting for the next tick. */
+    /** A crystal appeared; react without waiting for the next tick. */
     private fun onCrystalSpawn(id: Int, pos: Vec3) {
         val rec = CrystalTracker.matchSpawn(pos) ?: return
         placeToSpawnMs = System.currentTimeMillis() - rec.time
@@ -969,7 +962,6 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         }
     }
 
-    /** The original's `js.c` (Render3D). */
     private fun render() {
         CrystalTracker.cleanup()
         val p = mc.player ?: return
@@ -994,11 +986,11 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
         World3D.label(text, box.center, PlaceBoxes.withAlpha(Theme.text, fade.value))
     }
 
-    /** The original's `e6`: one decimal, HALF_UP (1.0 for NaN or infinity). */
+    /** One decimal, HALF_UP (1.0 for NaN or infinity). */
     private fun fmt(f: Float): Float =
         if (f.isNaN() || f.isInfinite()) 1.0f else java.math.BigDecimal(f.toDouble()).setScale(1, java.math.RoundingMode.HALF_UP).toFloat()
 
-    /** The original's `ch`: a value easing (OUT_BACK, 1 s) from where it was towards a target. */
+    /** A value easing (OUT_BACK, 1 s) from where it was towards a target. */
     class Fade {
         private var start = 0f
         private var target = 0f
@@ -1033,7 +1025,7 @@ class AutoCrystal : Module("auto-crystal", Categories.ATTACK) {
             Vec3(0.95, 0.05, 0.05), Vec3(0.95, 0.05, 0.95), Vec3(0.95, 0.95, 0.05), Vec3(0.95, 0.95, 0.95),
         )
 
-        /** Points on a top face, in the original's order (the first closest wins). */
+        /** Points on a top face; the order matters (the first closest wins). */
         val TOP_OFFSETS = listOf(
             Vec3(0.51, 0.0, 0.49), Vec3(0.05, 0.0, 0.05), Vec3(0.05, 0.0, 0.95), Vec3(0.95, 0.0, 0.05), Vec3(0.95, 0.0, 0.95),
             Vec3(0.475, 0.0, 0.95), Vec3(0.475, 0.0, 0.05), Vec3(0.95, 0.0, 0.025), Vec3(0.05, 0.0, 0.475),

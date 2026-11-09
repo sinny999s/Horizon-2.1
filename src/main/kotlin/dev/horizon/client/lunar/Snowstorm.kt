@@ -11,7 +11,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Not in the original: Bedrock particle effects (`.particle.json`) as Blockbuster's Snowstorm runs them, which is what
+ * Bedrock particle effects (`.particle.json`) as Blockbuster's Snowstorm runs them, which is what
  * Lunar's emote and cosmetic particles are. The parts Lunar's 74 effects use: emitter initialization, lifetime
  * (looping, once, expression), rate (steady, instant), shapes (point, sphere, disc, box; offsets, directions, surface
  * only), local space; particle lifetime, initial speed and spin, dynamic and parametric motion, simple collision with

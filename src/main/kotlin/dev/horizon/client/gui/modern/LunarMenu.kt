@@ -11,7 +11,7 @@ import dev.horizon.client.setting.BoolSetting
 import net.minecraft.client.Minecraft
 
 /**
- * Not in the original: the ClickGUI's Lunar menu (the title bar's Lunar tool), Horizon's built-in Lunar side in one card.
+ * The ClickGUI's Lunar menu (the title bar's Lunar tool), Horizon's built-in Lunar side in one card.
  * Left: Lunar's services on or off with where the connection is, the locker and friends list, and what shows by names
  * and in the friends list. Right: cosmetics, and the server side: Lunar Spoof (passing for Lunar Client on the server,
  * the one part a server sees) and what its Apollo settings turn off. Settings save to `lunar.hzn` as they change.

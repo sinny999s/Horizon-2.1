@@ -51,7 +51,7 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEgg
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownExperienceBottle
 
 /**
- * The original's "no-render" (`rf`): every handler cancels one render event (posted by the `NoRender*Mixin` hooks) when its
+ * Every handler cancels one render event (posted by the `NoRender*Mixin` hooks) when its
  * setting is on.
  */
 class NoRender : Module("no-render", Categories.WORLD) {
@@ -99,8 +99,8 @@ class NoRender : Module("no-render", Categories.WORLD) {
         on<ReceivePacketEvent> { e ->
             if ((e.packet is ClientboundSetTitleTextPacket || e.packet is ClientboundSetSubtitleTextPacket) && antiTitle.value) e.cancel()
         }
-        // The original compares the crosshair's hit location (a Vec3) with the sign's BlockPos, which are never equal, so every
-        // sign's text is hidden.
+        // Every sign's text is hidden (on purpose): a crosshair check comparing the hit location (a Vec3) with the sign's
+        // BlockPos would never match.
         on<SignTextRenderEvent> { e -> if (signText.value) e.cancel() }
         on<RenderArmorEvent> { e -> if (armor.value) e.cancel() }
         on<MapRenderEvent> { e -> if (maps.value) e.cancel() }
@@ -133,16 +133,15 @@ class NoRender : Module("no-render", Categories.WORLD) {
             e.cancel()
         }
         on<RenderParticleEvent> { e -> if (hidden(e.particle)) e.cancel() }
-        // The original's ShouldRenderEntityEvent (`EntityRenderer.shouldRender` HEAD) is the port's RenderEntityEvent
-        // (`EntityRenderDispatcher.shouldRender` HEAD, which only forwards to it). The original posted it only while one of
-        // the entity settings below was on (`GofraState.shouldRender`, refreshed each Render3D); [hidden] is false
-        // otherwise, so the gate isn't needed.
+        // RenderEntityEvent is posted at `EntityRenderDispatcher.shouldRender` HEAD (which only forwards to
+        // `EntityRenderer.shouldRender`). [hidden] is false unless one of the entity settings below is on, so no gate is
+        // needed.
         on<RenderEntityEvent> { e -> if (hidden(e.entity)) e.cancel() }
         on<RenderNameTagEvent> { e -> if (e.state is ArmorStandRenderState && noArmorStands.value) e.cancel() }
         on<GetFogBufferEvent> { e -> if (fog.value) e.cancel() }
     }
 
-    /** The original's particle handler: the first matching setting cancels. */
+    /** The particle handler: the first matching setting cancels. */
     private fun hidden(p: net.minecraft.client.particle.Particle): Boolean = when {
         guardian.value && p is ElderGuardianParticle -> true
         explosions.value && (p is HugeExplosionParticle || p is HugeExplosionSeedParticle || p is ExplodeParticle) -> true
@@ -152,7 +151,7 @@ class NoRender : Module("no-render", Categories.WORLD) {
         else -> false
     }
 
-    /** The original's `rf.P`: entities the entity settings hide. */
+    /** Entities the entity settings hide. */
     private fun hidden(e: Entity): Boolean = when (e) {
         is EndCrystal -> crystals.value
         is ArmorStand -> noArmorStands.value

@@ -13,7 +13,7 @@ import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket
 import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket
 
 /**
- * The original's "fast-latency" (`a6`): measures the round trip with a tab-complete request ("/w ", id 1337) and warns on
+ * Measures the round trip with a tab-complete request ("/w ", id 1337) and warns on
  * spikes; while it's on, `PlayerState.ping` is this value.
  */
 class FastLatency : Module("fast-latency", Categories.MISC) {
@@ -23,7 +23,7 @@ class FastLatency : Module("fast-latency", Categories.MISC) {
     val spikeDetector = enum("spike-detector", SpikeDetector.CHAT)
     val messageDelay = int("message-delay", 500, 0..10000)
 
-    /** The original's `o`: the last round trip in ms (0 until the first reply). */
+    /** The last round trip in ms (0 until the first reply). */
     @Volatile
     var latency = 0
         private set
@@ -33,7 +33,7 @@ class FastLatency : Module("fast-latency", Categories.MISC) {
 
     private val samples = ArrayDeque<Int>(20)
 
-    /** The original's `I`: reset on a probe, set to "5 s passed" on its reply; a new probe waits for it. */
+    /** Reset on a probe, set to "5 s passed" on its reply; a new probe waits for it. */
     @Volatile
     private var awaitStart = System.currentTimeMillis()
 

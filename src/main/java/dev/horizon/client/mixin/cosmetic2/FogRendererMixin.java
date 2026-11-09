@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/** The original's FogRendererMixin: every fog value written to the fog buffer can be replaced by ApplyFogEvent. */
+/** Every fog value written to the fog buffer can be replaced by ApplyFogEvent. */
 @Mixin(FogRenderer.class)
 public abstract class FogRendererMixin {
 	@Unique

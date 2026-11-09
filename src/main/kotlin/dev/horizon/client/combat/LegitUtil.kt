@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
 
 /**
- * The original's `qo.a` for a bind setting: is it physically held right now (polled; never off the render thread, for an
+ * Whether a bind setting is physically held right now (polled; never off the render thread, for an
  * unset bind, or with chat open; any other screen doesn't matter).
  */
 fun bindHeld(b: Bind): Boolean {

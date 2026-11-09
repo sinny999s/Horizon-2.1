@@ -26,8 +26,8 @@ import kotlin.math.sin
 private val mc get() = Minecraft.getInstance()
 
 /**
- * The original's `jr.J.k(true)`: a module is about to send START_FALL_FLYING itself, so elytra-swap must not fire its own
- * firework for that packet (elytra-swap's `M`, which it reads and clears on START_FALL_FLYING).
+ * A module is about to send START_FALL_FLYING itself, so elytra-swap must not fire its own
+ * firework for that packet (elytra-swap's flag, which it reads and clears on START_FALL_FLYING).
  */
 object ElytraSwapHook {
     var moduleStart: Boolean
@@ -37,7 +37,7 @@ object ElytraSwapHook {
         }
 }
 
-/** The original's `bn.R.f(b)` (gui-move's internal-click flag): set around clicks a module makes itself; GuiMove reads it. */
+/** Gui-move's internal-click flag: set around clicks a module makes itself; GuiMove reads it. */
 object GuiMoveHook {
     var internalClick: Boolean
         get() = Modules.get<GuiMove>().internalClick
@@ -47,11 +47,11 @@ object GuiMoveHook {
 }
 
 /**
- * The firework helpers the original keeps on elytra-target (`bi`) and that mace-elytra-target and elytra-plus's silent
- * firework mode call too: `bi.L` (use a firework) and `bi.f()` (the built-in boost table, pitch → strength).
+ * The firework helpers elytra-target, mace-elytra-target and elytra-plus's silent firework mode call: using a firework
+ * and the built-in boost table (pitch → strength).
  */
 object ElytraFirework {
-    /** The original's `bi.U`, a `HashMap` like the original's so ties go to the same key. */
+    /** The built-in boost table, a `HashMap` on purpose so ties go to the same key. */
     val table: HashMap<Float, Float> = hashMapOf(
         0.0f to 0.155f, 5.0f to 0.16f, 10.0f to 0.19f, 15.0f to 0.22f, 20.0f to 0.22f, 25.0f to 0.27f, 30.0f to 0.28f,
         35.0f to 0.34f, 40.0f to 0.37f, 45.0f to 0.37f, 50.0f to 0.34f, 55.0f to 0.34f, 60.0f to 0.2f, 65.0f to 0.18f,
@@ -88,8 +88,8 @@ object ElytraFirework {
     }
 
     /**
-     * The original's `bi.L(offhand, altSwap)`: use a firework, through the offhand (a swap click, or three pickups with
-     * [altSwap]) or the hotbar (moving one in from the inventory). With none, the original disables elytra-target and says so
+     * Use a firework, through the offhand (a swap click, or three pickups with
+     * [altSwap]) or the hotbar (moving one in from the inventory). With none, it disables elytra-target and says so
      * under its name, whoever asked.
      */
     fun use(offhand: Boolean, altSwap: Boolean) {
@@ -128,7 +128,7 @@ object ElytraFirework {
         }
         mc.gameMode?.useItem(p, hand())
         Inventory.restore()
-        // The original swaps back with the restored slot, not the one it moved the firework into.
+        // Swaps back with the restored slot, not the one it moved the firework into (on purpose).
         if (hot == null && inv != null) containerClick(inv.slot, p.inventory.selectedSlot, ContainerInput.SWAP, true)
     }
 

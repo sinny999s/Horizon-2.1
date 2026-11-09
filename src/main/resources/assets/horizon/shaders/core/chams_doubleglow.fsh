@@ -1,7 +1,6 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's post/doubleglow/doubleglow.fsh (case bodies braced and one local renamed for the compiler, same maths).
 uniform sampler2D Sampler0;
 
 layout(std140) uniform UBO {

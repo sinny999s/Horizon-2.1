@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * The original's ItemInHandRendererMixin on 26.3's first-person renderer: HandModifyEvent before each held item is drawn
+ * On 26.3's first-person renderer: HandModifyEvent before each held item is drawn
  * and around the eat transform, SwingArmEvent at swingArm, EquipArmEvent at applyItemArmTransform.
  */
 @Mixin(FirstPersonHandsAndItemsRenderer.class)

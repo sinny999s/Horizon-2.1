@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
 /**
- * The original's "auto-eat" (`a5`): at or below [hunger] food, eats what is in a hand, else switches to the first allowed
+ * At or below [hunger] food, eats what is in a hand, else switches to the first allowed
  * food on the hotbar; while eating, the item counts as in use and isn't released. With [swapBack] the slot it switched
  * from is selected again once food is above the threshold.
  */
@@ -43,7 +43,7 @@ class AutoEat : Module("auto-eat", Categories.MISC) {
         on<StopUsingItemEvent> { if (eating) it.cancel() }
     }
 
-    /** The original's `a5.N`: starts using the food (off-hand if that one is allowed) unless already using something. */
+    /** Starts using the food (off-hand if that one is allowed) unless already using something. */
     private fun eat() {
         val player = mc.player ?: return
         if (!player.isUsingItem) {
@@ -52,7 +52,7 @@ class AutoEat : Module("auto-eat", Categories.MISC) {
         eating = true
     }
 
-    /** The original's `a5.s`: selects the first allowed food on the hotbar, remembering the slot it came from. */
+    /** Selects the first allowed food on the hotbar, remembering the slot it came from. */
     private fun selectFood(): Boolean {
         val player = mc.player ?: return false
         for (i in 0 until 9) {
@@ -70,7 +70,7 @@ class AutoEat : Module("auto-eat", Categories.MISC) {
         return allowed(if (hand == InteractionHand.MAIN_HAND) player.mainHandItem else player.offhandItem)
     }
 
-    /** The original's `a5.q`: food, and not one of the kinds switched off. */
+    /** Food, and not one of the kinds switched off. */
     private fun allowed(stack: ItemStack): Boolean {
         if (!stack.components.has(DataComponents.FOOD)) return false
         val item = stack.item

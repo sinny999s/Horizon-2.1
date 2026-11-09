@@ -5,7 +5,7 @@ import kotlin.math.floor
 import kotlin.math.round
 
 /**
- * Not in the original: Molang, Bedrock's expression language, as Lunar's cosmetics use it (their animations' keyframes,
+ * Molang, Bedrock's expression language, as Lunar's cosmetics use it (their animations' keyframes,
  * animation state machines, and Lunar's own `constants.molang` and `functions.molang`). Game-free.
  *
  * What's understood: numbers, `'strings'` (compared by value), `true`/`false`; `+ - * / %`, `! && ||`, comparisons,

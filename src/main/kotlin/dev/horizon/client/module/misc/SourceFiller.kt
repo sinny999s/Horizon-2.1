@@ -11,7 +11,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 
 /**
- * The original's "source-filler" (`bv`): every water and lava source around us gets filled with any hotbar block that isn't
+ * Every water and lava source around us gets filled with any hotbar block that isn't
  * on the black-list, nearest first.
  */
 class SourceFiller : PlacerModule("source-filler", Categories.MISC, 150) {
@@ -24,7 +24,7 @@ class SourceFiller : PlacerModule("source-filler", Categories.MISC, 150) {
         on<PlayerUpdateEvent> { tick() }
     }
 
-    /** The original's `bv.V`: a cube one block wider than the range, around the eye block. */
+    /** A cube one block wider than the range, around the eye block. */
     private fun tick() {
         val self = mc.player ?: return
         val level = mc.level ?: return
@@ -43,6 +43,5 @@ class SourceFiller : PlacerModule("source-filler", Categories.MISC, 150) {
         placeList(list.sortedBy { self.distanceToSqr(Vec3.atCenterOf(it)) }, false, false, blocks(), true)
     }
 
-    /** The original's `bv.m`. */
     fun canPlace(p: BlockPos) = Placer.canPlace(p, interact.value, ignoreMode, range.value, wallRange.value)
 }

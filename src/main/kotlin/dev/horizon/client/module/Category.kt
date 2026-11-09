@@ -10,7 +10,7 @@ class Category(val id: String, val subCategories: List<SubCategory>) {
     val displayName = id.replaceFirstChar { it.uppercaseChar() }
 }
 
-/** The original's categories, in panel order. */
+/** The categories, in panel order. */
 object Categories {
     val ATTACK = SubCategory("attack")
     val LEGIT = SubCategory("legit")

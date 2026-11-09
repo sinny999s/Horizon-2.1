@@ -7,7 +7,7 @@ import dev.horizon.client.config.SettingsHolder
 import dev.horizon.client.config.Storage
 import dev.horizon.client.config.WidgetsFile
 
-/** HUD widget configs (`horizon/widgets/<name>.hzn`, the original's `wd`); the current one is in shared.hzn. */
+/** HUD widget configs (`horizon/widgets/<name>.hzn`); the current one is in shared.hzn. */
 object WidgetConfig : SettingsConfigs<WidgetsFile>("widgets", WidgetsFile.serializer(), "Widgets are not loaded from file for some reasons.") {
     override fun holders(): List<SettingsHolder> = Hud.widgets
     override fun wrap(id: String, entries: List<HolderEntry>) = WidgetsFile(id, entries)

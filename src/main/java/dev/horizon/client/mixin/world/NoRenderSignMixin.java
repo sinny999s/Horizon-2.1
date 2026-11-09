@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's AbstractSignRendererMixin: one side of a sign's text. */
+/** One side of a sign's text. */
 @Mixin(AbstractSignRenderer.class)
 public abstract class NoRenderSignMixin {
 	@Inject(method = "submitSignText", at = @At("HEAD"), cancellable = true)

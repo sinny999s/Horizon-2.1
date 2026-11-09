@@ -6,7 +6,7 @@ import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 
 /**
- * Not in the original: WebP pictures as AWT images, for Lunar's cosmetic textures (Lunar Client reads them with a native
+ * WebP pictures as AWT images, for Lunar's cosmetic textures (Lunar Client reads them with a native
  * libwebp; these are mostly lossless VP8L). TwelveMonkeys' reader is made directly rather than found through ImageIO's
  * plugin scan, which doesn't see jars nested in Horizon's. Game-free.
  */

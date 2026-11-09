@@ -9,7 +9,7 @@ import net.minecraft.world.phys.AABB
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * The original's `z3`: a 300 ms box on every block a placer module placed. Entries are equal when everything matches, so
+ * A 300 ms box on every block a placer module placed. Entries are equal when everything matches, so
  * placing the same block again with the same look restarts its box.
  */
 object PlaceBoxes {
@@ -24,7 +24,7 @@ object PlaceBoxes {
         boxes[Box(pos, line, fill, animation, mode)] = System.currentTimeMillis()
     }
 
-    /** The original's `z3.f` (first thing in the world flush): drop boxes older than 300 ms, queue the rest. */
+    /** First thing in the world flush: drop boxes older than 300 ms, queue the rest. */
     fun render() {
         val now = System.currentTimeMillis()
         val it = boxes.entries.iterator()
@@ -38,7 +38,6 @@ object PlaceBoxes {
         }
     }
 
-    /** The original's `vh.o` + `vh.l`. */
     private fun draw(b: Box, t: Long) {
         val f = factor(b.animation, t)
         val p = b.pos
@@ -60,10 +59,10 @@ object PlaceBoxes {
         return AABB(p.x + 0.5 - h, p.y + 0.5 - h, p.z + 0.5 - h, p.x + 0.5 + h, p.y + 0.5 + h, p.z + 0.5 + h)
     }
 
-    /** The original's `sf.q.x`: the colour with alpha `(int)(255 · clamp(a, 0, 1))`. */
+    /** The colour with alpha `(int)(255 · clamp(a, 0, 1))`. */
     fun withAlpha(argb: Int, a: Float): Int = ((255f * Mth.clamp(a, 0f, 1f)).toInt() shl 24) or (argb and 0xFFFFFF)
 
-    /** The original's animation factor `f(t)` for a box [t] ms old: it scales the alphas and, for most animations, the cube. */
+    /** The animation factor `f(t)` for a box [t] ms old: it scales the alphas and, for most animations, the cube. */
     fun factor(a: Animation, t: Long): Float = when (a) {
         Animation.Static -> 1f
         Animation.Decrease, Animation.Fade -> 1f - t / 300f

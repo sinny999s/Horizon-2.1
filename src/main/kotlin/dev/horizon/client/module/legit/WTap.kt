@@ -22,7 +22,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: legit sprint-reset & combo-spacing ("W-Tap" / "S-Tap"). Releases `W` (or taps `S` in [Mode.S_TAP])
+ * Legit sprint-reset & combo-spacing ("W-Tap" / "S-Tap"). Releases `W` (or taps `S` in [Mode.S_TAP])
  * through [KeyboardInputEvent] for a couple of ticks right after landing a hit within combo range so vanilla sends a
  * real sprint reset without extra packets.
  */

@@ -33,7 +33,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * Not in the original: follows a trail of old chunks under the nether roof, where Elytra Autopilot can't fly. New Chunks
+ * Follows a trail of old chunks under the nether roof, where Elytra Autopilot can't fly. New Chunks
  * finds the trail (with [TrailFinder], as Elytra Autopilot's trail mode does) and Baritone's elytra does the flying: it
  * gets a goal [LEAD] blocks ahead along the trail, and a new one when the trail bends or the goal gets close (only now
  * and then, and with open air below, since each new goal leaves the flight unsteered while Baritone replans). Until

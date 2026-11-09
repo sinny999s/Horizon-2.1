@@ -26,7 +26,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 
 /**
- * The original's "trace-through" (`ah`): [ignoreEntities] picks the crosshair target from blocks only; [attackEntities]
+ * [ignoreEntities] picks the crosshair target from blocks only; [attackEntities]
  * attacks the entity along the look when a left click lands on a block; [openContainers] right-clicks the first
  * block entity along the server-side look within reach, through whatever is in front of it.
  */
@@ -50,7 +50,7 @@ class TraceThrough : Module("trace-through", Categories.PLAYER) {
             val p = mc.player ?: return@on
             val target = entityAlong(p, p.yRot, p.xRot, p.entityInteractionRange().toFloat()) ?: return@on
             mc.gameMode?.attack(p, target)
-            // The original's swing also sent a swing packet; 26.3 has none.
+            // 26.3 has no swing packet to send with this swing.
             p.swing(InteractionHand.MAIN_HAND, p.mainHandItem.attackAnimation, false)
             e.cancel()
         }
@@ -61,7 +61,6 @@ class TraceThrough : Module("trace-through", Categories.PLAYER) {
         if (!openContainers.value) return
         val p = mc.player ?: return
         val level = mc.level ?: return
-        // The original's button 1 (GLFW's right button) is 26.3's MOUSE_BUTTON_RIGHT.
         if (e.device != InputEvent.Device.Mouse || e.action != InputEvent.Action.Press || e.key != InputConstants.MOUSE_BUTTON_RIGHT) return
         if (p.isShiftKeyDown || mc.gui.screen() != null) return
         val hit = mc.hitResult
@@ -79,7 +78,7 @@ class TraceThrough : Module("trace-through", Categories.PLAYER) {
         }
     }
 
-    /** The original's `ah.n`: vanilla's block pick from the camera, a miss past [range]; entities are never picked. */
+    /** Vanilla's block pick from the camera, a miss past [range]; entities are never picked. */
     private fun blockPick(camera: Entity, range: Double, partialTick: Float): HitResult {
         val hit = camera.pick(range, partialTick, false)
         val eye = camera.getEyePosition(partialTick)
@@ -88,7 +87,7 @@ class TraceThrough : Module("trace-through", Categories.PLAYER) {
         return BlockHitResult.miss(loc, Direction.getApproximateNearest(loc.x - eye.x, loc.y - eye.y, loc.z - eye.z), BlockPos.containing(loc))
     }
 
-    /** The original's `kk.P` without the wall check: the first pickable, non-spectator entity along [yaw]/[pitch] within [range]. */
+    /** The first pickable, non-spectator entity along [yaw]/[pitch] within [range], with no wall check. */
     private fun entityAlong(p: LocalPlayer, yaw: Float, pitch: Float, range: Float): Entity? {
         val eye = p.position().add(0.0, p.getEyeHeight(p.pose).toDouble(), 0.0)
         val dir = viewVec(pitch, yaw)
@@ -98,7 +97,7 @@ class TraceThrough : Module("trace-through", Categories.PLAYER) {
         return ProjectileUtil.getEntityHitResult(p, eye, end, box, { !it.isSpectator && it.isPickable }, maxSq)?.entity
     }
 
-    /** The original's `w4.B`: the clip along [ctx] with every block but [pos] (as [state]) taken as air, and no fluids. */
+    /** The clip along [ctx] with every block but [pos] (as [state]) taken as air, and no fluids. */
     private fun clipOnly(ctx: ClipContext, pos: BlockPos, state: BlockState): BlockHitResult {
         val level = mc.level!!
         return BlockGetter.traverseBlocks(ctx.from, ctx.to, ctx, { c, at ->

@@ -14,7 +14,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 
 /**
- * The client's 2D layer, drawn after vanilla's GUI each frame (from GuiRendererMixin), as the original did, in two layers,
+ * The client's 2D layer, drawn after vanilla's GUI each frame (from GuiRendererMixin), in two layers,
  * each followed by the vanilla items it submitted and then its [late] draws. First the world's: the background blur is
  * captured (world + vanilla HUD only), then the notifications and HUD widgets (nametags and their armour and effects
  * among them). Then the client's screens (ClickGUI, windows, HUD editor, menus) over all of that, so nothing the HUD

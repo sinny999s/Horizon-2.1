@@ -1,8 +1,8 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's core/rect/blurred_rect.vsh. The original squeezed the size into UV0 and the alpha into Color; here they come
-// in the UBO and UV0 is the corner coordinate. TexCoord samples the blurred screen under this pixel.
+// The size and the alpha come in the UBO and UV0 is the corner coordinate. TexCoord samples the blurred screen under
+// this pixel.
 layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;
     mat4 TextureMat;

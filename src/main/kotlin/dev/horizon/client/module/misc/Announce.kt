@@ -11,7 +11,7 @@ import java.nio.file.Files
 import kotlin.random.Random
 
 /**
- * Not in the original: periodically sends announcements to chat or as commands at a configurable interval
+ * Periodically sends announcements to chat or as commands at a configurable interval
  * (default 5.01s, slider range 1.0s..30.0s). Supports single text input or cycling lines from `announce.hzn`.
  */
 class Announce : Module("announce", Categories.MISC) {

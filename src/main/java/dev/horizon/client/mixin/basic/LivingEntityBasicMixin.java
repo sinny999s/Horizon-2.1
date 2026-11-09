@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The local player's travel (Pre/AfterElytraEvent, as the original names them) and its isFallFlying answer. */
+/** The local player's travel (Pre/AfterElytraEvent) and its isFallFlying answer. */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityBasicMixin {
 	@Inject(method = "isFallFlying", at = @At("TAIL"), cancellable = true)

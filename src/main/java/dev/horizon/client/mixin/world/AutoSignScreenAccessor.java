@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.entity.SignTextSlot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-/** The sign and the side a sign edit screen edits (the original's `SignEditScreenAccessor`; 26.3 has a slot, not isFrontText). */
+/** The sign and the side a sign edit screen edits (26.3 has a slot, not isFrontText). */
 @Mixin(AbstractSignEditScreen.class)
 public interface AutoSignScreenAccessor {
 	@Accessor("sign")

@@ -1,7 +1,7 @@
 package dev.horizon.client.huntmap
 
 /**
- * Not in the original: the hunt map's markers, read from the logs other modules already write (Base Finder's bases and
+ * The hunt map's markers, read from the logs other modules already write (Base Finder's bases and
  * clues, Stash Finder's stashes) and from the map's own files (portals, old-chunk islands, worker border crossings).
  * Kept free of the game so it can be tested on its own.
  */

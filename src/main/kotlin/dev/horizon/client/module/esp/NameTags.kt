@@ -57,7 +57,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * The original's "name-tags" (`e6`): instead of vanilla's player name tags, a glass plate over each player (farthest first)
+ * Instead of vanilla's player name tags, a glass plate over each player (farthest first)
  * with ping, gamemode, name, health, distance and totem pops; above it the armour and hand items (or their durability)
  * with enchant abbreviations, potion effects, a held shulker's contents, and health as hearts or dots. With chat open,
  * clicking a tag adds or removes that player as a friend. Spawners and pet/projectile owners can be tagged too.
@@ -99,7 +99,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
         ABSORBING(Identifier.withDefaultNamespace("hud/heart/absorbing_full"), Identifier.withDefaultNamespace("hud/heart/absorbing_half")),
     }
 
-    /** Enchant abbreviations; a HashMap as in the original, so their order on screen is the map's. */
+    /** Enchant abbreviations; a HashMap (on purpose), so their order on screen is the map's. */
     private val enchantNames = HashMap<ResourceKey<Enchantment>, String>().apply {
         put(Enchantments.BLAST_PROTECTION, "B")
         put(Enchantments.PROTECTION, "P")
@@ -124,7 +124,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
     private class LunarTag(val marks: LunarNameTag.Marks, val x: Float, val top: Float, val w: Float)
     private val lunarTags = ArrayList<LunarTag>()
 
-    /** The player whose tag the mouse is over while a screen is open (the original's `L`), "" if none. */
+    /** The player whose tag the mouse is over while a screen is open, "" if none. */
     private var hovered = ""
 
     init {
@@ -142,7 +142,6 @@ class NameTags : Module("name-tags", Categories.ESP) {
         }
     }
 
-    /** `e6.x`. */
     private fun render() {
         val g = Canvas.graphics ?: return
         val pose = Canvas.pose
@@ -160,7 +159,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
             if (p == self && mc.options.cameraType.isFirstPerson) continue
             val v = above(p, if (health.value == Health.Number) 0.4f else 0.55f) ?: continue
             val text = tagText(p)
-            // Not in the original: room for Lunar's logo and badge (Lunar Spoof), drawn after the plates.
+            // Room for Lunar's logo and badge (Lunar Spoof), drawn after the plates.
             val lunar = LunarNameTag.marks(p.uuid)
             val lead = lunar?.lead ?: 0
             val w = Fonts.bold8.width(text) + lead + (lunar?.tail ?: 0)
@@ -203,13 +202,13 @@ class NameTags : Module("name-tags", Categories.ESP) {
         Fonts.medium75.flush()
     }
 
-    /** The original's `sf.H`: the screen box ([Projection.box]) of the entity's interpolated eyes plus [up]. */
+    /** The screen box ([Projection.box]) of the entity's interpolated eyes plus [up]. */
     private fun above(e: Entity, up: Float): Vector4d? {
         val pt = World3D.partialTick.toDouble()
         return Projection.box(Vec3(Mth.lerp(pt, e.xo, e.x), Mth.lerp(pt, e.yo, e.y) + e.getEyeHeight(e.pose) + up, Mth.lerp(pt, e.zo, e.z)))
     }
 
-    /** `e6.w`: the tag's text. (the original's marks for the original users came from its server; there are none here.) */
+    /** The tag's text. */
     private fun tagText(p: Player): String {
         var s = ""
         if (ping.value) {
@@ -217,7 +216,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
             s += pingColor(ms) + ms + "ms " + ChatFormatting.WHITE
         }
         if (gamemode.value) s += gameModeText(mc.connection?.getPlayerInfo(p.uuid)?.gameMode) + " "
-        // Not in the original: an Apollo server's own name tag lines replace the name.
+        // An Apollo server's own name tag lines replace the name.
         val apollo = dev.horizon.client.lunar.ApolloFeatures.nametag(p.uuid)
         val name = if (!apollo.isNullOrEmpty()) apollo.joinToString("  ") else when (nameMode.value) {
             NameMode.FULL -> legacyText(p.displayName)
@@ -237,14 +236,14 @@ class NameTags : Module("name-tags", Categories.ESP) {
         return s
     }
 
-    /** `e6.D(int)`: green when their ping is above yours, yellow within 15 ms of it, red otherwise. */
+    /** Green when their ping is above yours, yellow within 15 ms of it, red otherwise. */
     private fun pingColor(ms: Int): String = when {
         ms > ServerInfo.ping -> ChatFormatting.GREEN.toString()
         Math.abs(ms - ServerInfo.ping) < 15 -> ChatFormatting.YELLOW.toString()
         else -> ChatFormatting.RED.toString()
     }
 
-    /** `e6.m(GameType)`. "[S]" for survival is inferred (it is an encrypted constant); no tab entry reads as a bot. */
+    /** No tab entry reads as a bot. */
     private fun gameModeText(g: GameType?): String = when (g) {
         null -> "[BOT]"
         GameType.SURVIVAL -> "[S]"
@@ -253,21 +252,19 @@ class NameTags : Module("name-tags", Categories.ESP) {
         GameType.ADVENTURE -> "[A]"
     }
 
-    /** `e6.O`. */
     private fun hpColor(hp: Float): String =
         if (hp > 15.0f) ChatFormatting.GREEN.toString() else if (hp > 7.0f) ChatFormatting.YELLOW.toString() else ChatFormatting.RED.toString()
 
-    /** `e6.W`. */
     private fun hpColorOf(hp: Float): Int = if (hp > 15.0f) Color.GREEN.rgb else if (hp > 7.0f) Color.YELLOW.rgb else Color.RED.rgb
 
-    /** `e6.m(float)`: to one decimal, half up (NaN shows 1.0). */
+    /** To one decimal, half up (NaN shows 1.0). */
     private fun round1(f: Float): Float = when {
         f.isNaN() -> 1.0f
         f.isInfinite() -> f
         else -> BigDecimal(f.toDouble()).setScale(1, RoundingMode.HALF_UP).toFloat()
     }
 
-    /** `e6.y`: the health the [healthProvider] reports. */
+    /** The health the [healthProvider] reports. */
     private fun healthOf(p: Player): Float = when (healthProvider.value) {
         HealthProvider.ScoreBoard -> {
             val board = p.level().scoreboard
@@ -289,7 +286,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
     }
 
     /**
-     * `e6.H`: offhand, armour (head first) and main hand 18 apart above the tag (armour only with Durability), as items
+     * Offhand, armour (head first) and main hand 18 apart above the tag (armour only with Durability), as items
      * or durability percentages, with enchant abbreviations stacked above each. Leaves a matrix pushed (popped after the
      * tag). Returns how far up the enchant columns reach (≤ 0).
      */
@@ -340,7 +337,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
         return top
     }
 
-    /** `e6.I`: hearts (or dots) in one row of ten, containers first, absorption after the health. */
+    /** Hearts (or dots) in one row of ten, containers first, absorption after the health. */
     private fun hearts(x: Double, y: Double, p: Player, maxHealth: Float, hp: Int, absorption: Int) {
         val pose = Canvas.pose
         pose.pushMatrix()
@@ -367,7 +364,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
         pose.popMatrix()
     }
 
-    /** `e6.D`: one heart sprite, or with Dots a 7×3 bar (half: 3 in the health colour, 4 in the plate colour). */
+    /** One heart sprite, or with Dots a 7×3 bar (half: 3 in the health colour, 4 in the plate colour). */
     private fun heart(type: HeartType, x: Int, half: Boolean, p: Player) {
         if (health.value == Health.Dots) {
             val c = (if (Friends.isFriend(p.gameProfile.name())) friendFill else fill).value.rgb
@@ -384,7 +381,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
         Canvas.graphics!!.blitSprite(RenderPipelines.GUI_TEXTURED, if (half) type.half else type.full, x, 0, 9, 9)
     }
 
-    /** `e6.Q`: the effects, strongest last, 25 apart and centred, each with its time and level. Returns 40 if any. */
+    /** The effects, strongest last, 25 apart and centred, each with its time and level. Returns 40 if any. */
     private fun effects(x: Float, y: Float, p: Player): Float {
         val list = ArrayList(p.activeEffects)
         if (list.isEmpty()) return 0.0f
@@ -409,11 +406,11 @@ class NameTags : Module("name-tags", Categories.ESP) {
         return 40.0f
     }
 
-    /** `e6.g`: "m:ss", or "*:*" for an infinite effect. */
+    /** "m:ss", or "*:*" for an infinite effect. */
     private fun duration(e: MobEffectInstance): String =
         if (e.isInfiniteDuration) "*:*" else (e.duration / 1200).toString() + ":" + String.format("%02d", e.duration % 1200 / 20)
 
-    /** `e6.v`: a held shulker's contents on a plate, nine to a row. */
+    /** A held shulker's contents on a plate, nine to a row. */
     private fun shulker(stack: ItemStack) {
         val contents = stack.get(DataComponents.CONTAINER) ?: return
         val item = stack.item
@@ -435,7 +432,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
         }
     }
 
-    /** `e6.Z`: each loaded spawner: its mob and seconds to the next spawn ("loot!" when idle with a second left). */
+    /** Each loaded spawner: its mob and seconds to the next spawn ("loot!" when idle with a second left). */
     private fun spawners() {
         val level = mc.level!!
         for (be in ServerInfo.blockEntities) {
@@ -454,7 +451,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
         }
     }
 
-    /** `e6.G`: "by <owner>" over projectiles, horses (owner's UUID) and tamed animals. */
+    /** "by <owner>" over projectiles, horses (owner's UUID) and tamed animals. */
     private fun owners() {
         for (e in mc.level!!.entitiesForRendering()) {
             val owner = when (e) {

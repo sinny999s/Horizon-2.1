@@ -26,7 +26,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * The original's "pearl-chaser" (`r_`): when someone else's ender pearl flies, works out where it lands and throws our own
+ * When someone else's ender pearl flies, works out where it lands and throws our own
  * pearl to land within 6 blocks of it. With only-target, only pearls nearest to a recent Aura / Auto Crystal target.
  */
 class PearlChaser : Module("pearl-chaser", Categories.WORLD) {
@@ -35,14 +35,14 @@ class PearlChaser : Module("pearl-chaser", Categories.WORLD) {
 
     private val timer = MsTimer()
 
-    /** Where the chased pearl lands (the original's `G`, cleared every tick). */
+    /** Where the chased pearl lands (cleared every tick). */
     private var landing: BlockPos? = null
 
-    /** The pearl last chased, and our own last thrown pearl (the original's `v`, `T`). */
+    /** The pearl last chased, and our own last thrown pearl. */
     private var chasedId = 0
     private var ownId = 0
 
-    /** Players that were an Aura / Auto Crystal target, with when they were first seen (the original's `X`, 10 s). */
+    /** Players that were an Aura / Auto Crystal target, with when they were first seen (kept 10 s). */
     private val targets = HashMap<Player, Long>()
 
     init {
@@ -97,7 +97,7 @@ class PearlChaser : Module("pearl-chaser", Categories.WORLD) {
         timer.reset()
     }
 
-    /** The original's `E`/`k`: switch to a pearl and use it (the original's swing packet doesn't exist in 26.3). */
+    /** Switch to a pearl and use it (no swing packet, which doesn't exist in 26.3). */
     private fun throwPearl() {
         SwitchUtil.run(Items.ENDER_PEARL, switch.value) {
             val p = mc.player ?: return@run
@@ -106,7 +106,7 @@ class PearlChaser : Module("pearl-chaser", Categories.WORLD) {
     }
 
     /**
-     * The original's `F`: for whole yaws ±10 around [yaw] and pitches 10 down to -85, the pitch whose throw lands nearest
+     * For whole yaws ±10 around [yaw] and pitches 10 down to -85, the pitch whose throw lands nearest
      * [goal] (within 5 blocks, first one on a tie); NaN when none does. Only the pitch is kept.
      */
     private fun pitchFor(goal: BlockPos, yaw: Float): Float {
@@ -126,7 +126,7 @@ class PearlChaser : Module("pearl-chaser", Categories.WORLD) {
         return hits.minByOrNull { Vec3.atCenterOf(it.first).distanceTo(Vec3.atCenterOf(goal)) }?.second ?: Float.NaN
     }
 
-    /** The original's `T`: a pearl's start velocity for [pitch]/[yaw] plus the player's movement (vertical only off the ground). */
+    /** A pearl's start velocity for [pitch]/[yaw] plus the player's movement (vertical only off the ground). */
     private fun throwVelocity(pitch: Float, yaw: Float): Vec3 {
         val p = mc.player!!
         val r = Math.PI / 180.0
@@ -138,7 +138,7 @@ class PearlChaser : Module("pearl-chaser", Categories.WORLD) {
     }
 
     /**
-     * The original's `i`: up to 201 steps of gravity 0.03 and drag (0.8 in a liquid, else 0.99); the block it hits first, or
+     * Up to 201 steps of gravity 0.03 and drag (0.8 in a liquid, else 0.99); the block it hits first, or
      * the point where it enters an entity (other than us) within 8 blocks.
      */
     private fun simulate(start: Vec3, velocity: Vec3): BlockPos? {

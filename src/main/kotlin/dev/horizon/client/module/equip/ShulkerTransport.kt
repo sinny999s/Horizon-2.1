@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.ShulkerBoxBlock
 import net.minecraft.world.phys.Vec3
 
 /**
- * Not in the original: moves shulker boxes between bases. Opening a chest (or barrel, ender chest) at the first base fills
+ * Moves shulker boxes between bases. Opening a chest (or barrel, ender chest) at the first base fills
  * your inventory with its shulkers; opening one at the other base empties them into it. Auto picks which by distance:
  * carrying shulkers more than [distance] blocks from where you last took some (or, before taking any, with nowhere
  * left to put more) means dump, anything else take; Take and Dump force it. Shulkers in the hotbar are filled and emptied too unless

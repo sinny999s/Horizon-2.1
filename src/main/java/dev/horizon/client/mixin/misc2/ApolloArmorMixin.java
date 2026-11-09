@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Not in the original: armour pieces an Apollo server hides on a player (Apollo's limb module, HideArmorPiecesMessage). */
+/** Armour pieces an Apollo server hides on a player (Apollo's limb module, HideArmorPiecesMessage). */
 @Mixin(HumanoidArmorLayer.class)
 public abstract class ApolloArmorMixin {
 	@Inject(method = "renderArmorPiece", at = @At("HEAD"), cancellable = true)

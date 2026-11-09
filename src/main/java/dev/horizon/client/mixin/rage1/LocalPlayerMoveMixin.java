@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * The local player's move (the original hooks the call to `super.move`; cancelling moves by the event's vector instead, with
+ * The local player's move (the call to `super.move`; cancelling moves by the event's vector instead, with
  * the walked distance but no auto-jump), the sneak/crawl slowdown and the sprint stop.
  */
 @Mixin(LocalPlayer.class)

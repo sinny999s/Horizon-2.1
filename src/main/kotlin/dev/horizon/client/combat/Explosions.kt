@@ -27,7 +27,7 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
-/** The original's `qh`: end-crystal explosion damage (power 6) with its own block raycast. */
+/** End-crystal explosion damage (power 6) with its own block raycast. */
 object Explosions {
     private val mc get() = Minecraft.getInstance()
 
@@ -39,20 +39,20 @@ object Explosions {
     private const val STRONG = 3
     private const val ENDER_CHEST = 4
 
-    /** Block codes for this frame, by position (the original's cache; a block's code is its first lookup's). */
+    /** Block codes for this frame, by position (a block's code is its first lookup's). */
     private val codes = ConcurrentHashMap<Long, Int>()
     private val ENDER_CHEST_SHAPE: VoxelShape = net.minecraft.world.level.block.Block.column(14.0, 0.0, 14.0)
 
     private var source: DamageSource? = null
 
-    /** The original's `qh.L`: read block codes from the cache (on, except while the "test" module compares without it). */
+    /** Read block codes from the cache (on, except while the "test" module compares without it). */
     var useCache = true
 
     fun init() {
         EventBus.on<PostTasksEvent>(this) { codes.clear() }
     }
 
-    /** The original's `qh.k`: damage to [entity] from a crystal exploding at [center], with its box [ticks] ahead. */
+    /** Damage to [entity] from a crystal exploding at [center], with its box [ticks] ahead. */
     fun damage(center: Vec3, entity: LivingEntity, ticks: Int, terrainIgnore: Boolean, ghost: Collection<BlockPos>,
                solid: Collection<BlockPos>, power: Float = 6.0f): Float {
         val level = mc.level ?: return 0f
@@ -124,7 +124,7 @@ object Explosions {
     }
 
     /**
-     * The original's `qh.J`: the first block hit going from [from] to [to], or null. Blocks in [ghost] are air, blocks in
+     * The first block hit going from [from] to [to], or null. Blocks in [ghost] are air, blocks in
      * [solid] full; with [terrainIgnore], blocks an explosion breaks (resistance under 600) are air too.
      */
     fun raycast(from: Vec3, to: Vec3, terrainIgnore: Boolean, ghost: Collection<BlockPos>, solid: Collection<BlockPos>): BlockHitResult? {

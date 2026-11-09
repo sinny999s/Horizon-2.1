@@ -32,10 +32,10 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import java.util.concurrent.ConcurrentHashMap
 
-/** The original's `t2`: which entities in the target block don't block a placement. */
+/** Which entities in the target block don't block a placement. */
 enum class IgnoreMode { ALL, ONLY_CRYSTALS, NONE }
 
-/** The original's `hl`: positions AutoCrystal is about to put a crystal on; the placer won't fill them. */
+/** Positions AutoCrystal is about to put a crystal on; the placer won't fill them. */
 object PlacementLock {
     private val locks = ConcurrentHashMap<BlockPos, Long>()
 
@@ -59,16 +59,16 @@ object PlacementLock {
 private class Candidate(val pos: BlockPos, val face: Direction)
 
 /**
- * The original's block placer (`w4`): finds the face and point to click so a block lands in a position, builds the rotation
+ * The block placer: finds the face and point to click so a block lands in a position, builds the rotation
  * request for it, and does the click with the chosen switching.
  */
 object Placer {
     private val mc get() = Minecraft.getInstance()
 
-    /** The original's `w4.p`: positions placed but not confirmed yet (placing against them works meanwhile). */
+    /** Positions placed but not confirmed yet (placing against them works meanwhile). */
     val pending = ConcurrentHashMap<BlockPos, Long>()
 
-    /** The original's map `K`: the face clicked, and where the clicked block is relative to the target, in this order. */
+    /** The face clicked, and where the clicked block is relative to the target, in this order. */
     private val NEIGHBOURS = listOf(
         Direction.UP to BlockPos(0, -1, 0),
         Direction.DOWN to BlockPos(0, 1, 0),
@@ -89,18 +89,18 @@ object Placer {
         }
     }
 
-    /** The block's box, a hair narrower in X and Z with Box Shrinker on (the original's `_0.y` / `w4` box). */
+    /** The block's box, a hair narrower in X and Z with Box Shrinker on. */
     fun box(pos: BlockPos): AABB {
         val b = AABB(pos)
         return if (Modules.get<BoxShrinker>().enabled) b.inflate(-1e-12, 0.0, -1e-12) else b
     }
 
-    /** The original's `_0.y`: a living entity stands in the block. */
+    /** A living entity stands in the block. */
     fun occupied(pos: BlockPos): Boolean =
         mc.level?.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity::class.java, box(pos))?.isNotEmpty() ?: false
 
     /**
-     * The original's `w4.j`: a request that rotates to the click point and, when run, places in [pos] from hotbar [slot]
+     * A request that rotates to the click point and, when run, places in [pos] from hotbar [slot]
      * (−1 = whatever is held). Null when there's nothing to click.
      */
     fun place(pos: BlockPos, slot: Int, interact: Interact, mode: PlaceMode, ignore: IgnoreMode, range: Float, wallRange: Float,
@@ -111,11 +111,10 @@ object Placer {
         return if (interact == Interact.GRIM) GrimRequest(rot, priority, action) else RotationRequest(rot, priority, action)
     }
 
-    /** The original's `w4.D`: not placed already (pending), and there is something to click for it. */
+    /** Not placed already (pending), and there is something to click for it. */
     fun canPlace(pos: BlockPos, interact: Interact, ignore: IgnoreMode, range: Float, wallRange: Float): Boolean =
         !pending.containsKey(pos) && findHit(pos, -1, interact, ignore, range, wallRange, emptyList()) != null
 
-    /** The original's `w4.v`. */
     fun findHit(pos: BlockPos, slot: Int, interact: Interact, ignore: IgnoreMode, range: Float, wallRange: Float,
                 calcGhost: Collection<BlockPos>): BlockHitResult? {
         val level = mc.level ?: return null
@@ -158,7 +157,7 @@ object Placer {
         return null
     }
 
-    /** The original's `w4.P`: blocks next to [pos] that can be clicked (solid, pending, or in [calcGhost]). */
+    /** Blocks next to [pos] that can be clicked (solid, pending, or in [calcGhost]). */
     private fun neighbours(pos: BlockPos, calcGhost: Collection<BlockPos>): MutableList<Candidate> {
         val level = mc.level ?: return ArrayList()
         val out = ArrayList<Candidate>()
@@ -169,7 +168,7 @@ object Placer {
         return out
     }
 
-    /** The original's `w4.S` ("strict directions"): faces of [pos] the eyes are beyond and that aren't covered. */
+    /** "Strict directions": faces of [pos] the eyes are beyond and that aren't covered. */
     fun visibleFaces(pos: BlockPos): List<Direction> {
         val level = mc.level ?: return emptyList()
         val c = Vec3.atCenterOf(pos)
@@ -187,7 +186,7 @@ object Placer {
         return out
     }
 
-    /** The original's `w4.n`: the closest (or, for GRIM, a random) point of 8x8 on the face that's in range. */
+    /** The closest (or, for GRIM, a random) point of 8x8 on the face that's in range. */
     fun faceHitVec(face: Direction, n: BlockPos, range: Float, wallRange: Float, random: Boolean): Vec3? {
         val points = ArrayList<Vec3>(64)
         fun steps(): DoubleArray {
@@ -236,11 +235,11 @@ object Placer {
         return d > range * range
     }
 
-    /** The original's `isInteractable`: clicking it would open or flip it, so the placer sneaks. */
+    /** Clicking it would open or flip it, so the placer sneaks. */
     fun isInteractable(b: Block) =
         b is BaseEntityBlock || b == Blocks.CRAFTING_TABLE || b is TrapDoorBlock || b is LeverBlock || b is ButtonBlock || b is DoorBlock
 
-    /** The original's `w4` lambda `K`: switch, (sneak), click, record as pending, switch back. */
+    /** Switch, (sneak), click, record as pending, switch back. */
     fun click(slot: Int, switch: Switch2, hit: BlockHitResult, mode: PlaceMode, target: BlockPos) {
         val player = mc.player ?: return
         val level = mc.level ?: return
@@ -253,7 +252,7 @@ object Placer {
         if (sneak) PlayerState.setSneak(true)
         if (mode == PlaceMode.Normal) mc.gameMode?.useItemOn(player, InteractionHand.MAIN_HAND, hit)
         else Packets.sendSequenced { seq -> ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, hit, seq) }
-        // The original sent a swing packet here; 26.3 has none (the server swings for a successful use by itself).
+        // No swing packet here: 26.3 has none (the server swings for a successful use by itself).
         pending[target] = System.currentTimeMillis()
         if (sneak) PlayerState.setSneak(false)
         if (slot == -1) return

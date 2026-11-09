@@ -27,13 +27,13 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.gui.components.AbstractButton
 import net.minecraft.network.chat.contents.TranslatableContents
 
-/** Not in the original: one of the client's menu screens; Overlay draws it in the client's 2D layer each frame. */
+/** One of the client's menu screens; Overlay draws it in the client's 2D layer each frame. */
 interface MenuScreen {
     fun draw(mouseX: Float, mouseY: Float)
 }
 
 /**
- * Not in the original: the client's menus in place of vanilla's title screen, world list, server list, options and pause
+ * The client's menus in place of vanilla's title screen, world list, server list, options and pause
  * menu, wherever vanilla opens them (and, out of a world, the multiplayer warning and Credits, as [PanelMenu]s, and the
  * disconnected screen, as a [DisconnectMenu]). All but the title screen wrap the vanilla screen they replace; vanilla
  * code going back to that screen gets the same wrapper again. (A pause screen without its menu, from F3 + Esc, stays vanilla's.)
@@ -75,7 +75,7 @@ object Menus {
         }
     }
 
-    // The original's GUI sounds, as the ClickGUI uses them.
+    // The GUI sounds, as the ClickGUI uses them.
     /** Opening something (a screen, a page, a popup). */
     fun open() = Sounds.SETTINGS_OPEN.play()
 
@@ -110,7 +110,7 @@ object Menus {
     }
 
     /**
-     * Runs [draw] scaled to half screen pixels, handing it the factor to multiply its coordinates by. The original's rounded
+     * Runs [draw] scaled to half screen pixels, handing it the factor to multiply its coordinates by. The rounded
      * shapes soften their edges over 2 of the units they're drawn in: 4 screen pixels at GUI scale 2, which smears
      * small shapes (switches, knobs); in half pixels it's one. Those shapes also come out one unit wider and taller
      * than asked (their quad is padded 1 left/top and 2 right/bottom, with the shape mapped across it), which in half

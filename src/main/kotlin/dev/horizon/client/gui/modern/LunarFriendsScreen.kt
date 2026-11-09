@@ -27,7 +27,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: Lunar Client's friends list and chats in the new GUI's style ([LunarFriends]). On the left,
+ * Lunar Client's friends list and chats in the new GUI's style ([LunarFriends]). On the left,
  * friend requests (accept or deny; ones you sent can be cancelled), your group chats (+ makes one from friends you
  * pick), then your friends: pinned first, online with where they are and their Lunar logo and badge, offline ones with
  * when they were last seen (hover a friend to pin them). Pick a friend or group to see your messages on the right and

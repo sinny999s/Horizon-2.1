@@ -15,7 +15,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's "flight" (`bd`). Vanilla sets the velocity at PreSync (horizontal along the keys, jump/sneak vertical);
+ * Vanilla sets the velocity at PreSync (horizontal along the keys, jump/sneak vertical);
  * Creative uses the abilities' flying; MATRIX_JUMP steers while falling and, after a server teleport, puts the velocity
  * back on the next position+rotation packet and turns off; GRIM_GLIDE glides forward at 0.3 sinking 0.03 and reports
  * on-ground instead of every other movement packet. Anti-kick bobs 0.08 every 15 ticks.
@@ -29,7 +29,7 @@ class Flight : Module("flight", Categories.RAGE) {
     val vertical = float("vertical", 0.78f, 0.0f..5.0f)
     val antiKick = bool("anti-kick", false) { (mode.value == Mode.Vanilla || mode.value == Mode.Creative) }
 
-    /** The velocity when the server last teleported us (MATRIX_JUMP; the original's `B`). */
+    /** The velocity when the server last teleported us (MATRIX_JUMP). */
     @Volatile
     private var teleportVelocity: Vec3? = null
 

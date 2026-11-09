@@ -10,7 +10,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Not in the original: the locker's tile pictures for model cosmetics (hats, glasses, wings, backpacks, pets...): the
+ * The locker's tile pictures for model cosmetics (hats, glasses, wings, backpacks, pets...): the
  * model alone, turned three-quarters (from behind for things worn on the back), drawn flat with [Canvas] back to front
  * and shaded by its faces' normals. A hovered tile turns slowly. Sized by the model's bounds around its vertical axis,
  * so turning doesn't change its size.

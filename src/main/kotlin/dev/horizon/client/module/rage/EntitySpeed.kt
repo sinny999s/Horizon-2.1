@@ -10,7 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import kotlin.math.min
 
 /**
- * The original's "entity-speed" (`ba`): at the start of the player's travel, sets the ridden vehicle's horizontal velocity
+ * At the start of the player's travel, sets the ridden vehicle's horizontal velocity
  * along the keys (accelerating to `speed`, plus `jitter` every other 25 ticks), with the client at `timer`; stops at
  * unloaded chunks or below y −60 with stop-unloaded. The player's own travel is skipped then.
  */
@@ -22,10 +22,10 @@ class EntitySpeed : Module("entity-speed", Categories.RAGE) {
     val timer = float("timer", 1.0f, 0.1f..5.0f)
     val jitter = float("jitter", 0.05f, 0.0f..0.5f)
 
-    /** The original's `y`: ticks driven, wrapping after 50 (jitter in the second half). */
+    /** Ticks driven, wrapping after 50 (jitter in the second half). */
     private var ticks = 0
 
-    /** The original's `H`: the acceleration ramp, ×100 the speed it allows. */
+    /** The acceleration ramp, ×100 the speed it allows. */
     @Volatile
     private var ramp = 0f
 
@@ -57,7 +57,6 @@ class EntitySpeed : Module("entity-speed", Categories.RAGE) {
         ramp = 0f
     }
 
-    /** The original's `ba.r`. */
     private fun speed(): Float {
         ramp += (20.0f - accelerateFactor.value) / speed.value
         var s = min((ramp / 100.0f).toDouble(), speed.value.toDouble()).toFloat()

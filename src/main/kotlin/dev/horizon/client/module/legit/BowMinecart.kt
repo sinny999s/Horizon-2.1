@@ -31,7 +31,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * The original's "bow-minecart" (`j_`): when a Flame bow is released it predicts where the arrow lands and, in the same
+ * When a Flame bow is released it predicts where the arrow lands and, in the same
  * tick, places a rail and a TNT minecart there (rotation request, priority 100) for the burning arrow to set off.
  * Trajectories draws the target box from [active] and [inRange].
  */
@@ -60,7 +60,7 @@ class BowMinecart : Module("bow-minecart", Categories.LEGIT) {
         }
     }
 
-    /** The original's `j_.J`: on, with a Flame bow in the main hand (read by Trajectories). */
+    /** On, with a Flame bow in the main hand (read by Trajectories). */
     fun active(): Boolean {
         val p = mc.player ?: return false
         return enabled && p.mainHandItem.`is`(Items.BOW) && hasFlame(p.mainHandItem)
@@ -74,7 +74,6 @@ class BowMinecart : Module("bow-minecart", Categories.LEGIT) {
         return dist >= 2.3f && dist <= range
     }
 
-    /** The original's `sh.S(stack, FLAME)`. */
     private fun hasFlame(stack: ItemStack): Boolean {
         val level = mc.level ?: return false
         val flame = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.FLAME)
@@ -82,8 +81,8 @@ class BowMinecart : Module("bow-minecart", Categories.LEGIT) {
     }
 
     /**
-     * The original's `j_.X`, the rotation's action: a rail on top of [pos] with the found slot, then a TNT minecart on the
-     * rail, searched again per the switch mode. The rail's hit vector has z + 0.0 (original).
+     * The rotation's action: a rail on top of [pos] with the found slot, then a TNT minecart on the
+     * rail, searched again per the switch mode. The rail's hit vector has z + 0.0 (on purpose).
      */
     private fun place(rail: Found, pos: BlockPos) {
         Switching.run(rail.slot, switch.value) {
@@ -99,7 +98,7 @@ class BowMinecart : Module("bow-minecart", Categories.LEGIT) {
     }
 
     /**
-     * The original's `j_.v`: steps an arrow from the feet X/Z at eye height − 0.1 along the camera rotation; only Y motion
+     * Steps an arrow from the feet X/Z at eye height − 0.1 along the camera rotation; only Y motion
      * is inherited, fluids are ignored, and any non-arrow entity near a step point cancels the prediction. With
      * `check-self-damage`, a spot whose minecart would out-damage health + absorption is skipped and the arrow
      * carries on through it.

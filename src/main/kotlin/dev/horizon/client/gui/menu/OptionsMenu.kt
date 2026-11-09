@@ -39,7 +39,7 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /**
- * Not in the original: the Options menu in the client's style, over vanilla's (which it wraps, as [ListMenu] does): pages in
+ * The Options menu in the client's style, over vanilla's (which it wraps, as [ListMenu] does): pages in
  * a sidebar, each a list of rows with switches, value pickers, sliders and key buttons drawn from vanilla's own option
  * values. With Sodium, video settings are Sodium's pages (and those of mods that add pages to Sodium's settings) instead
  * of vanilla's. Vanilla buttons with no page here (online, language, resource packs, difficulty, mods' buttons...) are

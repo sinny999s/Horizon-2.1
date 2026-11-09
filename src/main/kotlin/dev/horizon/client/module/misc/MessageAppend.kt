@@ -9,7 +9,7 @@ import net.minecraft.world.item.Items
 import kotlin.random.Random
 
 /**
- * The original's "message-append" (`a1`): an outgoing chat message is cancelled and sent again as prefix + message + postfix
+ * An outgoing chat message is cancelled and sent again as prefix + message + postfix
  * (+ a random emoticon). Commands, the client prefix "^", short messages with 3+ digits and messages while holding a map
  * are left alone; a leading "!" stays in front.
  */
@@ -18,7 +18,6 @@ class MessageAppend : Module("message-append", Categories.MISC) {
     val postfix = string("postfix", " [Horizon]")
     val emoji = bool("emoji", true)
 
-    /** The original's `a1.T`. */
     val emojis = arrayOf(
         "^_^", "^-^", "^o^", "^O^", "o_o", "O_O", "0_0", "x_x", ">_<", "-_-", ";_;", "T_T", "=_=", "v_v", "xD", "o.O",
         "O.o", "._.", "o_o;", "O_O;", ">:(", ":)", ":D", ":P", ":o", ":O", ":3", ":|", ":/", ":*", ";)", ">:D", ">:3c",

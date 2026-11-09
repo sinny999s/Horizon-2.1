@@ -22,7 +22,7 @@ import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 
 /**
- * Not in the original: humanized Left & Right auto-clicker powered by [LegacyClicker]. Left-clicking yields cleanly to
+ * Humanized Left & Right auto-clicker powered by [LegacyClicker]. Left-clicking yields cleanly to
  * vanilla block mining when `break-blocks` is on, respects friends & [Teams], and automatically sends 1.8 swing-first
  * packet order on ViaFabricPlus `<= 1.8.x`. Right-clicking pairs with [Eagle] for fast-bridging.
  */

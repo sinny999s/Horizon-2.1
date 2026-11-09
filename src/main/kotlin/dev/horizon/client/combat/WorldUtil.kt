@@ -17,12 +17,9 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 
 /**
- * The original's switch-mode helpers in `p2` (enum `uv`, the port's [Switch]): find an item the way a `switch` setting
- * says (`p2.i(searcher, mode)`), and run an action with it in hand (`p2.i(slot, mode, action)`, `p2.T(Item, mode,
- * action)`, `p2.F(searcher, mode, action)`).
+ * Switch-mode helpers ([Switch]): find an item the way a `switch` setting says, and run an action with it in hand.
  *
- * The original also raises gui-move's busy flag (`bn.R.f(true)` … `f(false)`) around the action; gui-move isn't ported in
- * the world copy, so that flag is left out here.
+ * Also raises gui-move's busy flag around the action.
  */
 object SwitchUtil {
     private val mc get() = Minecraft.getInstance()
@@ -37,7 +34,6 @@ object SwitchUtil {
         Switch.NORMAL_FULL, Switch.SILENT_FULL -> (Inventory.hotbarFind(pred) ?: Inventory.find(pred))?.slot ?: -1
     }
 
-    /** The original's `p2.i(slot, mode, action)`. */
     fun run(slot: Int, mode: Switch, action: () -> Unit) {
         val p = mc.player ?: return
         val guiMove = Modules.get<GuiMove>()
@@ -68,7 +64,7 @@ object SwitchUtil {
         guiMove.internalClick = false
     }
 
-    /** The original's `p2.F(searcher, mode, action)`: false when nothing matches. */
+    /** False when nothing matches. */
     fun run(mode: Switch, pred: (ItemStack) -> Boolean, action: () -> Unit): Boolean {
         val slot = find(mode, pred)
         if (slot == -1) return false
@@ -76,7 +72,6 @@ object SwitchUtil {
         return true
     }
 
-    /** The original's `p2.T(Item, mode, action)`. */
     fun run(item: Item, mode: Switch, action: () -> Unit): Boolean = run(mode, { it.`is`(item) }, action)
 
     /** A number-key swap of menu slot [slot] with the selected hotbar slot, no close packet. */
@@ -87,14 +82,14 @@ object SwitchUtil {
 }
 
 /**
- * The bits the original's farming modules (auto-bone-meal `r4`, auto-land `rj`, soil-ripper `rx`) share: the reach cube
- * (`w4.j`), the closest-first sort (`x`, `_f`, `mh`, `gs`, `yq`) and the "rotate, switch, click the top face" action.
+ * The bits the farming modules (auto-bone-meal, auto-land, soil-ripper) share: the reach cube, the closest-first sort
+ * and the "rotate, switch, click the top face" action.
  */
 object FarmUtil {
     private val mc get() = Minecraft.getInstance()
 
     /**
-     * The original's `w4.j`: every position in the cube of ±ceil(block reach) around the block holding the eyes, x outermost,
+     * Every position in the cube of ±ceil(block reach) around the block holding the eyes, x outermost,
      * then y, then z.
      */
     fun reachCube(): List<BlockPos> {

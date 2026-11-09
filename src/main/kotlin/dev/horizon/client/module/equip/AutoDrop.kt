@@ -9,7 +9,7 @@ import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.Items
 
 /**
- * Not in the original: automatically drops unwanted junk items (netherrack, cobblestone, dirt, diorite, seeds, etc.)
+ * Automatically drops unwanted junk items (netherrack, cobblestone, dirt, diorite, seeds, etc.)
  * from the player's inventory while mining, digging highways, or looting stashes.
  */
 class AutoDrop : Module("auto-drop", Categories.EQUIP) {

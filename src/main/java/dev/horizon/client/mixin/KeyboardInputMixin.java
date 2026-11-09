@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** After the keys were read into the movement input (the original hooked the moveVector write, which is the last thing). */
+/** After the keys were read into the movement input. */
 @Mixin(KeyboardInput.class)
 public abstract class KeyboardInputMixin {
 	@Inject(method = "tick", at = @At("TAIL"))

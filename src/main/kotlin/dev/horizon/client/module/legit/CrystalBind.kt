@@ -21,7 +21,7 @@ import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's "crystal-bind" (`jo`): while the bind is held it hits the crystal under the crosshair, or places obsidian
+ * While the bind is held it hits the crystal under the crosshair, or places obsidian
  * (unless looking at obsidian/bedrock) and a crystal with `delay` ms frame steps, then hits that crystal the moment it
  * spawns within 2 blocks of where the placing click aimed.
  */
@@ -32,10 +32,10 @@ class CrystalBind : Module("crystal-bind", Categories.LEGIT) {
     val optimizer = bool("optimizer", false)
     val switchBack = bool("switch-back", false)
 
-    /** Where the last crystal-placing click aimed; ZERO = nothing pending (the original's `W`). Survives failed placements. */
+    /** Where the last crystal-placing click aimed; ZERO = nothing pending. Survives failed placements. */
     private var aimed: Vec3 = Vec3.ZERO
 
-    /** The repeat gate (the original's `r`). */
+    /** The repeat gate. */
     private val gate = MsTimer()
 
     init {
@@ -71,16 +71,14 @@ class CrystalBind : Module("crystal-bind", Categories.LEGIT) {
         on<PreEntitySpawnEvent> { e -> onSpawn(e.entity) }
     }
 
-    /** A frame task `delay` ms from now (the original's `mt.U(…, mask 2)`; delay re-read each time). */
+    /** A frame task `delay` ms from now (delay re-read each time). */
     private fun schedule(task: () -> Unit) = Scheduler.ms(delay.value, task)
 
-    /** The original's `jo.T`. */
     private fun selectThenPlace(crystal: Int, orig: Int) {
         Inventory.selectHotbar(crystal)
         schedule { placeCrystal(orig) }
     }
 
-    /** The original's `jo.Q` / `jo.O`. */
     private fun placeCrystal(orig: Int) {
         (mc as MinecraftAccessor).horizon_startUseItem()
         aimed = mc.hitResult?.location ?: Vec3.ZERO
@@ -88,8 +86,8 @@ class CrystalBind : Module("crystal-bind", Categories.LEGIT) {
     }
 
     /**
-     * The original's `jo.R`, at `ClientLevel.addEntity` HEAD. The crystal isn't in the level yet there, so `optimizer`'s
-     * removal finds nothing and does nothing (original).
+     * Runs at `ClientLevel.addEntity` HEAD. The crystal isn't in the level yet there, so `optimizer`'s
+     * removal finds nothing and does nothing (on purpose).
      */
     private fun onSpawn(e: Entity) {
         if (e !is EndCrystal) return

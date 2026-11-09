@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3
 import java.util.UUID
 
 /**
- * Not in the original: warns about the things that start most Bedwars deaths, from what the server already sends (it
+ * Warns about the things that start most Bedwars deaths, from what the server already sends (it
  * sends nothing itself, so nothing can see it). An enemy within [range] switching to a fireball, TNT, a bow or an
  * ender pearl, or turning invisible; and, in a game (see [inGame]), around your own bed (the one nearest where you
  * first stood in this world): an enemy coming within [bedRange], or an enemy breaking a block next to it. Each alert is a notification, with a sound

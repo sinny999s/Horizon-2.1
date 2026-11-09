@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's InputEvent for mouse buttons. */
+/** InputEvent for mouse buttons. */
 @Mixin(MouseHandler.class)
 public abstract class MouseButtonMixin {
 	@Inject(method = "onButton", at = @At("HEAD"))

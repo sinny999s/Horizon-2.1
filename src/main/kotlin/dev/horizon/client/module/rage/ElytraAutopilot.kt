@@ -36,7 +36,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
- * Not in the original: flies an elytra for you while you hunt bases. It takes off from the ground (a jump, then a glide),
+ * Flies an elytra for you while you hunt bases. It takes off from the ground (a jump, then a glide),
  * fires a rocket when the speed drops below [minSpeed] or it's well under its cruise height (at most one every
  * [rocketDelay] seconds), and holds [height], climbing to keep [clearance] blocks above the terrain ahead. It steers, at
  * most [turnSpeed] degrees a tick, to a fixed heading (HEADING: the way you face, snapped to 45 degrees with [snap]),
@@ -45,7 +45,7 @@ import kotlin.math.sin
  * stasis it can circle it for [circleTime] seconds ([onFind]); at its coordinates or waypoint it circles until you
  * take over.
  *
- * AFK safety: it disconnects (with a "[the original]" reason, which Auto Reconnect leaves alone) when a non-friend player
+ * AFK safety: it disconnects (with a "[Horizon]" reason, which Auto Reconnect leaves alone) when a non-friend player
  * comes within [playerRange] or health falls to [leaveHp]; lands when it makes no progress for ten seconds
  * ([stuckStop]), when the rockets run out (warning at [lowRockets]) or when the elytra is a minute from breaking with
  * no spare (it puts a spare on itself when Elytra Replace is off). It refuses the nether below the roof (Baritone's

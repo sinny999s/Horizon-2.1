@@ -14,9 +14,8 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.item.Items
 
 /**
- * The original's "infinite-elytra" (`b6`): after 18 ticks of gliding it puts a chestplate on from the hotbar, a tick later
- * the elytra again, and two ticks after that starts gliding anew. The original also cancels the elytra equip sound, but it
- * compares the sound to its holder, which never matches, so nothing is cancelled; that handler is left out.
+ * After 18 ticks of gliding it puts a chestplate on from the hotbar, a tick later
+ * the elytra again, and two ticks after that starts gliding anew.
  */
 class InfiniteElytra : Module("infinite-elytra", Categories.BASIC) {
     init {
@@ -31,7 +30,7 @@ class InfiniteElytra : Module("infinite-elytra", Categories.BASIC) {
         }
     }
 
-    /** The original's `b6.q`: checks the chestplate search again (not the elytra one), as the original does. */
+    /** Checks the chestplate search again (not the elytra one), on purpose. */
     private fun elytraBack(chestplate: Found?) {
         val elytra = Inventory.hotbarFind(Items.ELYTRA)
         if (chestplate == null) disableWith("no-elytra-hotbar")

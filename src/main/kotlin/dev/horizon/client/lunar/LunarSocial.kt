@@ -21,7 +21,7 @@ import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * Not in the original: Lunar's emotes, sprays and notifications over Horizon's Lunar connection ([LunarNetwork]).
+ * Lunar's emotes, sprays and notifications over Horizon's Lunar connection ([LunarNetwork]).
  * - Emotes: Lunar's EmoteService says which emotes your account owns. Playing an owned one (the locker, or the
  *   `emote-key` bind for the last one played) also asks Lunar to play it (UseEmote), so other Lunar players see it, as
  *   in Lunar Client; others stay on your screen only.

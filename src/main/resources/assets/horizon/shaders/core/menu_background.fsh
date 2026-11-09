@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: the menu background, in black through white only (no hue, whatever the theme). Near-black; a
+// The menu background, in black through white only (no hue, whatever the theme). Near-black; a
 // horizon just under the middle with a soft white light rising from it, brightest to the right of the menu's column, a
 // thin bright line along it and a faint reflection below. Fog at two depths drifts sideways along the horizon, grey in
 // the dark and lit where the light reaches it. Dust hangs in the air at two depths, catching the light near the horizon,

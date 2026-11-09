@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's `BlockBehaviourMixin.calcBlockBreakingDeltaHook`: a cancelled BreakDeltaEvent replaces the progress per tick. */
+/** A cancelled BreakDeltaEvent replaces the progress per tick. */
 @Mixin(BlockBehaviour.class)
 public abstract class DestroyProgressMixin {
 	@Inject(method = "getDestroyProgress", at = @At("HEAD"), cancellable = true)

@@ -35,7 +35,7 @@ import kotlin.math.abs
 import kotlin.math.hypot
 
 /**
- * Not in the original: marks chunks the server has only just generated (new) and ones generated before (old), so a line of
+ * Marks chunks the server has only just generated (new) and ones generated before (old), so a line of
  * new chunks through old ground shows where someone travelled. Uses both fluid spread and Trouser-Streak's palette
  * check ([palette]) for new chunks, and settled flowing fluid for old chunks. With Hunt Map on, each verdict is saved
  * and reused the next time the chunk loads, so your own trail stays new after a relog or a 6b6t worker move.

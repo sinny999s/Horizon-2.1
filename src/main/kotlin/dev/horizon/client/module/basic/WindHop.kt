@@ -16,7 +16,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's "wind-hop" (`b9`): holds jump, and throws a wind charge down when a block is just below in the air, or at
+ * Holds jump, and throws a wind charge down when a block is just below in the air, or at
  * the bottom of each solid wall block next to the player when walking into one.
  */
 class WindHop : Module("wind-hop", Categories.BASIC) {
@@ -43,11 +43,11 @@ class WindHop : Module("wind-hop", Categories.BASIC) {
         }
     }
 
-    /** The original's `b9.P`: with a wind charge to hand, look there and throw it once the server has the rotation. */
+    /** With a wind charge to hand, look there and throw it once the server has the rotation. */
     private fun throwAt(rotation: Rotation) {
         val found = Slots.find(switch.value) { it.`is`(Items.WIND_CHARGE) } ?: return
         RotationManager.queue(RotationRequest(rotation, 150) {
-            // The original also sent a swing packet after the throw; 26.3 has none.
+            // No swing packet after the throw: 26.3 has none.
             Slots.withSwitch(found.slot, switch.value) { mc.gameMode!!.useItem(mc.player!!, InteractionHand.MAIN_HAND) }
         })
     }

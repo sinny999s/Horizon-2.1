@@ -23,7 +23,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 
 /**
- * Not in the original: vanilla's Add / Edit Server screen and its Direct Connection screen in the menus' style, over the
+ * Vanilla's Add / Edit Server screen and its Direct Connection screen in the menus' style, over the
  * backdrop: a panel with the screen's title, each text field under a small grey label, the Server Resource Packs choice
  * as a button that cycles it, and Cancel beside Done. The fields are vanilla's own [EditBox]es, only drawn here: keys and
  * typing go to the vanilla screen (so Tab, Enter, paste, the length limit and Done's state stay vanilla's), and a click

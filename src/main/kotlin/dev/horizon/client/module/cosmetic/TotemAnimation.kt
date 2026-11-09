@@ -24,7 +24,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * The original's "totem-animation" (`ry`): replaces vanilla's pop animation of the floating totem with its own, drawn
+ * Replaces vanilla's pop animation of the floating totem with its own, drawn
  * flat over the HUD in the 2D layer, fading out over 101 − [speed] ticks (FadeOut a quarter of that, Insert half).
  */
 class TotemAnimation : Module("totem-animation", Categories.COSMETIC) {
@@ -37,7 +37,7 @@ class TotemAnimation : Module("totem-animation", Categories.COSMETIC) {
     private var item: ItemStack? = null
     private var ticks = 0
 
-    /** The original's `gf`/`G`: collects the item's quads (position and uv, one colour) while the item is built. */
+    /** Collects the item's quads (position and uv, one colour) while the item is built. */
     private var collector: Collector? = null
 
     private class Collector(val color: Int) : VertexConsumer {
@@ -86,7 +86,7 @@ class TotemAnimation : Module("totem-animation", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `ry.r`: the animation's length in ticks. */
+    /** The animation's length in ticks. */
     private fun duration(): Int {
         val d = 101 - speed.value
         return when (mode.value) {

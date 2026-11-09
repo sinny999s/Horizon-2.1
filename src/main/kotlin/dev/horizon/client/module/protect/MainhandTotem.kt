@@ -17,14 +17,14 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's "mainhand-totem" (`jm`): selects a hotbar totem (for good) at low health, when a crystal that could kill us
- * spawns, or when we pop. The packet triggers run on the network thread, between client ticks, like the original's.
+ * Selects a hotbar totem (for good) at low health, when a crystal that could kill us spawns, or when we pop. The packet
+ * triggers run on the network thread, between client ticks.
  */
 class MainhandTotem : Module("mainhand-totem", Categories.PROTECT) {
     val hp = float("hp", 16.0f, 0.0f..36.0f)
     val pauseWhileEating = bool("pause-while-eating", false)
 
-    /** `jm.y`: the PlayerUpdate path's 1 s gate (the packet path has none). */
+    /** The PlayerUpdate path's 1 s gate (the packet path has none). */
     private val timer = MsTimer()
 
     init {
@@ -49,7 +49,7 @@ class MainhandTotem : Module("mainhand-totem", Categories.PROTECT) {
                 if (pk is ClientboundEntityEventPacket && pk.eventId.toInt() == 35 && pk.getEntity(p.level()) === p) {
                     trySwitch(totemSlot())
                 }
-                // The health before this packet is applied, as in the original.
+                // The health before this packet is applied (on purpose).
                 if (pk is ClientboundSetHealthPacket && health() - hp.value <= 0) trySwitch(totemSlot())
             } catch (ex: Exception) {
                 println("Mainhand Totem Error: " + ex.localizedMessage)
@@ -62,14 +62,14 @@ class MainhandTotem : Module("mainhand-totem", Categories.PROTECT) {
         return p.health + p.absorptionAmount
     }
 
-    /** `jm.Q`: the first hotbar totem, or −1 when there's none or it's already selected. */
+    /** The first hotbar totem, or −1 when there's none or it's already selected. */
     private fun totemSlot(): Int {
         val p = mc.player ?: return -1
         val f = Inventory.hotbarFind(Items.TOTEM_OF_UNDYING) ?: return -1
         return if (f.slot == p.inventory.selectedSlot) -1 else f.slot
     }
 
-    /** `jm.b(int, long)`: never takes the last totem while Offhand is on. */
+    /** Never takes the last totem while Offhand is on. */
     private fun trySwitch(slot: Int) {
         val p = mc.player ?: return
         if (slot == -1) return

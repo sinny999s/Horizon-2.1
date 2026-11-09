@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * X-ray with Sodium (not in the original): Sodium builds chunks with its own renderer, which never asks
+ * X-ray with Sodium: Sodium builds chunks with its own renderer, which never asks
  * `Block.shouldRenderFace`, so the blocks x-ray doesn't show are skipped here whole. Only applied when Sodium is there.
  */
 @Pseudo

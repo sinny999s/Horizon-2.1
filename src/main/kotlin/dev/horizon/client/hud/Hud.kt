@@ -39,9 +39,9 @@ import net.minecraft.client.Minecraft
 import org.joml.Matrix3x2f
 
 /**
- * The original's HUD (`yu`): the widgets in the Hud editor's list order, drawn under every screen. A frame draws each
+ * The HUD: the widgets in the Hud editor's list order, drawn under every screen. A frame draws each
  * enabled widget, then all queued plates, dividers and icons, then each widget's second pass, then the queued text.
- * Not in the original: the queues draw the new ClickGUI's look (design/clickgui/hud.css).
+ * The queues draw the new ClickGUI's look (design/clickgui/hud.css).
  */
 object Hud {
     val widgets: List<HudWidget> by lazy {
@@ -50,7 +50,6 @@ object Hud {
             WatermarkWidget, NotificationsWidget, SpeedWidget, InventoryWidget, CrystalSpeedWidget, MediaPlayerWidget,
             ArmorWidget, ChestCounterWidget, PvpResourcesWidget, PlayerListWidget, Crosshair, FlightWidget, PhaseWidget,
             CooldownsWidget, MacroWidget,
-            // Not in the original.
             ArrayListWidget,
             SessionStatsWidget,
             KeystrokesWidget,
@@ -78,10 +77,10 @@ object Hud {
     val dividers = ArrayList<Divider>()
     val icons = ArrayList<IconDraw>()
 
-    /** Not in the original: the new look's text, drawn last. */
+    /** The new look's text, drawn last. */
     val texts = ArrayList<TextDraw>()
 
-    /** Not in the original: the snap guides of the widget dragged in the new HUD editor (true: x of a vertical one). */
+    /** The snap guides of the widget dragged in the new HUD editor (true: x of a vertical one). */
     val guides = ArrayList<Pair<Boolean, Float>>()
 
     private inline fun withMatrix(m: Matrix3x2f, draw: () -> Unit) {
@@ -92,7 +91,7 @@ object Hud {
         pose.popMatrix()
     }
 
-    /** The original's `yu.B`, once per frame in a world. */
+    /** Once per frame in a world. */
     fun render() {
         cursorOwner = null
         guides.clear()
@@ -112,7 +111,7 @@ object Hud {
     }
 
     /**
-     * Not in the original: the new look's plate (hud.css .pl): the blurred world under rgba(12, 11, 16, .52) with a white
+     * The new look's plate (hud.css .pl): the blurred world under rgba(12, 11, 16, .52) with a white
      * 8% hairline, [alpha] for a row sliding in or out.
      */
     fun plate(x: Float, y: Float, w: Float, h: Float, radius: Float, alpha: Float) {
@@ -124,20 +123,20 @@ object Hud {
         Canvas.alpha = pa
     }
 
-    /** The original's `yu.G`: every mouse button event in a world, before the screen gets it. */
+    /** Every mouse button event in a world, before the screen gets it. */
     fun mouse(button: Int, press: Boolean) {
         val mc = Minecraft.getInstance()
         if (mc.level == null || mc.player == null) return
         for (w in widgets) if (w.enabled) w.mouse(button, press)
     }
 
-    /** The original's `yu.v`: every player tick. */
+    /** Every player tick. */
     fun tick() {
         for (w in widgets) if (w.enabled) w.tick()
     }
 }
 
-/** Not in the original: the new look's type (hud.css, CSS px / 2). */
+/** The new look's type (hud.css, CSS px / 2). */
 internal object HudType {
     val text by lazy { WebText("sf_medium", 7.5f) }
     val bold8 by lazy { WebText("sf_bold", 8f) }

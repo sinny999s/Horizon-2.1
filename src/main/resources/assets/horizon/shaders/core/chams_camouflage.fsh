@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's post/camouflage/camouflage.fsh: an animated camouflage pattern inside the chams mask, outlined.
+// An animated camouflage pattern inside the chams mask, outlined.
 uniform sampler2D Sampler0;
 
 layout(std140) uniform UBO {

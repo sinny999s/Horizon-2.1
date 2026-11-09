@@ -10,12 +10,11 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.entity.ai.attributes.Attributes
 
 /**
- * The original's "step" (`bc`). NCP / Vanilla / Strict NCP raise the step-height attribute while on the ground; after a step
+ * NCP / Vanilla / Strict NCP raise the step-height attribute while on the ground; after a step
  * up NCP and Strict NCP send the fake jump positions of that step height (slowing the tick rate to 1 / their count with
  * [timer]). NCP 2 instead shapes the vertical move against a wall into a jump.
  *
- * Note: a 26.3 server kicks for more than one position packet in a tick; servers on older versions (the original's target)
- * accept the sequence.
+ * Note: a 26.3 server kicks for more than one position packet in a tick; servers on older versions accept the sequence.
  */
 class Step : Module("step", Categories.RAGE) {
     enum class Mode { NCP, VANILLA, STRICT_NCP, NCP_2 }
@@ -29,12 +28,11 @@ class Step : Module("step", Categories.RAGE) {
         setStepHeight(0.6f)
     }
 
-    /** The original's `bc.z`. */
     private fun setStepHeight(h: Float) {
         mc.player?.getAttribute(Attributes.STEP_HEIGHT)?.baseValue = h.toDouble()
     }
 
-    /** The original's `bc.q`: the fake jump offsets for a step of [dy] blocks. */
+    /** The fake jump offsets for a step of [dy] blocks. */
     private fun offsets(dy: Double): DoubleArray? = when ((dy * 10000).toInt()) {
         7500, 10000 -> doubleArrayOf(0.42, 0.753)
         8125, 8750 -> doubleArrayOf(0.39, 0.7)

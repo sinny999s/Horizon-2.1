@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft
 import java.util.UUID
 
 /**
- * Not in the original: your Lunar account's outfit, changed the way Lunar Client's locker changes it. Cosmetics your
+ * Your Lunar account's outfit, changed the way Lunar Client's locker changes it. Cosmetics your
  * account owns that you pick or take off in Horizon's locker are put on or taken off your current Lunar outfit
  * (CosmeticService.UpdateOutfit with the whole outfit, every other field as Lunar last sent it), so other Lunar players
  * see them. With no outfit yet, one called "Horizon" is made (CreateOutfit) and selected (SelectOutfit). Cosmetics the

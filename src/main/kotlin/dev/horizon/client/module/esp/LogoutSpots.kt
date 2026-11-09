@@ -35,9 +35,9 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * The original's "logout-spots" (`e2`): when a player in view leaves the server, their model stays where they were (a primary-
- * coloured ghost, or the player-esp style shape in [colorSetting]) with a tag: name, health and time since, typed out over
- * half a second. Logging back in removes it; [timeOut] removes it after [timeOutValue] seconds.
+ * When a player in view leaves the server, their model stays where they were (a primary-coloured ghost, or the
+ * player-esp style shape in [colorSetting]) with a tag: name, health and time since, typed out over half a second.
+ * Logging back in removes it; [timeOut] removes it after [timeOutValue] seconds.
  */
 class LogoutSpots : Module("logout-spots", Categories.ESP) {
     enum class RenderMode { DEFAULT, GHOST }
@@ -50,7 +50,6 @@ class LogoutSpots : Module("logout-spots", Categories.ESP) {
     val timeOut = bool("time-out", false)
     val timeOutValue = float("time-out-value", 1.0f, 0.0f..3600.0f)
 
-    /** The original's `_3`. */
     private data class Spot(val id: UUID, val player: Player, val time: Long)
 
     /** The players seen in the level (by profile id), until the next player-info update. */
@@ -58,7 +57,7 @@ class LogoutSpots : Module("logout-spots", Categories.ESP) {
     private val spots = CopyOnWriteArrayList<Spot>()
     private val icon = Icon("no-connection", 10f, 10f)
 
-    /** Not in the original: the spots for the hunt map (name, where, when they logged out). */
+    /** The spots for the hunt map (name, where, when they logged out). */
     fun spotsForMap(): List<Triple<String, Vec3, Long>> = spots.map { Triple(it.player.name.string, it.player.position(), it.time) }
 
     init {
@@ -117,7 +116,7 @@ class LogoutSpots : Module("logout-spots", Categories.ESP) {
         spots.clear()
     }
 
-    /** The original's `e2.a`: names with "-" or "_" are never tracked. */
+    /** Names with "-" or "_" are never tracked. */
     private fun botName(p: Player): Boolean {
         val name = p.gameProfile.name()
         return name.contains("-") || name.contains("_")
@@ -126,7 +125,7 @@ class LogoutSpots : Module("logout-spots", Categories.ESP) {
     private fun message(format: String, p: Player) =
         moduleMessage(name.trim(), format.format(p.name.string, p.x.toInt(), p.y.toInt(), p.z.toInt()))
 
-    /** `e2.t` for one spot: a glass pill above the head with the icon and the typed-out text. */
+    /** One spot's tag: a glass pill above the head with the icon and the typed-out text. */
     private fun tag(s: Spot) {
         val now = System.currentTimeMillis()
         val alpha = if (timeOut.value) 1.0f - (now - s.time).toFloat() / (timeOutValue.value * 1000.0f) else 1.0f
@@ -146,7 +145,7 @@ class LogoutSpots : Module("logout-spots", Categories.ESP) {
         Fonts.bold8.draw(text, x + 12.0f, box.y.toFloat() - 13.0f, Colors.withAlpha(Theme.text, a))
     }
 
-    /** The original's `dw` as `e2.e` uses it: the model's positions and UVs, one colour for every vertex. */
+    /** The model's positions and UVs, one colour for every vertex. */
     private class Collector(val out: VertexConsumer, val color: Int) : VertexConsumer {
         private var x = 0f
         private var y = 0f
@@ -174,7 +173,7 @@ class LogoutSpots : Module("logout-spots", Categories.ESP) {
     }
 
     /**
-     * `e2.e`: the skinned model, unlit, in the theme's primary colour with [alpha], through walls with back faces culled,
+     * The skinned model, unlit, in the theme's primary colour with [alpha], through walls with back faces culled,
      * posed as at the moment the player left.
      */
     private fun ghost(player: Player, alpha: Float) {

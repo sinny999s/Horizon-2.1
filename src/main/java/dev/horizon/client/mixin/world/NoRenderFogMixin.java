@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * The original's FogRendererMixin `getBuffer` hook: a cancelled GetFogBufferEvent hands out the empty (no-fog) buffer.
+ * A cancelled GetFogBufferEvent hands out the empty (no-fog) buffer.
  * Also pushes {@link FogData} distances to {@link Float#MAX_VALUE} at priority 900 before Sodium captures them at RETURN.
  */
 @Mixin(value = FogRenderer.class, priority = 900)

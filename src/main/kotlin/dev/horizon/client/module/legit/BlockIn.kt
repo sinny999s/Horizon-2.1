@@ -29,7 +29,7 @@ import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
- * Not in the original: boxes you in for Bedwars / SkyWars the way a player does it by hand. While the trigger bind is
+ * Boxes you in for Bedwars / SkyWars the way a player does it by hand. While the trigger bind is
  * held (or always, with no bind), it picks one missing block of the box at a time (the floor, the four sides at the
  * feet, the four at the head, the roof), turns the camera onto a face it can be placed against in whole mouse counts,
  * and places through vanilla's own right click once the crosshair is really on that face, so every placement is one a

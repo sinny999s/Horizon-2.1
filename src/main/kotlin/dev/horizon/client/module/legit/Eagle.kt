@@ -19,7 +19,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Not in the original: fast-bridge ("Eagle") assist. Holds the sneak input as your feet approach a drop-off while
+ * Fast-bridge ("Eagle") assist. Holds the sneak input as your feet approach a drop-off while
  * bridging, then lets go a tick or two after a block lands underneath so backward and 45° diagonal ninja-bridging
  * stay safe without constant manual Shift timing.
  */

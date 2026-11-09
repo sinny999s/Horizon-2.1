@@ -4,7 +4,7 @@ import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-/** Sets the mouse position vanilla tracks (the original's `IMouse.setPosition`). */
+/** Sets the mouse position vanilla tracks. */
 @Mixin(MouseHandler.class)
 public interface MouseHandlerAccessor {
 	@Accessor("xpos")

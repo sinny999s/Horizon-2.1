@@ -38,11 +38,11 @@ import org.joml.Matrix4f
 import org.joml.Quaternionf
 import org.joml.Vector3f
 
-/** Bits the esp2 modules share: The original's `h3` box/billboard helpers, its tracer origin and `sh.S`. */
+/** Bits the esp2 modules share: box/billboard helpers, the tracer origin and an enchantment check. */
 object Esp2 {
     private val mc get() = Minecraft.getInstance()
 
-    /** The original's `horizon:textures/atlas.png` cells (u0, v0, u1, v1), `v0`. */
+    /** `horizon:textures/atlas.png` cells (u0, v0, u1, v1). */
     val CIRCLE = floatArrayOf(0.3906f, 0.0f, 0.6406f, 0.25f)
     val FIREFLY = floatArrayOf(0.8906f, 0.1875f, 0.9531f, 0.25f)
     val TRIANGLE1 = floatArrayOf(0.6406f, 0.25f, 0.7031f, 0.3125f)
@@ -51,7 +51,7 @@ object Esp2 {
     val TRIANGLE4 = floatArrayOf(0.8281f, 0.25f, 0.8906f, 0.3125f)
     val TRIANGLE5 = floatArrayOf(0.3906f, 0.3125f, 0.4531f, 0.3701f)
 
-    /** The original's `pos_color_alt_blend_depth` (`l0.f.P`): depth-tested, depth-writing, additive. */
+    /** `pos_color_alt_blend_depth`: depth-tested, depth-writing, additive. */
     val DEPTH_BOX: RenderPipeline = RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
         .withLocation(Identifier.fromNamespaceAndPath(HorizonClient.ID, "pipeline/pos_color_alt_blend_depth"))
         .withBindGroupLayout(BindGroupLayouts.PROJECTION)
@@ -65,7 +65,7 @@ object Esp2 {
         .withCull(false)
         .build()
 
-    /** The original's `h3.W`: [e]'s box at its interpolated position, 0.05 wider on each side and 0.15 taller. */
+    /** [e]'s box at its interpolated position, 0.05 wider on each side and 0.15 taller. */
     fun renderBox(e: Entity): AABB {
         val pt = World3D.partialTick.toDouble()
         val x = Mth.lerp(pt, e.xo, e.x)
@@ -76,21 +76,21 @@ object Esp2 {
             b.maxX - e.x + x + 0.05, b.maxY - e.y + y + 0.15, b.maxZ - e.z + z + 0.05)
     }
 
-    /** Where the original's ESP tracers start: 75 blocks straight ahead of the camera. */
+    /** Where ESP tracers start: 75 blocks straight ahead of the camera. */
     fun tracerStart(): Vec3 {
         val cam = mc.gameRenderer.mainCamera()
         return Vec3(0.0, 0.0, 75.0).xRot(-Math.toRadians(cam.xRot().toDouble()).toFloat())
             .yRot(-Math.toRadians(cam.yRot().toDouble()).toFloat()).add(cam.position())
     }
 
-    /** The original's `sh.S`: is [key] among [stack]'s enchantments. */
+    /** Is [key] among [stack]'s enchantments. */
     fun hasEnchant(stack: ItemStack, key: ResourceKey<Enchantment>): Boolean {
         val holder = mc.level?.registryAccess()?.lookupOrThrow(Registries.ENCHANTMENT)?.get(key)?.orElse(null) ?: return false
         return EnchantmentHelper.getEnchantmentsForCrafting(stack).keySet().contains(holder)
     }
 
     /**
-     * The original's `h3.c` billboard matrix for a [size]-wide quad at [pos]: turned to the camera, [yawOff] added to the
+     * Billboard matrix for a [size]-wide quad at [pos]: turned to the camera, [yawOff] added to the
      * yaw, tilted by [pitch] (the camera's pitch when 0), with the quad's corner moved to (-size/2, -size/2, -0.01).
      */
     fun billboard(pos: Vec3, yawOff: Float, pitch: Float, size: Float): Matrix4f {
@@ -106,12 +106,12 @@ object Esp2 {
         return ps.last().pose()
     }
 
-    /** The four corners of a `h3.c` quad, in the original's order, as (x, y, u, v). */
+    /** The four corners of a billboard quad, as (x, y, u, v). */
     private fun corners(size: Float, uv: FloatArray) = arrayOf(
         floatArrayOf(0f, size, uv[0], uv[3]), floatArrayOf(size, size, uv[2], uv[3]),
         floatArrayOf(size, 0f, uv[2], uv[1]), floatArrayOf(0f, 0f, uv[0], uv[1]))
 
-    /** The original's `h3.c` without a polygon: one quad drawn straight away with the level projection. */
+    /** A billboard without a polygon: one quad drawn straight away with the level projection. */
     fun drawBillboard(texture: GpuTextureView, pos: Vec3, yawOff: Float, pitch: Float, size: Float, color: Int, additive: Boolean,
                       uv: FloatArray) {
         val m = billboard(pos, yawOff, pitch, size)
@@ -122,13 +122,13 @@ object Esp2 {
         }
     }
 
-    /** The original's `h3.c` into a polygon: the quad's corners are transformed now and drawn later by [Quads.draw]. */
+    /** A billboard into a polygon: the quad's corners are transformed now and drawn later by [Quads.draw]. */
     fun billboardInto(out: Quads, pos: Vec3, yawOff: Float, pitch: Float, size: Float, color: Int, uv: FloatArray) {
         val m = billboard(pos, yawOff, pitch, size)
         for (c in corners(size, uv)) out.add(m, c[0], c[1], c[2], c[3], color)
     }
 
-    /** Textured quads whose corners are already in camera space (the original's `wg` filled by `wg.U`). */
+    /** Textured quads whose corners are already in camera space. */
     class Quads {
         private val data = ArrayList<Float>()
         private val colors = ArrayList<Int>()
@@ -149,7 +149,7 @@ object Esp2 {
             }
         }
 
-        /** The original's draw of a billboard polygon: model-view = camera rotation · Ry(180 − yaw) · Rx(−pitch). */
+        /** Draws a billboard polygon: model-view = camera rotation · Ry(180 − yaw) · Rx(−pitch). */
         fun draw(pipeline: RenderPipeline, depthTest: Boolean) {
             if (isEmpty) return
             val cam = mc.gameRenderer.mainCamera()
@@ -166,7 +166,7 @@ object Esp2 {
     private val guiProjection = Projection()
 
     /**
-     * The original's 2D draws with a 4x4 model-view (`sf.L`): the GUI's orthographic projection, [modelView] applied on the
+     * 2D draws with a 4x4 model-view: the GUI's orthographic projection, [modelView] applied on the
      * GPU, drawn now (after what the 2D layer queued so far).
      */
     fun drawGui(pipeline: RenderPipeline, texture: GpuTextureView?, modelView: Matrix4f, build: (VertexConsumer) -> Unit) {
@@ -181,7 +181,7 @@ object Esp2 {
     }
 }
 
-/** One of the original's world particles (`cx`): an atlas sprite that drifts, falls and fades over [life] ticks. */
+/** A world particle: an atlas sprite that drifts, falls and fades over [life] ticks. */
 class WorldParticle(
     private val sprite: FloatArray,
     var pos: Vec3,
@@ -200,11 +200,11 @@ class WorldParticle(
     private var prevAngle = 0f
 
     init {
-        // The original picks a random frame 0..3 here (unused), which advances the shared generator.
+        // Picks a random frame 0..3 here (unused), which advances the shared generator.
         Rng.int(0, 3)
     }
 
-    /** `cx.w`: one player tick; true once it is gone. */
+    /** One player tick; true once it is gone. */
     fun tick(): Boolean {
         life--
         if (life < 0) return true
@@ -217,7 +217,7 @@ class WorldParticle(
         return false
     }
 
-    /** `cx.w(matrices, base, polygon)`: its quad, pre-transformed by [stack] · [base], into [out]. */
+    /** Its quad, pre-transformed by [stack] · [base], into [out]. */
     fun emit(stack: PoseStack, base: Quaternionf, out: Esp2.Quads) {
         stack.pushPose()
         val pt = World3D.partialTick
@@ -233,7 +233,7 @@ class WorldParticle(
         if (angle != 0f && prevAngle != 0f) stack.last().pose().rotate(Axis.ZP.rotationDegrees(Mth.lerp(pt, prevAngle, angle)))
         val m = Matrix4f(stack.last().pose()).translate(-s / 2f, -s / 2f, -0.01f)
         val col = if (!fade) c else PlaceBoxes.withAlpha(c, k)
-        // The original's corner order and (mirrored) UVs.
+        // The corner order and the (mirrored) UVs are on purpose.
         out.add(m, 0f, s, sprite[2], sprite[1], col)
         out.add(m, s, s, sprite[0], sprite[1], col)
         out.add(m, s, 0f, sprite[0], sprite[3], col)
@@ -247,7 +247,7 @@ class WorldParticle(
     }
 }
 
-/** The original's `w7`: the world particles some modules spawn, ticked each player update and drawn each frame. */
+/** The world particles some modules spawn, ticked each player update and drawn each frame. */
 object WorldParticles {
     private val mc get() = Minecraft.getInstance()
     private val list = ArrayList<WorldParticle>()
@@ -262,7 +262,7 @@ object WorldParticles {
         list += p
     }
 
-    /** `w7.O`: every particle in view, one additive depth-tested draw. */
+    /** Every particle in view, one additive depth-tested draw. */
     private fun render() {
         if (list.isEmpty()) return
         val cam = mc.gameRenderer.mainCamera()
@@ -274,7 +274,7 @@ object WorldParticles {
         stack.last().pose().rotate(Axis.XP.rotation(pitch))
         stack.last().pose().rotate(Axis.YP.rotation(yaw180))
         val base = Quaternionf().rotateYXZ(-yaw, pitch, 0f)
-        // The original tests the point; a box of zero size is the same test.
+        // Tests the point: a box of zero size is the same test.
         for (p in list) if (World3D.isVisible(AABB(p.pos, p.pos))) p.emit(stack, base, out)
         if (out.isEmpty) return
         val modelView = Matrix4f(World3D.view).rotate(Axis.YP.rotation(-yaw180)).rotate(Axis.XP.rotation(-pitch))

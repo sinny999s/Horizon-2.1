@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
- * Better Chat (not in the original): the input bar and its command suggestions in the client's font, and the bar's black
+ * Better Chat: the input bar and its command suggestions in the client's font, and the bar's black
  * fill taken for a rounded pane.
  */
 @Mixin(ChatScreen.class)

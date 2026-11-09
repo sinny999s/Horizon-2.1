@@ -25,7 +25,7 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * The original's "sky-lanterns" (`rq`): keeps [count] paper lanterns drifting up around the player, each a translucent
+ * Keeps [count] paper lanterns drifting up around the player, each a translucent
  * box with a flame of particles, swaying, fading in and out over its 100–200 tick life.
  */
 class SkyLanterns : Module("sky-lanterns", Categories.COSMETIC) {
@@ -34,7 +34,7 @@ class SkyLanterns : Module("sky-lanterns", Categories.COSMETIC) {
     val bottomColor = color("bottom-color", Color(0x33FFC800.toInt(), true))
     val count = int("count", 256, 0..512)
 
-    /** The original's `w2`; the starting values are its constructor defaults (drawn from the shared RNG in this order). */
+    /** One lantern; its starting values are drawn from the shared RNG in this order. */
     private class Lantern(var x: Float, var y: Float, var z: Float) {
         var prevX = x
         var prevY = y
@@ -47,7 +47,7 @@ class SkyLanterns : Module("sky-lanterns", Categories.COSMETIC) {
         val yawSpeed = Rng.float(-0.5f, 0.5f)
 
         init {
-            Rng.int(0, 360) // a value the original draws and never uses
+            Rng.int(0, 360) // a value drawn and never used (on purpose)
         }
 
         val life = Rng.int(100, 200)
@@ -149,7 +149,7 @@ class SkyLanterns : Module("sky-lanterns", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `rq.u`: the paper box (open-bottomed, a tapered lower rim) and the wire cross under it. */
+    /** The paper box (open-bottomed, a tapered lower rim) and the wire cross under it. */
     private fun lantern(vc: VertexConsumer, m: Matrix4f, x: Float, y: Float, z: Float, yaw: Float, age: Float, life: Float, tmp: Vector3f) {
         val w = 0.33f
         val rim = 0.2f
@@ -178,7 +178,7 @@ class SkyLanterns : Module("sky-lanterns", Categories.COSMETIC) {
         v(w, y0, -w, side); v(w, y1, -w, side); v(w, y1, w, side); v(w, y0, w, side)
         v(w - inset, y0 - rim, -w + inset, bottom); v(w, y2 - rim, -w, side); v(w, y2 - rim, w, side); v(w - inset, y0 - rim, w - inset, bottom)
         v(-w, y1, -w, side); v(w, y1, -w, side); v(w, y1, w, side); v(-w, y1, w, side)
-        // Queued after this frame's world flush (priority −10), so drawn next frame, as in the original.
+        // Queued after this frame's world flush (priority −10), so drawn next frame (on purpose).
         val ang = Math.toRadians(yaw.toDouble())
         val wy = y + 0.58f
         val a = rotated(x - w + inset, wy, z + inset - w, x, wy, z, ang)
@@ -197,10 +197,10 @@ class SkyLanterns : Module("sky-lanterns", Categories.COSMETIC) {
         World3D.depthLine(g, h, wire)
     }
 
-    /** The last 10 ticks: The original divides by 20 there, so the lantern drops to half its alpha before fading. */
+    /** The last 10 ticks: divides by 20 there (on purpose), so the lantern drops to half its alpha before fading. */
     private fun fadeOut(life: Float, age: Float): Float = if (life - age < 10.0f) (life - age) / 20.0f else 1.0f
 
-    /** The original's `rq.z`: ([px], [py], [pz]) turned by [ang] radians about the vertical through ([cx], [cz]). */
+    /** ([px], [py], [pz]) turned by [ang] radians about the vertical through ([cx], [cz]). */
     private fun rotated(px: Float, py: Float, pz: Float, cx: Float, cy: Float, cz: Float, ang: Double): Vec3 {
         val s = sin(ang)
         val c = cos(ang)
@@ -211,7 +211,7 @@ class SkyLanterns : Module("sky-lanterns", Categories.COSMETIC) {
     }
 
     private companion object {
-        /** The original's wire colour, (70, 70, 70). */
+        /** The wire colour, (70, 70, 70). */
         const val WIRE = 0xFF464646.toInt()
     }
 }

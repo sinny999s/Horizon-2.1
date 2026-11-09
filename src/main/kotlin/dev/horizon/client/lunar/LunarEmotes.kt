@@ -16,7 +16,7 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Not in the original: other players' Lunar emotes. Lunar pushes `UseEmotePush { player, emote id }` and
+ * Other players' Lunar emotes. Lunar pushes `UseEmotePush { player, emote id }` and
  * `StopEmotePush { player }` for the players it sends cosmetics for; the emote's animation is an action in Lunar's
  * emote armature files (`emotes/models/actions*.bobj`, "emote_<name>"), played on Lunar's skinned player mesh
  * (`emotes/models/entity/default.bobj`, `slim.bobj` for slim skins) wearing the player's skin, with the emote's props

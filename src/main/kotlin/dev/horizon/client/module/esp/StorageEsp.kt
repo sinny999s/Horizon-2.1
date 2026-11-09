@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3
 import java.awt.Color
 
 /**
- * The original's "storage-esp" (`ef`): containers as shader boxes (their shape; brewing stands and hoppers as a few boxes),
+ * Containers as shader boxes (their shape; brewing stands and hoppers as a few boxes),
  * optional tracers. Its shader-mode drives every shader box in the client (World3D's composite reads it).
  */
 class StorageEsp : Module("storage-esp", Categories.ESP) {
@@ -63,14 +63,14 @@ class StorageEsp : Module("storage-esp", Categories.ESP) {
     val emptyFrame = color("empty-frame", Color(0x64731919.toInt(), true)) { frames.value }
     val itemFrame = color("item-frame", Color(0x64731919.toInt(), true)) { frames.value }
 
-    /** Read by nothing in the original (beds have no case in `ef.C`). */
+    /** Read by nothing (beds have no case in [colorOf]). */
     val beds = bool("beds", true)
 
     init {
         on<Render3DEvent> { render() }
     }
 
-    /** `ef.Y`: block entities first, then entities; anything that maps to plain white is skipped. */
+    /** Block entities first, then entities; anything that maps to plain white is skipped. */
     private fun render() {
         val level = mc.level ?: return
         for (be in ServerInfo.blockEntities) {
@@ -98,7 +98,7 @@ class StorageEsp : Module("storage-esp", Categories.ESP) {
         }
     }
 
-    /** `ef.C`; null for the original's "white" (not shown). A trapped chest never falls back to the chest colour. */
+    /** Null for "white" (not shown). A trapped chest never falls back to the chest colour. */
     private fun colorOf(be: BlockEntity): Int? {
         val c = when (be) {
             is TrappedChestBlockEntity -> if (trappedChests.value) trappedChest.value else null
@@ -115,7 +115,6 @@ class StorageEsp : Module("storage-esp", Categories.ESP) {
         return c?.rgb?.takeIf { it != WHITE }
     }
 
-    /** `ef.A`. */
     private fun colorOf(e: Entity): Int? {
         val c = when (e) {
             is MinecartChest -> if (chestMinecarts.value) chestMinecart.value else null
@@ -128,7 +127,7 @@ class StorageEsp : Module("storage-esp", Categories.ESP) {
     }
 
     private companion object {
-        /** The original marks "nothing" with `Color.WHITE`, so a setting set to opaque white hides that kind too. */
+        /** "Nothing" is marked with `Color.WHITE`, so a setting set to opaque white hides that kind too. */
         const val WHITE = -1
     }
 }

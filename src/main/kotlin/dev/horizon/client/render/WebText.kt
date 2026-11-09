@@ -25,8 +25,8 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 
 /**
- * Not in the original: text laid out as a browser lays it out, for screens matched to an HTML mockup (the new ClickGUI).
- * The original's [TextRenderer] advances every glyph by its bounds rounded up to a whole pixel, without kerning, which runs
+ * Text laid out as a browser lays it out, for screens matched to an HTML mockup (the new ClickGUI).
+ * [TextRenderer] advances every glyph by its bounds rounded up to a whole pixel, without kerning, which runs
  * text 5-8% wider than the same font in a browser. Here a string is laid out by AWT with kerning and fractional
  * advances and rasterised whole at the screen's pixel size, its pen started at the right quarter pixel (browsers
  * position glyphs in quarter pixels too) and its baseline on a whole pixel, then kept as one texture. Coverage is

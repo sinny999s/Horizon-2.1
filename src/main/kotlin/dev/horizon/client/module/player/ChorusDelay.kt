@@ -16,18 +16,18 @@ import java.awt.Color
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * The original's "chorus-delay" (`aq`): server teleports that arrive while eating a chorus fruit, or after one was eaten, are
+ * Server teleports that arrive while eating a chorus fruit, or after one was eaten, are
  * held back (an outline marks the first one's spot) until the confirm key is released.
  */
 class ChorusDelay : Module("chorus-delay", Categories.PLAYER) {
     val confirm = bind("confirm", Bind(InputConstants.KEY_LSHIFT))
     val colorSetting = color("color", Color(0xFFFFFFFF.toInt(), true))
 
-    /** The original's `X`: a chorus fruit was eaten since the last release. */
+    /** A chorus fruit was eaten since the last release. */
     @Volatile
     private var ate = false
 
-    /** The original's `Y` (filled on the network thread). */
+    /** Filled on the network thread. */
     private val held = ConcurrentLinkedQueue<ClientboundPlayerPositionPacket>()
 
     init {
@@ -36,7 +36,7 @@ class ChorusDelay : Module("chorus-delay", Categories.PLAYER) {
             World3D.outline(AABB(pos.add(-0.27, 0.0, -0.27), pos.add(0.27, 1.8, 0.27)), colorSetting.value.rgb)
         }
         on<InputEvent> { e ->
-            // The original compared only the code; 26.3's key and button codes overlap, so the device must match too.
+            // 26.3's key and button codes overlap, so the device must match too.
             if (e.key != confirm.value.key || (e.device == InputEvent.Device.Mouse) != confirm.value.mouse) return@on
             if (e.action == InputEvent.Action.Release) release()
         }
@@ -61,7 +61,7 @@ class ChorusDelay : Module("chorus-delay", Categories.PLAYER) {
         if (ate) release()
     }
 
-    /** The original's `L`: the held teleports, handled in the order they came. */
+    /** The held teleports, handled in the order they came. */
     private fun release() {
         ate = false
         val listener = mc.connection ?: return

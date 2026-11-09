@@ -20,7 +20,7 @@ import net.minecraft.client.input.MouseButtonEvent
 import kotlin.math.floor
 
 /**
- * Not in the original: a simple vanilla screen out of a world (the multiplayer warning, Credits and Attribution) in the
+ * A simple vanilla screen out of a world (the multiplayer warning, Credits and Attribution) in the
  * menus' style, over the backdrop: a panel with its title, its text wrapped, its checkboxes and its buttons in vanilla's
  * rows, each pressing vanilla's own (so what they do, and Esc, stay vanilla's).
  */

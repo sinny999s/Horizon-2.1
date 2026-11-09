@@ -19,7 +19,7 @@ import net.minecraft.network.chat.contents.TranslatableContents
 import kotlin.math.floor
 
 /**
- * Not in the original: the disconnected (kicked, lost connection, couldn't connect) screen in the menus' style, over the
+ * The disconnected (kicked, lost connection, couldn't connect) screen in the menus' style, over the
  * backdrop: a panel with vanilla's title, the server you were on, the reason in the server's own colours, and at the
  * bottom Back beside Auto Reconnect's Reconnect button, which fills a bar along its bottom while Auto Reconnect counts
  * down. Vanilla's other buttons (report to the server, open the report folder) get a row each above them. Every button

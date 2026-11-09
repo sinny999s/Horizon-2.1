@@ -19,7 +19,7 @@ import net.minecraft.util.Util
 import kotlin.math.floor
 
 /**
- * Not in the original: the connecting screen ("Connecting to the server...", "Logging in..." and so on) in the menus'
+ * The connecting screen ("Connecting to the server...", "Logging in..." and so on) in the menus'
  * style, over the backdrop: a small panel with vanilla's status as its title, live, the server being joined under it, a
  * short bar sweeping along a faint track while it connects, and Cancel, which presses vanilla's own. Vanilla's screen
  * keeps running the connection: its tick (and close) are forwarded to it, and vanilla's code-of-conduct screen, which

@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Tooltip images for items without one, dropping the container text lines under them and cutting over-wide lines
- * (Shulker View; not in the original).
+ * (Shulker View).
  */
 @Mixin(ItemStack.class)
 public abstract class ItemStackTooltipMixin {

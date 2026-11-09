@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Not in the original: other players' Lunar Client cosmetics, drawn without Lunar. [LunarNetwork] has Lunar's websocket
+ * Other players' Lunar Client cosmetics, drawn without Lunar. [LunarNetwork] has Lunar's websocket
  * send what each player in the world wears (cosmetic ids, [received]); the cosmetics themselves come from Lunar's public
  * CDN ([LunarAssets]) and are drawn here, as Lunar Client draws them:
  * - cloaks, as the player's cape (vanilla's cape layer, and Horizon's wavey capes), animated ones frame by frame; as

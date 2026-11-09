@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * Not in the original: Horizon users see each other's Lunar locker picks, client-side cosmetics included, through
+ * Horizon users see each other's Lunar locker picks, client-side cosmetics included, through
  * Horizon's own small service (`share-worker/`, a Cloudflare Worker at [LunarSettings.shareUrl]). Lunar players and
  * everyone else see nothing of it.
  * - Signing in: the game's chat-signing key for your account (Mojang signs its public half, the "player certificate")

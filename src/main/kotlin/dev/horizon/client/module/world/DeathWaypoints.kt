@@ -9,7 +9,7 @@ import dev.horizon.client.module.Module
 import net.minecraft.world.entity.player.Player
 
 /**
- * Not in the original: a waypoint where you die ("death-1", "death-2"...), with the server's other waypoints, so the
+ * A waypoint where you die ("death-1", "death-2"...), with the server's other waypoints, so the
  * waypoint renderer and `^wp gps` can take you back; and the coordinates in chat with [message]. Only the server's
  * last [keep] deaths are kept.
  */

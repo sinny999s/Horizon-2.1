@@ -10,7 +10,7 @@ import net.minecraft.world.phys.EntityHitResult
 import kotlin.random.Random
 
 /**
- * The original's "tape-mouse" (`ax`): clicks on whatever the crosshair is on every [delay] + up to [randomize] ms, checked
+ * Clicks on whatever the crosshair is on every [delay] + up to [randomize] ms, checked
  * once per frame. Left attacks or starts breaking, right interacts or uses the held item on the block.
  */
 class TapeMouse : Module("tape-mouse", Categories.MISC) {

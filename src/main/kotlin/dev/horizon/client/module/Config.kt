@@ -7,7 +7,7 @@ import dev.horizon.client.config.SettingsConfigs
 import dev.horizon.client.config.SettingsHolder
 import dev.horizon.client.config.Storage
 
-/** Module configs (`horizon/modules/<name>.hzn`, the original's format); the current one is in shared.hzn. */
+/** Module configs (`horizon/modules/<name>.hzn`); the current one is in shared.hzn. */
 object Config : SettingsConfigs<ModulesFile>("modules", ModulesFile.serializer(), "Modules are not loaded from file for some reasons.") {
     override fun holders(): List<SettingsHolder> = Modules.all
     override fun wrap(id: String, entries: List<HolderEntry>) = ModulesFile(id, entries)
@@ -19,7 +19,7 @@ object Config : SettingsConfigs<ModulesFile>("modules", ModulesFile.serializer()
         }
 
     /**
-     * The original's `cb.n(previous)`, after [apply]: a module that is on now and wasn't on in [previous] runs its enable
+     * After [apply]: a module that is on now and wasn't on in [previous] runs its enable
      * hook; one that is off now and was on (or missing) in [previous] runs its disable hook. No sounds.
      */
     fun reconcile(previous: NamedConfig?) {

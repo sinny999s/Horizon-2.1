@@ -10,7 +10,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
 /**
- * The original's "test" (`ri`), a developer benchmark: every frame, the crystal damage to us from every block within 6 of
+ * A developer benchmark: every frame, the crystal damage to us from every block within 6 of
  * our eyes, once without and once with the explosion block cache; prints any mismatch and the times to chat.
  */
 class Test : Module("test", Categories.MISC) {

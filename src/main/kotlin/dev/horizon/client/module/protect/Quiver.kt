@@ -18,7 +18,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.alchemy.PotionContents
 
 /**
- * The original's "Quiver" (`jt`): while a bow is drawn, moves a strength or swiftness arrow we lack the effect of to the
+ * While a bow is drawn, moves a strength or swiftness arrow we lack the effect of to the
  * front, looks straight up and lets go after 4 ticks, so the arrow lands on us.
  */
 class Quiver : Module("Quiver", Categories.PROTECT) {
@@ -28,12 +28,12 @@ class Quiver : Module("Quiver", Categories.PROTECT) {
             if (p.mainHandItem.item != Items.BOW) return@on
             if (p.ticksUsingItem < 4) return@on
             if (!prepareArrow()) return@on
-            // The yaw is the player's pitch in the original too (straight up, so it doesn't change the shot).
+            // The yaw is the player's pitch, on purpose (straight up, so it doesn't change the shot).
             RotationManager.queue(RotationRequest(Rotation(p.xRot, -90.0f), 0) { release() })
         }
     }
 
-    /** `jt.c`: swap the first wanted arrow with the frontmost arrow (inventory indices used as menu slots, as in the original). */
+    /** Swap the first wanted arrow with the frontmost arrow (inventory indices used as menu slots, on purpose). */
     private fun prepareArrow(): Boolean {
         val p = mc.player ?: return false
         val arrows = ArrayList<Pair<Int, PotionContents>>()
@@ -56,7 +56,7 @@ class Quiver : Module("Quiver", Categories.PROTECT) {
         return false
     }
 
-    /** `jt.X`: the arrow's first effect is strength or speed, and we don't have it. */
+    /** The arrow's first effect is strength or speed, and we don't have it. */
     private fun wanted(contents: PotionContents): Boolean {
         val p = mc.player ?: return false
         val e = contents.allEffects.firstOrNull()?.effect
@@ -65,7 +65,7 @@ class Quiver : Module("Quiver", Categories.PROTECT) {
         return false
     }
 
-    /** `jt.q`, at PostSync while still rotated: release the bow without going through the game mode. */
+    /** At PostSync while still rotated: release the bow without going through the game mode. */
     private fun release() {
         val p = mc.player ?: return
         Packets.send(ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, p.direction))

@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 
-/** The original's ModelPartAccessor: a part's own cubes (without its children). */
+/** A part's own cubes (without its children). */
 @Mixin(ModelPart.class)
 public interface ModelPartAccessor {
 	@Accessor("cubes")

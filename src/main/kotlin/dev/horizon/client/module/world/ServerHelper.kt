@@ -25,19 +25,18 @@ import java.awt.Color
 import kotlin.math.pow
 
 /**
- * The original's "server-helper" (`ru`), helpers for Russian anarchy servers: auc-helper tints auction items by how close
+ * Helpers for Russian anarchy servers: auc-helper tints auction items by how close
  * their unit price is to the cheapest one of the same kind; structure-cooldowns shows a countdown over pistons
- * (netherite scrap, 15 s) and anvil-built structures (dried kelp, 20 s / 60 s). The original's dead "keep removed players"
- * branch (static `O`, never set) is left out.
+ * (netherite scrap, 15 s) and anvil-built structures (dried kelp, 20 s / 60 s).
  */
 class ServerHelper : Module("server-helper", Categories.WORLD) {
     val aucHelper = bool("auc-helper", true)
     val structureCooldowns = bool("structure-cooldowns", true)
 
-    /** A countdown over [pos] until [end] (ms), drawn with [icon] (the original's `ld`). */
+    /** A countdown over [pos] until [end] (ms), drawn with [icon]. */
     private class Cooldown(val pos: Vec3, val end: Long, val icon: Item)
 
-    /** One auction slot: its unit [price], the cheapest unit price of that item, and its menu slot (the original's `vf`). */
+    /** One auction slot: its unit [price], the cheapest unit price of that item, and its menu slot. */
     private class Lot(val item: Item, val price: Int, val min: Int, val index: Int)
 
     private val cooldowns = ArrayList<Cooldown>()
@@ -48,8 +47,7 @@ class ServerHelper : Module("server-helper", Categories.WORLD) {
             val p = e.packet
             if (!structureCooldowns.value || p !is ClientboundSoundPacket) return@on
             val sound = p.sound.value()
-            // The original queues these on its tick scheduler straight from the network thread; the port's scheduler isn't
-            // thread-safe, so the task is added on the game thread (before the next tick, as in the original).
+            // The scheduler isn't thread-safe, so the task is added on the game thread (before the next tick).
             if (sound == SoundEvents.PISTON_CONTRACT || sound == SoundEvents.PISTON_EXTEND) {
                 mc.execute {
                     Scheduler.ticks(0) { cooldowns += Cooldown(Vec3(p.x, p.y, p.z), System.currentTimeMillis() + 15000L, Items.NETHERITE_SCRAP) }
@@ -69,7 +67,6 @@ class ServerHelper : Module("server-helper", Categories.WORLD) {
                 val ticks = ((c.end - System.currentTimeMillis()).toDouble() / 50.0f).toInt()
                 val text = (ticks / 1200).toString() + ":" + String.format("%02d", ticks % 1200 / 20)
                 val w = font.width(text) + 22.0f
-                // The original centres on (x + (max(x, depth) - x) / 2); that is x everywhere but the first GUI unit.
                 val s = World3D.project(c.pos) ?: continue
                 val x = s[0] - w / 2
                 val y = s[1]
@@ -129,7 +126,7 @@ class ServerHelper : Module("server-helper", Categories.WORLD) {
     }
 
     /**
-     * The original's `T`: an anvil was placed. The nearest cobblestone more than 2 blocks from it (within ±4) is taken as the
+     * An anvil was placed. The nearest cobblestone more than 2 blocks from it (within ±4) is taken as the
      * structure's centre; 8 andesite around it makes it a 60 s one (drawn half a block lower), else 20 s.
      */
     private fun anvil(pos: BlockPos) {
@@ -144,7 +141,7 @@ class ServerHelper : Module("server-helper", Categories.WORLD) {
             System.currentTimeMillis() + time - 250, Items.DRIED_KELP)
     }
 
-    /** The original's `b`: the box ±[r] in x and z and ±[ry] in y around [pos], x outermost, then z, then y. */
+    /** The box ±[r] in x and z and ±[ry] in y around [pos], x outermost, then z, then y. */
     private fun cube(pos: BlockPos, r: Int, ry: Int): List<BlockPos> {
         val list = ArrayList<BlockPos>()
         for (x in pos.x - r..pos.x + r) for (z in pos.z - r..pos.z + r) for (y in pos.y - ry..pos.y + ry) list += BlockPos(x, y, z)
@@ -154,7 +151,7 @@ class ServerHelper : Module("server-helper", Categories.WORLD) {
     private fun key(stack: ItemStack): String = stack.item.descriptionId
 
     /**
-     * The original's `K`: the price in an item's lore. On holyworld the first sibling with 2+ digits of the "price per unit"
+     * The price in an item's lore. On holyworld the first sibling with 2+ digits of the "price per unit"
      * line; elsewhere the "price" line itself. 999999999 without lore, 9999999 when nothing parses.
      */
     private fun price(stack: ItemStack): Int {
@@ -182,8 +179,8 @@ class ServerHelper : Module("server-helper", Categories.WORLD) {
     private fun isAuction(title: String) = title.contains(AUCTION) || title.contains(SEARCH)
 
     private companion object {
-        // The original's strings are UTF-8 Russian read as CP1251 when it was compiled ("Аукцион", "Поиск", "Цена за 1 ед.",
-        // "¤", "Цена" with a Latin a), so they never match a real title or lore; kept as they are in the jar.
+        // These strings are UTF-8 Russian read as CP1251 ("Аукцион", "Поиск", "Цена за 1 ед.",
+        // "¤", "Цена" with a Latin a), so they never match a real title or lore; kept like this on purpose.
         const val AUCTION = "РђСѓРєС†РёРѕРЅ"
         const val SEARCH = "РџРѕРёСЃРє"
         const val PER_UNIT = "Р¦РµРЅР° Р·Р° 1 РµРґ."

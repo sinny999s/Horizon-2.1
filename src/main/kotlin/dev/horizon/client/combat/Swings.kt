@@ -7,7 +7,7 @@ import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundPunchPacket
 
 /**
- * Not in the original: the swing that goes with every attack. In 26.3 the arm swing is its own packet (Punch), sent by
+ * The swing that goes with every attack. In 26.3 the arm swing is its own packet (Punch), sent by
  * vanilla's left click right after the attack, and servers (and anticheats: Vulcan's "No Swing") expect the two
  * together. So every attack the client sends itself (Aura, AutoCrystal, Crystal Bind...) is followed by a Punch, as a
  * click would be; your own clicks already send theirs ([inVanillaAttack], set by StartAttackMixin).

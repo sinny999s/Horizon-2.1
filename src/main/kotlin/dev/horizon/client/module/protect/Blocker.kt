@@ -10,7 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket
 import net.minecraft.world.level.block.Blocks
 
 /**
- * The original's "blocker" (`_e`, anti-city): when someone starts mining a surround block (or the blocks over the head),
+ * Anti-city: when someone starts mining a surround block (or the blocks over the head),
  * keep the blocks around it filled for about 2.6 s, starting at the estimated `trigger-progress` of the break.
  */
 class Blocker : PlacerModule("blocker", Categories.PROTECT, 200, showRange = false) {
@@ -18,10 +18,10 @@ class Blocker : PlacerModule("blocker", Categories.PROTECT, 200, showRange = fal
     val surround = bool("surround", true)
     val head = bool("head", true)
 
-    /** The original's `t1`: a block someone started mining, ticks since then ("progress"), and whether it's over the head. */
+    /** A block someone started mining, ticks since then ("progress"), and whether it's over the head. */
     private class Breaking(val pos: BlockPos, var progress: Int, val head: Boolean)
 
-    /** Never cleared except by expiry, so entries survive a toggle (as in the original's static list). */
+    /** Never cleared except by expiry, so entries survive a toggle (on purpose). */
     private val tracked = ArrayList<Breaking>()
 
     init {
@@ -48,7 +48,7 @@ class Blocker : PlacerModule("blocker", Categories.PROTECT, 200, showRange = fal
         }
     }
 
-    /** The original's `_e.H`: the obsidian / ender chest blocks beside the feet. */
+    /** The obsidian / ender chest blocks beside the feet. */
     private fun watchList(): List<BlockPos> {
         val p = mc.player ?: return emptyList()
         val level = mc.level ?: return emptyList()
@@ -62,7 +62,7 @@ class Blocker : PlacerModule("blocker", Categories.PROTECT, 200, showRange = fal
         return out
     }
 
-    /** The original's `_e.L`: on top of a head block; around a surround block (all six sides, in Direction order). */
+    /** On top of a head block; around a surround block (all six sides, in Direction order). */
     private fun responses(e: Breaking): List<BlockPos> =
         if (e.head) listOf(e.pos.above()) else Direction.entries.map { e.pos.relative(it) }
 

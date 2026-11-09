@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's `ItemStackMixin.onFinishUsing`: the local player finished using an item. */
+/** The local player finished using an item. */
 @Mixin(ItemStack.class)
 public abstract class ItemStackFinishMixin {
 	@Inject(method = "finishUsingItem", at = @At("HEAD"))

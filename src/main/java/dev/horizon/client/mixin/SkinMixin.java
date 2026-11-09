@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The skin a player is drawn with, open to the Cape module (not in the original). */
+/** The skin a player is drawn with, open to the Cape module. */
 @Mixin(AbstractClientPlayer.class)
 public abstract class SkinMixin {
 	@Inject(method = "getSkin", at = @At("RETURN"), cancellable = true)

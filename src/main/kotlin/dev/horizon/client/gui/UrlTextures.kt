@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.imageio.ImageIO
 
 /**
- * The original's URL images (`g4`): loaded once per URL on a background thread; until then (and when it fails) the missing
- * texture, as the original's placeholder isn't in its jar.
+ * URL images: loaded once per URL on a background thread; until then (and when it fails) the missing
+ * texture.
  */
 object UrlTextures {
     private val loaded = ConcurrentHashMap<String, DynamicTexture>()

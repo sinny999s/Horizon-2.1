@@ -20,7 +20,7 @@ import net.minecraft.world.scores.PlayerTeam
 import kotlin.math.max
 
 /**
- * Not in the original: the server's sidebar scoreboard in the HUD's look, movable in the HUD editor. The same lines as
+ * The server's sidebar scoreboard in the HUD's look, movable in the HUD editor. The same lines as
  * vanilla's sidebar (your team colour's objective if it has one, else the sidebar's; up to 15 entries, highest score
  * first, names inside their team's prefix and suffix, scores in the objective's own number format, so a server that
  * hides them keeps them hidden), as a title plate over one panel, with the server's colours. Vanilla's own sidebar is

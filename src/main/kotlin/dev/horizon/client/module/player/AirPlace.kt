@@ -19,7 +19,7 @@ import net.minecraft.world.phys.BlockHitResult
 import java.awt.Color
 
 /**
- * The original's "air-place" (`aa`): while the use key is held with a block in hand and the crosshair ray (Range long)
+ * While the use key is held with a block in hand and the crosshair ray (Range long)
  * ends in air, places the block there, at most every 4 ticks (every tick with No Delay's blocks / all). 2b2t wraps
  * the place in an offhand swap (scaffold reads [n2b2t] for the same trick). Draws the target block.
  */
@@ -28,14 +28,13 @@ class AirPlace : Module("air-place", Categories.PLAYER) {
     val range = float("range", 5.0f, 0.0f..6.0f)
     val fillColor = color("fill--color", Color(0x326432FF.toInt(), true))
 
-    /** The original's `aa.M`: the last ray end, written every tick and never cleared. */
+    /** The last ray end, written every tick and never cleared. */
     private var target: BlockHitResult? = null
 
-    /** `aa.J`: ticks until the next place. */
+    /** Ticks until the next place. */
     private var cooldown = 0
 
     init {
-        // `aa.o`
         on<PlayerUpdateEvent> {
             if (cooldown > 0) cooldown--
             val hit = mc.cameraEntity!!.pick(range.value.toDouble(), 0.0f, false) as? BlockHitResult ?: return@on
@@ -66,7 +65,7 @@ class AirPlace : Module("air-place", Categories.PLAYER) {
             val noDelay = Modules.get<NoDelay>()
             cooldown = if (noDelay.enabled && (noDelay.blocksSetting.value || noDelay.all.value)) 0 else 4
         }
-        // `aa.l`: the last tick's target, while it is still air and a block is held.
+        // The last tick's target, while it is still air and a block is held.
         on<Render3DEvent> {
             val hit = target ?: return@on
             val level = mc.level ?: return@on

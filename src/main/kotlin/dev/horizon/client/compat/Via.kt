@@ -7,7 +7,7 @@ import net.minecraft.network.Connection
 import java.lang.reflect.Method
 
 /**
- * Not in the original (Horizon's `compat.Via`): ViaFabricPlus, when it's installed next to the client: the Minecraft version
+ * ViaFabricPlus, when it's installed next to the client: the Minecraft version
  * servers are joined as, for all servers and per server. Reached by reflection through its public API, so the client
  * neither needs nor bundles it (it's GPL; this only calls it). Versions are ViaVersion `ProtocolVersion`s, held as
  * [Any]. Without it, [present] is false and nothing else here is used.

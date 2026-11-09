@@ -13,7 +13,7 @@ import net.minecraft.world.item.crafting.display.ShapelessCraftingRecipeDisplay
 import net.minecraft.world.item.crafting.display.SlotDisplayContext
 
 /**
- * Not in the original: Auto Craft's and Auto Smelt's planning, from the recipes in your recipe book. A target is planned
+ * Auto Craft's and Auto Smelt's planning, from the recipes in your recipe book. A target is planned
  * down to what the inventory has: missing ingredients are crafted first (their own ingredients before them), and what
  * can't be crafted or found is a shortfall, which furnaces may make.
  */
@@ -167,7 +167,7 @@ object CraftPlanner {
 }
 
 /**
- * Not in the original: Litematica's material list, read by reflection (Litematica is optional): the list Litematica has
+ * Litematica's material list, read by reflection (Litematica is optional): the list Litematica has
  * open or last opened, else a new one for the selected placement.
  */
 object LitematicaMaterials {

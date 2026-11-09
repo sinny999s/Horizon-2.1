@@ -28,7 +28,7 @@ import net.minecraft.world.phys.EntityHitResult
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * The original's "boat-fly" (`bb`): at the start of the player's travel, drives the ridden vehicle along the keys at `speed`
+ * At the start of the player's travel, drives the ridden vehicle along the keys at `speed`
  * (jump/sneak `y-speed`, sinking `glide-speed`/100 a tick) — Motion through its velocity, Packet by moving it and sending
  * the vehicle position — and skips the player's own travel. Mounts the nearest boat (auto-mount), drops server
  * corrections while steering (cancel) and only lets its own vehicle packets through (limit).
@@ -58,10 +58,10 @@ class BoatFly : Module("boat-fly", Categories.RAGE) {
     val waitTicks = int("wait-ticks", 10, 1..100, parent = advanced.value) { pause.value }
     val timer = float("timer", 1.0f, 0.1f..5.0f, parent = advanced.value)
 
-    /** Vehicle packets this module sent, let through by `limit` (the original's `n`). */
+    /** Vehicle packets this module sent, let through by `limit`. */
     private val sent = CopyOnWriteArrayList<ServerboundMoveVehiclePacket>()
 
-    /** Ticks driven since the last pause (`Q`), the pause's ticks left (`X`), whether pausing (`M`), the jitter side (`B`). */
+    /** Ticks driven since the last pause, the pause's ticks left, whether pausing, the jitter side. */
     private var driven = 0
     private var pauseLeft = 0
     @Volatile
@@ -183,8 +183,8 @@ class BoatFly : Module("boat-fly", Categories.RAGE) {
     }
 
     /**
-     * The original's `bb.Q`: sends the vehicle standing on the first solid block (or water) below it. The original's "move back"
-     * sets the position it already has, so the vehicle stays down there.
+     * Sends the vehicle standing on the first solid block (or water) below it. It isn't moved back, so the vehicle stays
+     * down there (on purpose).
      */
     private fun groundPacket(v: Entity) {
         val level = mc.level ?: return
@@ -201,7 +201,7 @@ class BoatFly : Module("boat-fly", Categories.RAGE) {
         send(ServerboundMoveVehiclePacket.fromEntity(v))
     }
 
-    /** The original's `bb.s`: interact with the first boat within 5 blocks. */
+    /** Interact with the first boat within 5 blocks. */
     private fun mount() {
         val p = mc.player ?: return
         val level = mc.level ?: return

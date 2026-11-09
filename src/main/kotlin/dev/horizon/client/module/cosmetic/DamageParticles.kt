@@ -16,8 +16,8 @@ import java.awt.Color
 import java.text.DecimalFormat
 
 /**
- * The original's "damage-particles" (`rm`): each change of a nearby entity's health (absorption included) floats up as a
- * number for [ticks] ticks, green for healing and red for damage. [size] is not read anywhere (as in the original).
+ * Each change of a nearby entity's health (absorption included) floats up as a
+ * number for [ticks] ticks, green for healing and red for damage. [size] is not read anywhere (on purpose).
  */
 class DamageParticles : Module("damage-particles", Categories.COSMETIC) {
     val healColor = color("heal-color", Color(0xFF00FF00.toInt(), true))
@@ -25,12 +25,12 @@ class DamageParticles : Module("damage-particles", Categories.COSMETIC) {
     val size = float("size", 0.5f, 0.1f..3.0f)
     val ticks = int("ticks", 35, 5..60)
 
-    /** The original's `ge`: a health change [value] at a fixed point. */
+    /** A health change [value] at a fixed point. */
     private class Number(val value: Float, val x: Double, val y: Double, val z: Double) {
         var age = 0
     }
 
-    /** The original's `F`: the last health + absorption seen per entity id. */
+    /** The last health + absorption seen per entity id. */
     private val health = HashMap<Int, Float>()
     private val numbers = ArrayList<Number>()
     private val format = DecimalFormat("#.#")
@@ -64,7 +64,7 @@ class DamageParticles : Module("damage-particles", Categories.COSMETIC) {
         health.clear()
     }
 
-    /** The original's `h3.G` with a shadow and the bold 25 font: centred, shrinking with distance, gone at 10 blocks. */
+    /** [text] with a shadow and the bold 25 font: centred, shrinking with distance, gone at 10 blocks. */
     private fun label(text: String, pos: Vec3, color: Int) {
         val s = World3D.project(pos) ?: return
         val cam = mc.cameraEntity ?: return

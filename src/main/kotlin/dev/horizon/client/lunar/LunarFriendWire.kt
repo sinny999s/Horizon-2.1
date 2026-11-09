@@ -6,7 +6,7 @@ import dev.horizon.client.lunar.LunarWire.message
 import java.util.UUID
 
 /**
- * Not in the original: Lunar's friends and messages on its game websocket, read and written by hand like [LunarWire]
+ * Lunar's friends and messages on its game websocket, read and written by hand like [LunarWire]
  * (schemas from lunar.jar: `lunarclient.websocket.friend.v1`, `conversation.v1`, `common.v1`). Game-free.
  */
 object LunarFriendWire {

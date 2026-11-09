@@ -4,7 +4,7 @@ import dev.horizon.client.HorizonClient
 import kotlinx.serialization.Serializable
 import java.nio.file.Files
 
-/** The original's waypoint (`zs`): dimension 0 overworld, 1 nether, 2 anything else. */
+/** A waypoint: dimension 0 overworld, 1 nether, 2 anything else. */
 @Serializable
 data class WayPoint(
     var id: String,
@@ -19,13 +19,13 @@ data class WayPoint(
 @Serializable
 private data class WayPointsFile(val wayPoints: List<WayPoint>)
 
-/** The original's waypoints (`lo`), saved in `waypoints.hzn`. */
+/** Waypoints, saved in `waypoints.hzn`. */
 object Waypoints {
     val list = ArrayList<WayPoint>()
 
     private val file get() = Storage.root.resolve("waypoints.hzn")
 
-    /** The original's `lo.f`: the dimension index of a dimension path. */
+    /** The dimension index of a dimension path. */
     fun dimension(path: String) = when (path) {
         "overworld" -> 0
         "the_nether" -> 1

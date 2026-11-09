@@ -15,7 +15,7 @@ import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 /**
- * The original's motion predictor (`u6`): every tick, each player's hitbox for the next 20 ticks, walking on at their current
+ * The motion predictor: every tick, each player's hitbox for the next 20 ticks, walking on at their current
  * horizontal speed (clamped to walk/sprint speeds) and falling with vanilla gravity.
  */
 object Predictor {
@@ -82,14 +82,14 @@ object Predictor {
         return b.center.subtract(0.0, p.boundingBox.ysize / 2, 0.0)
     }
 
-    /** The original's `nq.o`: about one tick per 7.8 ms of our ping plus theirs, above ~54 ms. */
+    /** About one tick per 7.8 ms of our ping plus theirs, above ~54 ms. */
     fun linearTicks(p: Player): Int {
         val latency = mc.connection?.getPlayerInfo(p.uuid)?.latency ?: 0
         val sum = PlayerState.ping + latency
         return (0.12857f * sum.toFloat() - 7.0f).roundToInt().coerceIn(0, 100)
     }
 
-    /** The original's `u6.a`: last tick's movement carried on until a non-air block is in the way (then it stops for good). */
+    /** Last tick's movement carried on until a non-air block is in the way (then it stops for good). */
     fun linear(p: Player, ticks: Int): Vec3 {
         val level = mc.level ?: return p.position()
         var pos = p.position()

@@ -27,14 +27,14 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 
 /**
- * The original's "dismemberment" (`rt`): when a player leaves the level, its head, body, arms and legs fall apart as six
+ * When a player leaves the level, its head, body, arms and legs fall apart as six
  * skinned pieces that tumble, bounce off the ground and fade out after [lifeTime] seconds.
  */
 class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
     val sound = bool("sound", true)
     val lifeTime = int("life-time", 10, 3..100)
 
-    /** The original's `zz`: the model parts a piece is made of, and how high it sits above its position (flying, landed). */
+    /** The model parts a piece is made of, and how high it sits above its position (flying, landed). */
     private enum class Part(val parts: (PlayerModel) -> List<ModelPart>, val flying: Double, val landed: Double) {
         HEAD({ listOf(it.head, it.hat) }, 0.5, 0.25),
         BODY({ listOf(it.body, it.jacket) }, 0.7, 0.2),
@@ -44,7 +44,7 @@ class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
         RIGHT_LEG({ listOf(it.rightLeg, it.rightPants) }, 0.7, 0.2),
     }
 
-    /** The original's `mz`: one piece. Velocities and spins are random (Math.random), rotations in degrees. */
+    /** One piece. Velocities and spins are random (Math.random), rotations in degrees. */
     private inner class Piece(val skin: Identifier, val model: PlayerModel, val part: Part, var x: Double, var y: Double, var z: Double) {
         var vx = jitter()
         var vy = jitter()
@@ -66,7 +66,7 @@ class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
         private fun jitter() = Math.random() * 0.3 - 0.15
         private fun spin() = Math.random() * 5.0 - 2.5
 
-        /** The original's `mz.L`: one tick; true once the piece has lived [lifeTime] seconds. */
+        /** One tick; true once the piece has lived [lifeTime] seconds. */
         fun tick(): Boolean {
             val level = mc.level!!
             px = x
@@ -109,7 +109,7 @@ class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
             return age++ > lifeTime.value * 20
         }
 
-        /** The original's `mz.b`: the part's cubes, unlit, depth-tested, fading out over the last 3 ticks. */
+        /** The part's cubes, unlit, depth-tested, fading out over the last 3 ticks. */
         fun render(view: Matrix4f) {
             val cam = mc.gameRenderer.mainCamera().position()
             val pt = World3D.partialTick.toDouble()
@@ -132,10 +132,10 @@ class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `F`: the pieces in flight. */
+    /** The pieces in flight. */
     private val pieces = ArrayList<Piece>()
 
-    /** The original's `J`: the players seen in the level. */
+    /** The players seen in the level. */
     private val seen = ArrayList<AbstractClientPlayer>()
 
     init {
@@ -153,7 +153,7 @@ class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `rt.J`: six pieces at the player (none while another set with the same skin is still around). */
+    /** Six pieces at the player (none while another set with the same skin is still around). */
     private fun spawn(player: AbstractClientPlayer) {
         if (player is LocalPlayer) return
         val self = mc.player ?: return
@@ -176,7 +176,7 @@ class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
         }
     }
 
-    /** The original's `rt.y`: every face of the part's own cubes, positions through [mat] (children and the part's pose ignored). */
+    /** Every face of the part's own cubes, positions through [mat] (children and the part's pose ignored). */
     private fun cubes(part: ModelPart, vc: VertexConsumer, color: Int, mat: Matrix4f) {
         val t = Vector3f()
         for (cube in (part as ModelPartAccessor).horizon_cubes()) {
@@ -191,7 +191,7 @@ class Dismemberment : Module("dismemberment", Categories.COSMETIC) {
     }
 
     private companion object {
-        /** The original's `m7.t` ("lego-breaking", volume 1). */
+        /** The "lego-breaking" sound (volume 1). */
         val LEGO_BREAKING: SoundEvent = SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath(HorizonClient.ID, "lego-breaking"))
     }
 }

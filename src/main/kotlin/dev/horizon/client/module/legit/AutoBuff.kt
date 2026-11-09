@@ -23,7 +23,7 @@ import net.minecraft.world.item.alchemy.PotionContents
 import kotlin.math.floor
 
 /**
- * The original's "auto-buff" (`j9`): looks straight down (rotation request, priority 200) and throws splash potions to keep
+ * Looks straight down (rotation request, priority 200) and throws splash potions to keep
  * the chosen effects up, at most `potions-per-tick` per pass and one pass per `6 + ping / 50` ticks.
  */
 class AutoBuff : Module("auto-buff", Categories.LEGIT) {
@@ -41,10 +41,10 @@ class AutoBuff : Module("auto-buff", Categories.LEGIT) {
     val potionsPerTick = int("potions-per-tick", 3, 1..3)
     val switch = enum("switch", Switch.SILENT_FULL)
 
-    /** Throws this tick (the original's `u`). */
+    /** Throws this tick. */
     private var thrown = 0
 
-    /** Cooldown between throw passes (the original's `y`). */
+    /** Cooldown between throw passes. */
     private val cooldown = TickTimer()
 
     init {
@@ -56,7 +56,6 @@ class AutoBuff : Module("auto-buff", Categories.LEGIT) {
 
     private fun currentHp(): Float = mc.player?.let { it.health + it.absorptionAmount } ?: 0f
 
-    /** The original's `j9.A`. */
     private fun wantBuff(): Boolean {
         val p = mc.player ?: return false
         if (!cooldown.passed(6 + floor(PlayerState.ping / 50.0).toInt())) return false
@@ -72,19 +71,18 @@ class AutoBuff : Module("auto-buff", Categories.LEGIT) {
         return currentHp() < hp.value && trigger.value == Trigger.Health && available(MobEffects.REGENERATION) && regeneration.value
     }
 
-    /** The original's `j9.u`. */
     private fun available(e: Holder<MobEffect>): Boolean = mc.player?.hasEffect(e) == false && findPotion(e) != -1
 
-    /** The original's `j9.F`: where the switch mode finds a splash potion of [e], or −1. */
+    /** Where the switch mode finds a splash potion of [e], or −1. */
     private fun findPotion(e: Holder<MobEffect>): Int = Switching.search(switch.value) { isSplashWith(it, e) }?.slot ?: -1
 
-    /** The original's `j9.R`; lingering potions aren't splash potions. */
+    /** Lingering potions aren't splash potions. */
     private fun isSplashWith(stack: ItemStack, e: Holder<MobEffect>): Boolean =
         stack.item is SplashPotionItem && stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).allEffects.any { it.effect == e }
 
     /**
-     * The original's `j9.s`, the rotation's action (PostSync, still looking down). With trigger Health the regeneration
-     * throw doesn't check for an active effect (original); the cooldown restarts even when nothing was thrown.
+     * The rotation's action (PostSync, still looking down). With trigger Health the regeneration
+     * throw doesn't check for an active effect (on purpose); the cooldown restarts even when nothing was thrown.
      */
     private fun throwPass() {
         val p = mc.player ?: return
@@ -100,7 +98,7 @@ class AutoBuff : Module("auto-buff", Categories.LEGIT) {
         cooldown.reset()
     }
 
-    /** The original's `j9.k`. The original also sent a swing packet here; 26.3 has none (and there's no client swing). */
+    /** No swing packet: 26.3 has none (and there's no client swing). */
     private fun throwPotion(e: Holder<MobEffect>) {
         val slot = findPotion(e)
         if (slot == -1) return

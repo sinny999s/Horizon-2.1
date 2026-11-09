@@ -35,7 +35,7 @@ import org.joml.Quaternionf
 import org.joml.Quaternionfc
 import org.joml.Vector3f
 
-/** The original's sprites on its atlas (`v0`, `horizon:textures/atlas.png`): u0, v0, u1, v1. */
+/** The sprites on the atlas (`horizon:textures/atlas.png`): u0, v0, u1, v1. */
 enum class AtlasSprite(val u0: Float, val v0: Float, val u1: Float, val v1: Float) {
     SMOKE(0.0f, 0.0f, 0.3906f, 0.3906f),
     CIRCLE(0.3906f, 0.0f, 0.6406f, 0.25f),
@@ -56,7 +56,7 @@ enum class AtlasSprite(val u0: Float, val v0: Float, val u1: Float, val v1: Floa
     TRIANGLE5(0.3906f, 0.3125f, 0.4531f, 0.3701f),
 }
 
-/** The original's particle mode `di` -> its sprite. */
+/** A particle mode -> its sprite. */
 fun Mode.sprite(): AtlasSprite = when (this) {
     Mode.STAR -> AtlasSprite.STAR
     Mode.FIRE_FLY -> AtlasSprite.FIREFLY
@@ -69,7 +69,7 @@ fun Mode.sprite(): AtlasSprite = when (this) {
 
 /**
  * One textured quad: corners (0, [size]) (size, size) (size, 0) (0, 0) of [m]'s plane get uv (u1, v0) (u0, v0)
- * (u0, v1) (u1, v1), as the original's particles (`cx`) and its rain/splash sprites (`rr`) emit them.
+ * (u0, v1) (u1, v1), as the particles and the rain/splash sprites emit them.
  */
 fun VertexConsumer.sprite(m: Matrix4f, size: Float, s: AtlasSprite, color: Int, tmp: Vector3f = Vector3f()) {
     fun v(x: Float, y: Float, u: Float, vv: Float) {
@@ -82,11 +82,11 @@ fun VertexConsumer.sprite(m: Matrix4f, size: Float, s: AtlasSprite, color: Int, 
     v(0f, 0f, s.u1, s.v1)
 }
 
-/** The original's opaque black, which a particle colour uses to mean "the theme gradient". */
+/** Opaque black, which a particle colour uses to mean "the theme gradient". */
 const val THEME_COLOR = 0xFF000000.toInt()
 
 /**
- * The original's particle (`cx`): a camera-facing sprite moving by [velocity] every tick, slowed by [friction] and pulled by
+ * A camera-facing sprite moving by [velocity] every tick, slowed by [friction] and pulled by
  * [gravity], living [life] ticks; with [fade] it shrinks and fades out. [color] [THEME_COLOR] = the theme gradient.
  */
 class Particle3D(
@@ -109,11 +109,11 @@ class Particle3D(
     private var prevRot = 0f
 
     init {
-        // The original draws (and never uses) a random 0..3 for every particle; kept for the shared RNG's sequence.
+        // A random 0..3 drawn (and never used) for every particle; kept for the shared RNG's sequence.
         Rng.int(0, 3)
     }
 
-    /** The original's `cx.w()`: one tick; true once it is dead. */
+    /** One tick; true once it is dead. */
     fun tick(): Boolean {
         life--
         if (life < 0) return true
@@ -126,7 +126,7 @@ class Particle3D(
         return false
     }
 
-    /** The original's `cx.w(stack, base, polygon)`: the sprite at its interpolated position, turned by [base]. */
+    /** The sprite at its interpolated position, turned by [base]. */
     fun build(vc: VertexConsumer, ps: PoseStack, base: Quaternionfc, pt: Float, cam: Vec3, tmp: Vector3f) {
         ps.pushPose()
         val lifeLerp = Mth.lerp(pt, life + 1f, life.toFloat())
@@ -145,8 +145,8 @@ class Particle3D(
 }
 
 /**
- * The original's particle system (`w7`): every particle ticks on PlayerUpdate (dead ones dropped) and all are drawn in one
- * additive, depth-tested batch on Render3D. Registered at client start, before any module (as the original's).
+ * The particle system: every particle ticks on PlayerUpdate (dead ones dropped) and all are drawn in one
+ * additive, depth-tested batch on Render3D. Registered at client start, before any module.
  */
 object Particles3D {
     private val mc get() = Minecraft.getInstance()
@@ -183,9 +183,9 @@ object Particles3D {
     }
 }
 
-/** The original pipelines the port's [Pipelines] lacks, built on first use like the port's post pipelines. */
+/** Pipelines that [Pipelines] lacks, built on first use like its post pipelines. */
 object Cosmetic2Pipelines {
-    /** `pos_color_depth` (`l0.f.NU`): translucent quads, depth-tested (reversed-Z GEQUAL), no depth write. */
+    /** `pos_color_depth`: translucent quads, depth-tested (reversed-Z GEQUAL), no depth write. */
     val POS_COLOR_DEPTH: RenderPipeline = RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
         .withLocation(Identifier.fromNamespaceAndPath(HorizonClient.ID, "pipeline/pos_color_depth"))
         .withBindGroupLayout(BindGroupLayouts.PROJECTION)
@@ -201,7 +201,7 @@ object Cosmetic2Pipelines {
 }
 
 /**
- * An immediate draw in GUI units (the original's 2D `wg.P`: ortho over the scaled screen, -100..100, model-view identity),
+ * An immediate draw in GUI units (ortho over the scaled screen, -100..100, model-view identity),
  * through World3D's draw with its projection swapped for the call.
  */
 fun drawGui(pipeline: RenderPipeline, texture: GpuTextureView?, build: (VertexConsumer) -> Unit) {

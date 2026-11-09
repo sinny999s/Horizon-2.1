@@ -16,7 +16,7 @@ import kotlin.math.sqrt
 import kotlin.math.min
 
 /**
- * Not in the original: the new ClickGUI's look (design/clickgui/index.html), in GUI units. The mockup is a 1600x900 window
+ * The new ClickGUI's look (design/clickgui/index.html), in GUI units. The mockup is a 1600x900 window
  * at GUI scale 2, so its pixels halved are these units; its colours are below, with the theme's primary and secondary
  * standing in for its two accents.
  */

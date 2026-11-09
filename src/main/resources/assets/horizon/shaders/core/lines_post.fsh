@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's post/lines/lines.fsh: thickens the lines drawn into the lines target.
+// Thickens the lines drawn into the lines target.
 uniform sampler2D Sampler0;
 
 layout(std140) uniform UBO {

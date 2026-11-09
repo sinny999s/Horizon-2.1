@@ -7,7 +7,7 @@ import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 
 /**
- * The original's "timer" (`bh`): sets the tick-rate factor to [value] every player tick; with [timeout], turns itself off
+ * Sets the tick-rate factor to [value] every player tick; with [timeout], turns itself off
  * once [timeoutValue] ms have passed since it was enabled (the factor written that tick still applies until the next).
  * It writes at PlayerUpdate priority 0, so any module writing the factor later in the tick wins.
  */

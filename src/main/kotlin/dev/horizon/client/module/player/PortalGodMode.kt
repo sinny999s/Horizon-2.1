@@ -9,11 +9,11 @@ import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
 import net.minecraft.world.level.block.Blocks
 
 /**
- * The original's "portal-god-mode" (`rv`): teleport confirmations aren't sent while a nether portal was within 2 blocks in
+ * Teleport confirmations aren't sent while a nether portal was within 2 blocks in
  * the last 5 seconds.
  */
 class PortalGodMode : Module("portal-god-mode", Categories.PLAYER) {
-    /** The original's timer `W`: when a portal was last near; it starts 99999 ms back, long expired. */
+    /** When a portal was last near; it starts 99999 ms back, long expired. */
     private var lastPortal = System.currentTimeMillis() - 99999
 
     init {
@@ -23,7 +23,7 @@ class PortalGodMode : Module("portal-god-mode", Categories.PLAYER) {
         on<PlayerUpdateEvent> {
             val p = mc.player ?: return@on
             val level = mc.level ?: return@on
-            // Truncated towards zero, as the original's (int) casts.
+            // Truncated towards zero (on purpose).
             for (x in (p.x - 2).toInt() until (p.x + 2).toInt()) {
                 for (z in (p.z - 2).toInt() until (p.z + 2).toInt()) {
                     for (y in (p.y - 2).toInt() until (p.y + 2).toInt()) {

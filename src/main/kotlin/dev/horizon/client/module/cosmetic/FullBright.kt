@@ -4,7 +4,7 @@ import dev.horizon.client.event.LightMapUpdateEvent
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 
-/** The original's "full-bright" (`r7`): the lightmap stays full white (its update is cancelled). */
+/** The lightmap stays full white (its update is cancelled). */
 class FullBright : Module("full-bright", Categories.COSMETIC) {
     init {
         on<LightMapUpdateEvent> { it.cancel() }

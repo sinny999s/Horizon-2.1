@@ -16,9 +16,9 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's "burrow" (`jd`): tells the server we jumped (four fake rising positions, looking down), places obsidian (or
+ * Tells the server we jumped (four fake rising positions, looking down), places obsidian (or
  * an ender chest) in our own feet block, and reports standing on top of it. Note: a 26.3 server kicks for more than one
- * position packet in a tick; servers on older versions (the original's target) accept the sequence.
+ * position packet in a tick; servers on older versions accept the sequence.
  */
 class Burrow : Module("burrow", Categories.PROTECT) {
     val once = bool("once", true)
@@ -58,14 +58,14 @@ class Burrow : Module("burrow", Categories.PROTECT) {
         Inventory.saveAndSelect(slot)
         val hit = BlockHitResult(Vec3.atCenterOf(feet).add(0.0, -0.5, 0.0), Direction.UP, feet.below(), false)
         Packets.sendSequenced { seq -> ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, hit, seq) }
-        // The original sent a swing packet here; 26.3 has none.
+        // 26.3 has no swing packet to send here.
         Inventory.restore()
         Packets.send(ServerboundMovePlayerPacket.PosRot(p.x, p.y + 1.0f, p.z, p.yRot, 90.0f, true, p.horizontalCollision))
         cooldown.reset()
         if (once.value) disable()
     }
 
-    /** The original's `jd.y`: a rising position packet, not on the ground. */
+    /** A rising position packet, not on the ground. */
     private fun fakeY(dy: Double, pitch: Float) {
         val p = mc.player ?: return
         Packets.send(ServerboundMovePlayerPacket.PosRot(p.x, p.y + dy, p.z, p.yRot, pitch, false, p.horizontalCollision))

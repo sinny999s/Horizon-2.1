@@ -41,12 +41,12 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-/** A row of the original's animated list widgets: slides in over 250 ms (OUT_QUINT), out once [removing]. */
+/** A row of the animated list widgets: slides in over 250 ms (OUT_QUINT), out once [removing]. */
 open class ListRow {
     val anim = Animation(Easing.OUT_QUINT, 250)
     var removing = false
 
-    /** The original's per-frame step inside `removeIf`: true once it has faded out. */
+    /** The per-frame step inside `removeIf`: true once it has faded out. */
     fun step(): Boolean {
         anim.update(if (removing) 0f else 1f)
         return removing && anim.value <= 0f
@@ -54,9 +54,9 @@ open class ListRow {
 }
 
 /**
- * The original's `eq`: "Key Binds" and a row per enabled, bound module (not the ClickGUI). Rows with [KeyBind.extra] come
+ * "Key Binds" and a row per enabled, bound module (not the ClickGUI). Rows with [KeyBind.extra] come
  * from setting macros and show that text instead of the name.
- * Not in the original: the new look, a plate for the name and one for the key (hud.js's list).
+ * The new look, a plate for the name and one for the key (hud.js's list).
  */
 object KeybindsWidget : HudWidget("keybinds-widget") {
     class KeyBind(val name: String, val bind: String, val extra: String = "") : ListRow()
@@ -98,8 +98,8 @@ object KeybindsWidget : HudWidget("keybinds-widget") {
 }
 
 /**
- * The original's `e5`: "Cooldowns" and a row per item on cooldown (name, m:ss, the item at 0.55 scale).
- * Not in the original: the new look, plates for the item, its name and the time left.
+ * "Cooldowns" and a row per item on cooldown (name, m:ss, the item at 0.55 scale).
+ * The new look, plates for the item, its name and the time left.
  */
 object CooldownsWidget : HudWidget("cooldowns-widget") {
     private class Row(val item: Item, val endTick: Int) : ListRow()
@@ -159,8 +159,8 @@ object CooldownsWidget : HudWidget("cooldowns-widget") {
 }
 
 /**
- * The original's `mv`: "Potions" and a row per active effect (icon, name in red when harmful, m:ss, flicker under 10 s).
- * Not in the original: the new look, plates for the effect's icon, its name and the time left.
+ * "Potions" and a row per active effect (icon, name in red when harmful, m:ss, flicker under 10 s).
+ * The new look, plates for the effect's icon, its name and the time left.
  */
 object PotionsWidget : HudWidget("potions-widget") {
     private class Row(val effect: MobEffectInstance) : ListRow()
@@ -219,20 +219,20 @@ object PotionsWidget : HudWidget("potions-widget") {
 }
 
 /**
- * The original's `qc`: one detected staff entry, tracking their team-formatted name (`Y`), vanished flag, and current
- * world/tab/gamemode status (`O`).
+ * One detected staff entry, tracking their team-formatted name, vanished flag, and current
+ * world/tab/gamemode status.
  */
 class StaffEntry(val profile: GameProfile, var vanished: Boolean = true) {
     val info = PlayerInfo(profile, false)
     private var cachedName: String? = null
 
-    /** The original's `qc.Y()`: lazily cached team-formatted display name. */
+    /** Lazily cached team-formatted display name. */
     fun formattedName(): String {
         if (cachedName == null) cachedName = StaffDetector.formatName(info).string
         return cachedName!!
     }
 
-    /** The original's `qc.O()`: dynamic status prefix (`(near)`, `Spec!`, `(gm3)`, or `""`), updating [vanished]. */
+    /** Dynamic status prefix (`(near)`, `Spec!`, `(gm3)`, or `""`), updating [vanished]. */
     fun statusPrefix(): String {
         val mc = Minecraft.getInstance()
         val name = profile.name
@@ -254,7 +254,6 @@ class StaffEntry(val profile: GameProfile, var vanished: Boolean = true) {
         return ""
     }
 
-    /** The original's `qc.W()`. */
     fun rowText(): String = statusPrefix() + " " + formattedName()
 
     override fun equals(other: Any?): Boolean = other is StaffEntry && profile.name == other.profile.name
@@ -263,8 +262,8 @@ class StaffEntry(val profile: GameProfile, var vanished: Boolean = true) {
 }
 
 /**
- * The original's `su`: listens for `ClientboundSetPlayerTeamPacket` (`Action.ADD`), checks team prefixes against the
- * staff rank list (`su.I`), and maintains the sorted active/vanished staff list (`su.z`) for [StaffWidget].
+ * Listens for `ClientboundSetPlayerTeamPacket` (`Action.ADD`), checks team prefixes against the
+ * staff rank list, and maintains the sorted active/vanished staff list for [StaffWidget].
  */
 object StaffDetector {
     private val mc get() = Minecraft.getInstance()
@@ -316,14 +315,12 @@ object StaffDetector {
         }
     }
 
-    /** The original's `su.g(PlayerInfo)`. */
     fun formatName(entry: PlayerInfo): MutableComponent {
         val base = entry.tabListDisplayName?.copy()
             ?: PlayerTeam.formatNameForTeam(entry.team, Component.literal(entry.profile.name))
         return if (entry.gameMode == GameType.SPECTATOR) base.withStyle(ChatFormatting.ITALIC) else base
     }
 
-    /** The original's `su.p(String)`. */
     private fun matchesStaff(displayName: String): Boolean {
         val s = StringUtil.stripColor(displayName.lowercase(Locale.ROOT))
         if (s.contains("§")) return false
@@ -331,7 +328,6 @@ object StaffDetector {
         return mc.player?.connection?.onlinePlayers?.any { it.profile.name == s } == true
     }
 
-    /** The original's `su.q(qc)`. */
     private fun rankOrder(entry: StaffEntry): Int {
         val words = StringUtil.stripColor(entry.formattedName().lowercase(Locale.ROOT)).split(' ')
         var best = 11
@@ -357,8 +353,8 @@ object StaffDetector {
 }
 
 /**
- * The original's `mj`: "Staff" and a row per detected staff member from [StaffDetector].
- * Not in the original: the new look, a plate per member with the status and team colours.
+ * "Staff" and a row per detected staff member from [StaffDetector].
+ * The new look, a plate per member with the status and team colours.
  */
 object StaffWidget : HudWidget("staff-widget") {
     private class Row(val name: String) : ListRow()
@@ -395,12 +391,12 @@ object StaffWidget : HudWidget("staff-widget") {
 }
 
 /**
- * The original's `m8`: "Players" and a row per other player (friends in green, hp, distance, ping, skin head).
- * Not in the original: the new look's rows of plates (hud.js's players).
+ * "Players" and a row per other player (friends in green, hp, distance, ping, skin head).
+ * The new look's rows of plates (hud.js's players).
  */
 object PlayerListWidget : HudWidget("player-list-widget") {
     private class Row(val player: AbstractClientPlayer) : ListRow() {
-        /** Not in the original: where the row was drawn this frame. */
+        /** Where the row was drawn this frame. */
         var x = 0f
         var y = 0f
     }
@@ -439,7 +435,7 @@ object PlayerListWidget : HudWidget("player-list-widget") {
         size(width, y - 1f)
     }
 
-    /** Not in the original: the new look's cells, hud.js's players: the head and name, health, distance, ping. */
+    /** The new look's cells, hud.js's players: the head and name, health, distance, ping. */
     private fun cells(p: AbstractClientPlayer): List<String> {
         val me = mc.player ?: return emptyList()
         return listOf(p.gameProfile.name, "${(p.health + p.absorptionAmount).roundToInt()} hp",

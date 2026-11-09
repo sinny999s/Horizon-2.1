@@ -23,7 +23,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 
 /**
- * The original's "middle-click" (`jc`): the pick-block key runs an action chosen by what is targeted (gliding, a player, a
+ * The pick-block key runs an action chosen by what is targeted (gliding, a player, a
  * block, anything else): throw a pearl (on press or release), use a firework, throw XP straight down while the armour
  * needs it, or add/remove a friend. Vanilla block picking is suppressed while it is on.
  */
@@ -42,7 +42,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
     val xpFactor = int("xp-factor", 1, 1..16)
     val pearlOnRelease = bool("pearl-on-release", true)
 
-    /** The key was down on the last tick without a screen (the original's `w`; kept across disable). */
+    /** The key was down on the last tick without a screen (kept across disable). */
     private var wasDown = false
     /** One cooldown shared by pearl (500 ms), firework (250 ms) and friend (800 ms), reset when it passes. */
     private val cooldown = MsTimer()
@@ -73,7 +73,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
         }
     }
 
-    /** The original's context order: gliding, a player, a non-air block, anything else (non-player entities too). */
+    /** The context order: gliding, a player, a non-air block, anything else (non-player entities too). */
     private fun action(p: Player): OnBlock {
         val hit = mc.hitResult
         return when {
@@ -92,7 +92,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
         OnBlock.NONE -> Unit
     }
 
-    /** The original's `jc.O`: a pearl along the current look, used when the rotation manager picks the request. */
+    /** A pearl along the current look, used when the rotation manager picks the request. */
     private fun pearl() {
         val p = mc.player ?: return
         if (!cooldown.passedAndReset(500)) return
@@ -111,7 +111,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
         })
     }
 
-    /** The original's `jc.M`: a firework, no rotation, every 250 ms while held. */
+    /** A firework, no rotation, every 250 ms while held. */
     private fun firework() {
         if (!cooldown.passedAndReset(250)) return
         val hotbar = Inventory.hotbarFind(Items.FIREWORK_ROCKET)?.slot ?: -1
@@ -126,7 +126,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
         }
     }
 
-    /** The original's `jc.q`: XP straight down (no cooldown), thrown after the movement packet carried pitch 90. */
+    /** XP straight down (no cooldown), thrown after the movement packet carried pitch 90. */
     private fun xp() {
         val p = mc.player ?: return
         if (!needsXp()) return
@@ -135,7 +135,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
         })
     }
 
-    /** The original's `jc.i`: XP in the hotbar and a worn piece under [stopOn] percent, or always without [antiWaste]. */
+    /** XP in the hotbar and a worn piece under [stopOn] percent, or always without [antiWaste]. */
     private fun needsXp(): Boolean {
         val inv = mc.player?.inventory ?: return false
         if (Inventory.hotbarFind(Items.EXPERIENCE_BOTTLE) == null) return false
@@ -143,7 +143,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
         return !antiWaste.value
     }
 
-    /** The original's `jc.A`: add or remove the targeted player's profile name. */
+    /** Add or remove the targeted player's profile name. */
     private fun toggleFriend() {
         if (!cooldown.passedAndReset(800)) return
         val hit = mc.hitResult as? EntityHitResult ?: return
@@ -159,9 +159,9 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
     }
 
     /**
-     * The original's swap thread (`ce`): switch to [slot] (hotbar) or swap it into the selected slot (inventory), wait
-     * [swapDelay], queue the use, wait again, switch or swap back. The original touched the inventory and the rotation queue
-     * from the thread; here those steps run on the client thread, with the same delays.
+     * A swap thread: switch to [slot] (hotbar) or swap it into the selected slot (inventory), wait [swapDelay], queue the
+     * use, wait again, switch or swap back. The thread only waits; the inventory and the rotation queue are touched on the
+     * client thread.
      */
     private fun swapThread(slot: Int, viaInventory: Boolean) {
         val p = mc.player ?: return
@@ -173,7 +173,7 @@ class MiddleClick : Module("middle-click", Categories.EQUIP) {
             Thread.sleep(delay)
             mc.execute {
                 val pl = mc.player ?: return@execute
-                // The original also sent a swing packet after the use; 26.3 has none.
+                // No swing packet after the use; 26.3 has none.
                 RotationManager.queue(InstantRequest(Rotation(pl.yRot, pl.xRot), 200) { EquipUtil.use() })
             }
             Thread.sleep(delay)

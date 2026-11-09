@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's LightmapRenderStateExtractorMixin: the darkness effect's light pulse and brightness drop. */
+/** The darkness effect's light pulse and brightness drop. */
 @Mixin(LightmapRenderStateExtractor.class)
 public abstract class NoRenderDarknessMixin {
 	@Inject(method = "calculateDarknessScale", at = @At("HEAD"), cancellable = true)

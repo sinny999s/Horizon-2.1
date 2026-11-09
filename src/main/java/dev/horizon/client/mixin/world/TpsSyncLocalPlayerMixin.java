@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * tps-sync's cancel of the player tick (the original cancels `LocalPlayer.tick` at HEAD when PlayerUpdate is cancelled).
+ * tps-sync's cancel of the player tick (when PlayerUpdate is cancelled).
  * Placed at the first call after the client-loaded check, so the PlayerUpdate event at HEAD has run already.
  */
 @Mixin(LocalPlayer.class)

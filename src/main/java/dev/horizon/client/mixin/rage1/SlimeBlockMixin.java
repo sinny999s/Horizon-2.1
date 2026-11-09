@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Walking on slime (for any entity, as in the original). */
+/** Walking on slime (for any entity, on purpose). */
 @Mixin(SlimeBlock.class)
 public abstract class SlimeBlockMixin {
 	@Inject(method = "stepOn", at = @At("HEAD"), cancellable = true)

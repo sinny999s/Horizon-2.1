@@ -13,7 +13,7 @@ import dev.horizon.client.render.Theme
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 
-/** The original's popup button (`vu`): a glass rect that brightens on hover (200 ms OUT_QUINT); any mouse button clicks it. */
+/** A popup button: a glass rect that brightens on hover (200 ms OUT_QUINT); any mouse button clicks it. */
 private class PopupButton(val w: Float, val h: Float, val index: Int, val onClick: () -> Unit) {
     var x = 0f
     var y = 0f
@@ -36,7 +36,7 @@ private class PopupButton(val w: Float, val h: Float, val index: Int, val onClic
 }
 
 /**
- * The original's kit editor (`w0`) for "inventory-manager": the current kit's 36 slots (main inventory rows, then the
+ * The kit editor for "inventory-manager": the current kit's 36 slots (main inventory rows, then the
  * hotbar); a slot opens an item picker, "select" the kit selector. Either opens as its sub-popup [sub].
  */
 class KitPopup : Popup() {
@@ -47,7 +47,7 @@ class KitPopup : Popup() {
         rebuild()
     }
 
-    /** The original's `w0.X`; each slot's picker starts on the item the slot had at this point. */
+    /** Each slot's picker starts on the item the slot had at this point. */
     private fun rebuild() {
         w = 188f
         h = 119f
@@ -138,13 +138,13 @@ class KitPopup : Popup() {
     }
 
     companion object {
-        /** The open sub-popup (the original's static `w0.U`); a popup that finishes closing detaches it instead of itself. */
+        /** The open sub-popup; a popup that finishes closing detaches it instead of itself. */
         var sub: Popup? = null
     }
 }
 
 /**
- * The original's kit selector (`wc`): a name field and "+" (a new kit from the current inventory), and the kits as they were
+ * The kit selector: a name field and "+" (a new kit from the current inventory), and the kits as they were
  * when it opened (click selects, the red box deletes).
  */
 class KitSelectPopup(private val names: List<String>, private val onSelect: (String) -> Unit, private val onRemove: (String) -> Unit) : Popup() {
@@ -215,7 +215,7 @@ class KitSelectPopup(private val names: List<String>, private val onSelect: (Str
         scroll = 0f
     }
 
-    /** The original's `wc.C`: a kit from the current inventory becomes current, and a fresh editor replaces the old one. */
+    /** A kit from the current inventory becomes current, and a fresh editor replaces the old one. */
     private fun create() {
         if (text.isBlank()) return
         if (Kits.list.map { it.id }.contains(text)) return

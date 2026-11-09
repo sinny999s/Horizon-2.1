@@ -34,7 +34,7 @@ interface MenuPopup {
 }
 
 /**
- * Not in the original: a vanilla list screen (worlds, servers) drawn in the client's style. It wraps the vanilla screen it
+ * A vanilla list screen (worlds, servers) drawn in the client's style. It wraps the vanilla screen it
  * replaces and leaves the work to it: the vanilla screen is initialised, ticked and removed with this one, its list
  * holds the entries, and its buttons (mods' ones included) become this screen's, pressing the vanilla ones; buttons in
  * the top third go in the header, the rest in rows at the bottom, as vanilla grouped them. Entries are selected with a

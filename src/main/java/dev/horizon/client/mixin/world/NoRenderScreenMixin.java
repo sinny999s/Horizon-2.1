@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's ScreenMixin background hook: the dimmed in-game background behind a screen. */
+/** The dimmed in-game background behind a screen. */
 @Mixin(Screen.class)
 public abstract class NoRenderScreenMixin {
 	@Inject(method = "extractTransparentBackground", at = @At("HEAD"), cancellable = true)

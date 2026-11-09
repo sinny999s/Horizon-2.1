@@ -14,13 +14,13 @@ import java.util.Locale
 import kotlin.reflect.KProperty
 
 /**
- * A module setting (the original's `hs`). [value] starts as the same object as [default]. The settings of a group point at
+ * A module setting. [value] starts as the same object as [default]. The settings of a group point at
  * the group's [Group] value through [parent]; [visible] is evaluated live.
  */
 abstract class Setting<T : Any>(val id: String, val default: T, val parent: Group? = null, var visible: () -> Boolean = { true }) {
     var value: T = default
 
-    /** The original's display name: every id part as " " + Capitalised, so it starts with a space (" Ignore Walls"). */
+    /** The display name: every id part as " " + Capitalised, so it starts with a space (" Ignore Walls"). */
     val displayName: String = id.split("-").filter { it.isNotEmpty() }
         .joinToString("") { " " + it.substring(0, 1).uppercase(Locale.ROOT) + it.substring(1).lowercase(Locale.ROOT) }
 
@@ -31,7 +31,7 @@ abstract class Setting<T : Any>(val id: String, val default: T, val parent: Grou
     /** Loads [value] from its saved string. */
     abstract fun parse(s: String)
 
-    /** The saved string (the original's `toString()`). */
+    /** The saved string. */
     abstract fun save(): String
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T = value
@@ -180,7 +180,7 @@ class BlocksSetting(id: String, default: MutableList<Block> = ArrayList(), paren
 class ItemsSetting(id: String, default: MutableList<Item> = ArrayList(), parent: Group? = null, visible: () -> Boolean = { true }) :
     ListSetting<Item>(id, default, parent, visible, { BuiltInRegistries.ITEM }, { it.descriptionId })
 
-/** The original's value labels (`k9`): a setting id + value shown as a word instead of the number (Aura's fov 1 = "trigger"). */
+/** Value labels: a setting id + value shown as a word instead of the number (Aura's fov 1 = "trigger"). */
 object ValueLabels {
     private class Label(val id: String, val value: Number, val text: String)
 

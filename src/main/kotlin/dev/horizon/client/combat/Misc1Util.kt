@@ -21,13 +21,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val mc get() = Minecraft.getInstance()
 
 /**
- * The original's switch-and-act helpers (`p2.T(item, mode, action)`, `p2.i(slot, mode, action)`): find the item, put it in
+ * Switch-and-act helpers: find the item, put it in
  * hand the way [Switch] says, run the action, and switch back for the silent modes.
  */
 object ItemSwitch {
     /**
-     * gui-move's `bn.d` flag, which the original sets for the duration of every switch (`bn.R.f(true)` / `f(false)`) and
-     * around auto-trader's clicks.
+     * gui-move's flag, set for the duration of every switch and around auto-trader's clicks.
      */
     var switching: Boolean
         get() = Modules.get<GuiMove>().internalClick
@@ -35,7 +34,7 @@ object ItemSwitch {
             Modules.get<GuiMove>().internalClick = value
         }
 
-    /** The original's `p2.T(item, mode, action)`: false when the item isn't where [mode] looks. */
+    /** False when the item isn't where [mode] looks. */
     fun use(item: Item, mode: Switch, action: () -> Unit): Boolean {
         val found = when (mode) {
             Switch.NORMAL, Switch.SILENT -> Inventory.hotbarFind(item)
@@ -46,7 +45,7 @@ object ItemSwitch {
         return true
     }
 
-    /** The original's `p2.i`: [slot] is a hotbar index for the hotbar modes, a container slot id for the inventory ones. */
+    /** [slot] is a hotbar index for the hotbar modes, a container slot id for the inventory ones. */
     fun run(slot: Int, mode: Switch, action: () -> Unit) {
         val p = mc.player ?: return
         switching = true
@@ -82,7 +81,7 @@ object ItemSwitch {
     }
 }
 
-/** The original's `y6.Q`: a click on [slot] of the open container (button 0, PICKUP by default), then optionally a close. */
+/** A click on [slot] of the open container (button 0, PICKUP by default), then optionally a close. */
 fun containerClick(slot: Int, button: Int = 0, input: ContainerInput = ContainerInput.PICKUP, close: Boolean = false) {
     val p = mc.player ?: return
     mc.gameMode?.handleContainerInput(p.containerMenu.containerId, slot, button, input, p)
@@ -90,7 +89,7 @@ fun containerClick(slot: Int, button: Int = 0, input: ContainerInput = Container
 }
 
 /**
- * The original's `da.l(module, text, false)`: "> [Name] text" in chat, at once on the main thread (queued otherwise). Unlike
+ * "> [Name] text" in chat, at once on the main thread (queued otherwise). Unlike
  * [moduleMessage] it doesn't wait for the next frame, which matters right before a disconnect.
  */
 fun moduleChat(module: Module, text: String) {
@@ -99,12 +98,12 @@ fun moduleChat(module: Module, text: String) {
 }
 
 /**
- * team-communication's `ao.r` (`ao.o.J()`): set while a module sends its own chat lines, so team-communication leaves
+ * Set while a module sends its own chat lines, so team-communication leaves
  * them alone. TeamCommunication should read this one.
  */
 val teamChatBypass = AtomicBoolean(false)
 
-/** The original's `ws.r`: the block entities of every loaded chunk within render distance (chunk coords by truncation). */
+/** The block entities of every loaded chunk within render distance (chunk coords by truncation). */
 fun blockEntitiesAround(): List<BlockEntity> {
     val p = mc.player ?: return emptyList()
     val level = mc.level ?: return emptyList()
@@ -117,7 +116,7 @@ fun blockEntitiesAround(): List<BlockEntity> {
 }
 
 /**
- * The original's pop tracker `t5` (counting part): totem pops per player name from entity event 35 (not our own), reset when
+ * Pop tracker (counting part): totem pops per player name from entity event 35 (not our own), reset when
  * the player is seen dead, with a 1000 ms window against counting a corpse twice. Always on once started.
  */
 object PopCounter {
@@ -148,6 +147,5 @@ object PopCounter {
         }
     }
 
-    /** The original's `t5.T(name)`. */
     fun pops(name: String): Int = pops[name] ?: 0
 }

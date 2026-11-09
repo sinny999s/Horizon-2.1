@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * The original's timer (`MixinDynamic`): while the factor isn't 1, a frame's milliseconds become ticks at the raw 50 ms per
+ * The timer: while the factor isn't 1, a frame's milliseconds become ticks at the raw 50 ms per
  * tick times the factor (the server's tick rate is ignored then).
  */
 @Mixin(DeltaTracker.Timer.class)

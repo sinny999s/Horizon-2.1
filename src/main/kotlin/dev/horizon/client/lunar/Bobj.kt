@@ -5,7 +5,7 @@ import org.joml.Vector3f
 import kotlin.math.abs
 
 /**
- * Not in the original: Blockbuster's BOBJ format, which Lunar's emotes use (they began as McHorse's Emoticons): an OBJ
+ * Blockbuster's BOBJ format, which Lunar's emotes use (they began as McHorse's Emoticons): an OBJ
  * with an armature (`arm_bone name parent tail.xyz matrix[16]`, row-major, rest pose), meshes bound to it (`o`, `o_arm`,
  * `v` then its `vw bone weight` lines, `vt`, `vn`, `f`), and actions (`an name`, `ao bone`, `ag location|rotation|scale
  * index`, `kf frame value CONSTANT|LINEAR|BEZIER [left.x left.y right.x right.y]`, frames in ticks). Skinned as Emoticons

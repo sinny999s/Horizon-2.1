@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's ParticleEngineMixin: every particle added to the engine. */
+/** Every particle added to the engine. */
 @Mixin(ParticleEngine.class)
 public abstract class NoRenderParticleMixin {
 	@Inject(method = "add(Lnet/minecraft/client/particle/Particle;)V", at = @At("HEAD"), cancellable = true)

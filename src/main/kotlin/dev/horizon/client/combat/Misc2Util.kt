@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 private val mc get() = Minecraft.getInstance()
 
-/** Helpers the misc modules share: The original's chat output (`da`), text flattening (`lq`), and its packet-event gate. */
+/** Helpers the misc modules share: chat output, text flattening, and a packet-event gate. */
 object Misc2Util {
     /** Plugs the always-on trackers below; called once when the Notifier module is created (at client start). */
     fun init() {
@@ -45,7 +45,7 @@ object Misc2Util {
     }
 
     /**
-     * The original's `da.l(module, text, false)`: one legacy-formatted line, "§a> §7[§6Name§7] text" (so the text is gray
+     * One legacy-formatted line, "§a> §7[§6Name§7] text" (so the text is gray
      * unless it has its own codes), shown on the game thread.
      */
     fun chat(module: Module, text: String) {
@@ -55,7 +55,7 @@ object Misc2Util {
     }
 
     /**
-     * The original's ReceivePacket as its mixin fires it: only with a player, once per packet of a bundle. [fn] returns
+     * ReceivePacket, fired only with a player and once per packet of a bundle. [fn] returns
      * whether to drop the packet; dropping any packet of a bundle drops the bundle.
      */
     inline fun received(e: ReceivePacketEvent, fn: (Packet<*>) -> Boolean) {
@@ -68,7 +68,7 @@ object Misc2Util {
         }
     }
 
-    /** The original's `lq.j`: a component as a legacy string, a colour code wherever the colour changes, then "§r". */
+    /** A component as a legacy string, a colour code wherever the colour changes, then "§r". */
     fun legacy(c: Component): String {
         val sb = StringBuilder()
         var last = Int.MIN_VALUE
@@ -86,7 +86,7 @@ object Misc2Util {
         return sb.append("§r").toString()
     }
 
-    /** `lq.T`: "§c" for a legacy colour, else "§x§r§r§g§g§b§b". */
+    /** "§c" for a legacy colour, else "§x§r§r§g§g§b§b". */
     private fun colorCode(rgb: Int): String {
         val legacy = when (rgb) {
             0 -> '0'; 170 -> '1'; 43520 -> '2'; 43690 -> '3'; 11141120 -> '4'; 11141290 -> '5'; 16755200 -> '6'
@@ -100,14 +100,14 @@ object Misc2Util {
         return sb.toString()
     }
 
-    /** The original's `cw.a`: a sound at the world origin on the voice channel, heard everywhere because the files are stereo. */
+    /** A sound at the world origin on the voice channel, heard everywhere because the files are stereo. */
     fun playVoice(event: SoundEvent) {
         mc.execute {
             mc.soundManager.play(SimpleSoundInstance(event, SoundSource.VOICE, 1f, 1f, SoundInstance.createUnseededRandom(), 0.0, 0.0, 0.0))
         }
     }
 
-    /** The original's `ws.d`: the loaded chunks in the render-distance square (truncating division, x outer, z inner). */
+    /** The loaded chunks in the render-distance square (truncating division, x outer, z inner). */
     fun loadedChunks(): List<LevelChunk> {
         val list = ArrayList<LevelChunk>()
         val p = mc.player ?: return list
@@ -120,7 +120,7 @@ object Misc2Util {
 }
 
 /**
- * The server timing the original's `ws` and `kk` keep for the notifier: when the last packet and the last time packet
+ * The server timing kept for the notifier: when the last packet and the last time packet
  * came, and when the server last moved us (a lag-back) other than after a chorus fruit or an ender pearl.
  */
 object ServerWatch {
@@ -131,10 +131,10 @@ object ServerWatch {
     @Volatile
     private var teleport = -1L
 
-    /** The original's `ws.U()`: the last packet's time minus the last time packet's. */
+    /** The last packet's time minus the last time packet's. */
     fun sinceTimePacket(): Long = lastPacket - lastTimePacket
 
-    /** The original's `kk.e()`: ms since the last lag-back. */
+    /** Ms since the last lag-back. */
     fun sinceLagBack(): Long = System.currentTimeMillis() - lagBack
 
     fun init() {
@@ -155,27 +155,25 @@ object ServerWatch {
 
     private fun packet(p: Packet<*>) {
         val now = System.currentTimeMillis()
-        // ws: a time packet in the player's first 20 ticks (after the first one ever) updates neither time.
+        // A time packet in the player's first 20 ticks (after the first one ever) updates neither time.
         if (p is ClientboundSetTimePacket) {
             if (lastTimePacket != 0L && (mc.player?.tickCount ?: 20) < 20) return
             lastTimePacket = now
         }
         lastPacket = now
-        // kk
         if (p is ClientboundPlayerPositionPacket && now - teleport - 10000L > 0 && (mc.player?.tickCount ?: 0) > 20) lagBack = now
         if (p is ClientboundSoundPacket && p.sound.value() == SoundEvents.ENDER_PEARL_THROW) teleport = now
     }
 }
 
 /**
- * The original's `t5`: totem pops per player name (counted as the packet arrives, the local player's never), and deaths of
+ * Totem pops per player name (counted as the packet arrives, the local player's never), and deaths of
  * other players seen in the level, which post [PlayerDeathEvent] and reset that player's count.
  */
 object PopTracker {
     private val pops = ConcurrentHashMap<String, Int>()
     private val recentlyDead = LinkedHashMap<String, Long>()
 
-    /** The original's `t5.T(name)`. */
     fun pops(name: String): Int = pops.getOrDefault(name, 0)
 
     fun init() {

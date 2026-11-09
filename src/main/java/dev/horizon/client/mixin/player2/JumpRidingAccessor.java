@@ -4,7 +4,7 @@ import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-/** The horse jump charge (the original's `LocalPlayerAccessor.setJumpRidingScale`). */
+/** The horse jump charge. */
 @Mixin(LocalPlayer.class)
 public interface JumpRidingAccessor {
 	@Accessor("jumpRidingScale")

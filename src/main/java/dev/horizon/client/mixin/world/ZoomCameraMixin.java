@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * The original's CameraMixin.getBasicProjectionMatrixHook: a cancelled BasicProjectionMatrixEvent rebuilds the level
+ * A cancelled BasicProjectionMatrixEvent rebuilds the level
  * projection. Same hook as the cosmetic1 copy's mixin/cosmetic1/CameraMixin (aspect): keep one when merging.
  */
 @Mixin(Camera.class)

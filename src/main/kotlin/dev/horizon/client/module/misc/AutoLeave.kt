@@ -13,7 +13,7 @@ import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.item.Items
 
 /**
- * The original's "auto-leave" (`a4`): disconnects (or runs [command]) when a non-friend player is within [distance], and
+ * Disconnects (or runs [command]) when a non-friend player is within [distance], and
  * disconnects when out of totems or low on health. With [instantLeave] it first sends an invalid hotbar slot.
  */
 class AutoLeave : Module("auto-leave", Categories.MISC) {
@@ -60,7 +60,7 @@ class AutoLeave : Module("auto-leave", Categories.MISC) {
         }
     }
 
-    /** The original's `a4.m`: off with the reason in chat (with [disableSetting]), the bad slot packet, then the disconnect. */
+    /** Off with the reason in chat (with [disableSetting]), the bad slot packet, then the disconnect. */
     private fun leave(reason: String) {
         if (disableSetting.value) {
             disable()
@@ -71,7 +71,7 @@ class AutoLeave : Module("auto-leave", Categories.MISC) {
     }
 
     private companion object {
-        // The original's en.ctlang lines for "modules.misc.auto-leave.*".
+        // The English lines for "modules.misc.auto-leave.*".
         const val PLAYER = "Logged out because there was a player"
         const val TOTEMS = "Logged out because out of totems"
         const val HP = "Logged out because ur hp is low"

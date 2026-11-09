@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's `MultiPlayerGameModeMixin.pickItemFromBlockHook`: block picks go through PickBlockEvent (cancellable). */
+/** Block picks go through PickBlockEvent (cancellable). */
 @Mixin(MultiPlayerGameMode.class)
 public abstract class PickBlockMixin {
 	@Inject(method = "handlePickItemFromBlock", at = @At("HEAD"), cancellable = true)

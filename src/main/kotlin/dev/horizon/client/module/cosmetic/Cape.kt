@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.imageio.ImageIO
 
 /**
- * Not in the original: wears any of Minecraft's own capes (Java's official ones, Mojang's and the event capes included), and
+ * Wears any of Minecraft's own capes (Java's official ones, Mojang's and the event capes included), and
  * with [elytra] the same art on your elytra (or vanilla's elytra without it). Only you see it: other players get your
  * real cape, if any, from the server. The pictures come from Mojang's texture server the first time each is worn and
  * are kept under Storage's `capes` folder; until one is there you keep the cape you have.

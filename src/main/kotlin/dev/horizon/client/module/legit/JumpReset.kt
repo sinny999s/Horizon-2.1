@@ -19,7 +19,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: legit velocity reduction ("Jump Reset"). Inputs a real jump on the tick you take combat
+ * Legit velocity reduction ("Jump Reset"). Inputs a real jump on the tick you take combat
  * knockback while sprinting on the ground so vanilla's sprint-jump forward impulse cuts horizontal knockback without
  * modifying velocity packets.
  */

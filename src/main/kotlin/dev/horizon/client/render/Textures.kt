@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import java.awt.image.BufferedImage
 
-/** The original's `sf.F(id, image)`: an AWT image as a GPU texture (straight alpha). */
+/** An AWT image as a GPU texture (straight alpha). */
 object Textures {
     fun upload(label: String, image: BufferedImage): DynamicTexture {
         val native = NativeImage(image.width, image.height, false)

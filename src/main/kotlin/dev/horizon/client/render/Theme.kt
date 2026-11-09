@@ -4,9 +4,9 @@ import dev.horizon.client.config.Storage
 import java.awt.Color
 
 /**
- * The live theme colours every GUI part reads (the original's `zo.p`). Switching theme fades from the previous theme's colours
+ * The live theme colours every GUI part reads. Switching theme fades from the previous theme's colours
  * to the new one over 1 s (OUT_EXPO); [update] runs once per world frame. At start-up the colours fade in from the
- * built-in default, as in the original.
+ * built-in default.
  */
 object Theme {
     var primary = 0
@@ -22,7 +22,7 @@ object Theme {
     var moduleOutline = 0
     var inactiveModuleOutline = 0
 
-    /** The original's colour clipboard for Copy/Paste in the colour pickers (`zo.Z`). */
+    /** The colour clipboard for Copy/Paste in the colour pickers. */
     var clipboard: Color = Color.WHITE
 
     private var previous = ThemeData.default()
@@ -47,7 +47,7 @@ object Theme {
         inactiveModuleOutline = t.nonActiveOutlineModuleColor
     }
 
-    /** The original's `zo.Y(theme)`: make [t] current; the fade starts from the previous theme's stored colours. */
+    /** Make [t] current; the fade starts from the previous theme's stored colours. */
     fun select(t: ThemeData) {
         previous = Themes.current
         Themes.current = t
@@ -55,7 +55,7 @@ object Theme {
         transition.reset(0f)
     }
 
-    /** The original's `zo.a()`: once per world frame. */
+    /** Once per world frame. */
     fun update() {
         transition.update(1f)
         val p = previous
@@ -75,7 +75,7 @@ object Theme {
         inactiveModuleOutline = Colors.lerp(p.nonActiveOutlineModuleColor, c.nonActiveOutlineModuleColor, k)
     }
 
-    /** The original's `zo.p.P(offset)`: primary towards secondary and back, only half-way (0..0.5), cycling with time. */
+    /** Primary towards secondary and back, only half-way (0..0.5), cycling with time. */
     fun gradient(offset: Int): Int {
         val t = ((System.currentTimeMillis() / 14.0 + offset) % 360).toInt()
         val tri = if (t < 180) t else 360 - t

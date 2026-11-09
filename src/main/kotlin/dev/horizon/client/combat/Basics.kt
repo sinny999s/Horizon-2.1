@@ -40,7 +40,7 @@ import kotlin.math.sin
 
 private val mc get() = Minecraft.getInstance()
 
-/** The original's `ii`: milliseconds since the last [reset]. */
+/** Milliseconds since the last [reset]. */
 class MsTimer {
     private var start = System.currentTimeMillis()
 
@@ -52,7 +52,7 @@ class MsTimer {
 
     fun passed(ms: Long) = System.currentTimeMillis() - start >= ms
 
-    /** The original's `m(ms)`: [passed], resetting when it is. */
+    /** [passed], resetting when it is. */
     fun passedAndReset(ms: Long): Boolean {
         if (!passed(ms)) return false
         reset()
@@ -60,7 +60,7 @@ class MsTimer {
     }
 }
 
-/** The original's `oy`: player ticks since the last [reset]. */
+/** Player ticks since the last [reset]. */
 class TickTimer {
     private var start = 0
 
@@ -68,7 +68,7 @@ class TickTimer {
         start = mc.player?.tickCount ?: 0
     }
 
-    /** The original's `oy.t`: count from [offset] ticks after now (negative: as if reset that many ticks ago). */
+    /** Count from [offset] ticks after now (negative: as if reset that many ticks ago). */
     fun set(offset: Int) {
         start = (mc.player?.tickCount ?: 0) + offset
     }
@@ -80,7 +80,7 @@ class TickTimer {
         return ticks >= n
     }
 
-    /** The original's `oy.A`: [passed], resetting when it is. */
+    /** [passed], resetting when it is. */
     fun passedAndReset(n: Int): Boolean {
         if (!passed(n)) return false
         reset()
@@ -88,7 +88,7 @@ class TickTimer {
     }
 }
 
-/** The original's `lh`: packets through the connection (so this client's own send hooks see them). */
+/** Packets through the connection (so this client's own send hooks see them). */
 object Packets {
     fun send(p: Packet<*>) {
         mc.connection?.send(p)
@@ -101,8 +101,8 @@ object Packets {
     }
 
     /**
-     * The original's `n8.B`: tell the server a rotation now, as a position+rotation packet at the current position (a 26.3
-     * server kicks for it when the tick's own movement packet also carries a position; kept as the original).
+     * Tell the server a rotation now, as a position+rotation packet at the current position (a 26.3
+     * server kicks for it when the tick's own movement packet also carries a position; kept on purpose).
      */
     fun sendRotation(yaw: Float, pitch: Float) {
         val p = mc.player ?: return
@@ -111,7 +111,7 @@ object Packets {
 }
 
 /**
- * The original's `kk` and `ws` bits the combat modules read: whether a container click was sent without a close, the eye
+ * The bits the combat modules read: whether a container click was sent without a close, the eye
  * position cached at the start of the player tick, the ping, and the WASD movement offset.
  */
 object PlayerState {
@@ -119,37 +119,37 @@ object PlayerState {
     var containerOpen = false
         private set
 
-    /** `player.getEyePosition()` at PlayerUpdate priority 10 (the original's `w4.m`). */
+    /** `player.getEyePosition()` at PlayerUpdate priority 10. */
     var eye: Vec3 = Vec3.ZERO
         private set
 
-    /** The local player's latency (the original's `ws.w()`): fast-latency's measurement while it's on, else [tabPing]. */
+    /** The local player's latency: fast-latency's measurement while it's on, else [tabPing]. */
     val ping: Int
         get() = Modules.get<FastLatency>().let { if (it.enabled) it.latency else tabPing }
 
-    /** The local player's latency from the tab list, refreshed at PlayerUpdate priority 10 (the original's `ws.C`). */
+    /** The local player's latency from the tab list, refreshed at PlayerUpdate priority 10. */
     var tabPing = 0
         private set
 
-    /** Whether the server thinks we sprint, from our START/STOP_SPRINTING packets (the original's `kk.M`). */
+    /** Whether the server thinks we sprint, from our START/STOP_SPRINTING packets. */
     @Volatile
     var serverSprinting = false
         private set
 
-    /** Consecutive ticks gliding with an elytra on (the original's `kk.P()`). */
+    /** Consecutive ticks gliding with an elytra on. */
     var elytraTicks = 0
 
-    /** Blocks fallen since last on the ground or in a liquid, from the player's own moves (the original's `kk.Q()`). */
+    /** Blocks fallen since last on the ground or in a liquid, from the player's own moves. */
     var fallDistance = 0.0
         private set
 
-    /** Set while the main thread is inside `Minecraft.tick` (TickEvent +20 to PostTickEvent −20; the original's `tf.k`). */
+    /** Set while the main thread is inside `Minecraft.tick` (TickEvent +20 to PostTickEvent −20). */
     private val tickInProgress = AtomicBoolean(false)
 
-    /** The original's `tf.a.d()`: on the main thread, or between client ticks (for network-thread handlers). */
+    /** On the main thread, or between client ticks (for network-thread handlers). */
     fun safeToAct() = mc.isSameThread || !tickInProgress.get()
 
-    /** A copy of the level's players, taken at PlayerUpdate priority 20 (the original's `tf.a.e()`). */
+    /** A copy of the level's players, taken at PlayerUpdate priority 20. */
     @Volatile
     var players: List<Player> = emptyList()
         private set
@@ -190,7 +190,7 @@ object PlayerState {
         }
     }
 
-    /** Where the server has us: Blink's held-back position while it's on, else our position (the original's `kk.V()`). */
+    /** Where the server has us: Blink's held-back position while it's on, else our position. */
     fun serverPos(): Vec3 {
         val p = mc.player ?: return Vec3.ZERO
         val blink = Modules.get<Blink>()
@@ -200,7 +200,7 @@ object PlayerState {
     /** Eye position for placement maths: the cached one for the local player, the live one for others. */
     fun eyeOf(e: net.minecraft.world.entity.Entity): Vec3 = if (e === mc.player) eye else e.eyePosition
 
-    /** The original's `kk.C(0.5, true)`: half a block in the direction the movement keys point, as (dx, dz). */
+    /** Half a block in the direction the movement keys point, as (dx, dz). */
     fun movementOffset(speed: Double = 0.5): DoubleArray {
         val p = mc.player ?: return doubleArrayOf(0.0, 0.0)
         val o = mc.options
@@ -221,24 +221,24 @@ object PlayerState {
 
     private fun movementKeys() = mc.options.let { listOf(it.keyUp, it.keyDown, it.keyLeft, it.keyRight, it.keyJump, it.keyShift) }
 
-    /** The original's `qo.a`: is the key a mapping is bound to physically held (mouse buttons from the input mixin's set). */
+    /** Is the key a mapping is bound to physically held (mouse buttons from the input mixin's set). */
     fun physical(km: KeyMapping): Boolean {
         val k = (km as KeyMappingAccessor).horizon_key()
         if (k.type == InputConstants.Type.MOUSE) return k.value in Keys.heldMouse
         return Keys.down(k.value)
     }
 
-    /** The original's `kk.z`: let go of the movement keys. */
+    /** Let go of the movement keys. */
     fun releaseMovementKeys() {
         for (k in movementKeys()) k.isDown = false
     }
 
-    /** The original's `kk.X`: set the movement keys back to what is physically held. */
+    /** Set the movement keys back to what is physically held. */
     fun resyncMovementKeys() {
         for (k in movementKeys()) k.isDown = physical(k)
     }
 
-    /** The original's `nk.e`: tells the server the sneak key changed, and sneaks client-side. */
+    /** Tells the server the sneak key changed, and sneaks client-side. */
     fun setSneak(sneak: Boolean) {
         val p = mc.player ?: return
         val i = p.input.keyPresses
@@ -247,7 +247,7 @@ object PlayerState {
     }
 }
 
-/** The original's `da.T`: a chat line from a module, "> [Name] text", one legacy-coded string (so the text is gray). */
+/** A chat line from a module, "> [Name] text", one legacy-coded string (so the text is gray). */
 fun moduleMessage(module: String, text: String) {
     val msg = Component.nullToEmpty("${ChatFormatting.GREEN}> ${ChatFormatting.GRAY}[${ChatFormatting.GOLD}$module${ChatFormatting.GRAY}] $text")
     mc.execute { mc.player?.sendSystemMessage(msg) }

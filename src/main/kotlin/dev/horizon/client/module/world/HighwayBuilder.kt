@@ -21,7 +21,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
 
 /**
- * Not in the original: automatically paves roads (1 to 5 blocks wide) beneath the player as you walk or fly.
+ * Automatically paves roads (1 to 5 blocks wide) beneath the player as you walk or fly.
  * Essential for paving Nether roof highways and tunnels on 6b6t with obsidian, netherrack, or blue ice.
  */
 class HighwayBuilder : Module("highway-builder", Categories.WORLD) {

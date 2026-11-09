@@ -32,7 +32,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * The original's "free-cam" (`rg`): the camera flies on its own, driven by the movement keys (which no longer reach the
+ * The camera flies on its own, driven by the movement keys (which no longer reach the
  * player), the crosshair picks from the camera, and the server-side rotation follows what the camera looks at. With
  * [freeze] the player doesn't move and sends no movement or input packets.
  */
@@ -41,9 +41,8 @@ class FreeCam : Module("free-cam", Categories.WORLD) {
     val vSpeed = float("v-speed", 0.42f, 0.1f..3.0f)
     val freeze = bool("freeze", true)
 
-    // The original's statics: camera yaw/pitch (G, L) and their previous-tick values (N, P), the camera's eye position (M)
-    // and its previous-tick value (p), the key-driven inputs (q forward, d strafe, j vertical; never reset), and the
-    // motion / rotation saved on enable (H, J).
+    // Camera yaw/pitch and their previous-tick values, the camera's eye position and its previous-tick value, the
+    // key-driven inputs (forward, strafe, vertical; never reset), and the motion / rotation saved on enable.
     private var yaw = 0f
     private var pitch = 0f
     private var prevYaw = 0f
@@ -101,8 +100,8 @@ class FreeCam : Module("free-cam", Categories.WORLD) {
                 Mth.lerp(pt.toDouble(), prevPos.y, pos.y), Mth.lerp(pt.toDouble(), prevPos.z, pos.z))
         }
         on<InputEvent> { e -> input(e) }
-        // The original cancels the movement-input event; its hook sits after the last write of KeyboardInput.tick, so this
-        // changes nothing there either.
+        // Cancels the movement-input event; its hook sits after the last write of KeyboardInput.tick, so this changes
+        // nothing (on purpose).
         on<KeyboardInputEvent> { e -> e.cancel() }
         on<MoveEvent>(-10) { e ->
             if (mc.level == null || mc.player == null) {
@@ -147,8 +146,7 @@ class FreeCam : Module("free-cam", Categories.WORLD) {
 
     /**
      * The movement keys drive the camera (Press / Hold set the input, Release clears it) and are let go of; a movement
-     * key never reaches vanilla. The original matched only the code; 26.3's key and button codes overlap, so the device must
-     * match too.
+     * key never reaches vanilla. The device must match too, as 26.3's key and button codes overlap.
      */
     private fun input(e: InputEvent) {
         if (mc.level == null || mc.player == null) {
@@ -189,13 +187,13 @@ class FreeCam : Module("free-cam", Categories.WORLD) {
         return k.type == type && k.value == e.key
     }
 
-    /** The original's `kk.s`: the player's movement input is non-zero. */
+    /** The player's movement input is non-zero. */
     private fun moving(): Boolean {
         val mv = mc.player?.input?.moveVector ?: return false
         return mv.y != 0.0f || mv.x != 0.0f
     }
 
-    /** The original's `kk.h` with explicit inputs: the (x, z) step for [fwd] / [str] at [speed] along [yaw0]. */
+    /** The (x, z) step for [fwd] / [str] at [speed] along [yaw0]. */
     private fun offset(speed: Float, fwd0: Float, str0: Float, yaw0: Float): DoubleArray {
         var fwd = fwd0
         var str = str0
@@ -212,7 +210,7 @@ class FreeCam : Module("free-cam", Categories.WORLD) {
         return doubleArrayOf((fwd * speed) * c + (str * speed) * s, (fwd * speed) * s - (str * speed) * c)
     }
 
-    /** The original's `kk.T`: the look vector, in float like the original. */
+    /** The look vector, in float. */
     private fun direction(pitch: Float, yaw: Float): Vec3 {
         val r = (Math.PI / 180.0).toFloat()
         return Vec3(
@@ -223,8 +221,8 @@ class FreeCam : Module("free-cam", Categories.WORLD) {
     }
 
     /**
-     * The original's `kk.D`: a 5-block crosshair pick from the camera. The block ray starts at the camera position (in
-     * float); the entity ray starts one eye height above it, as in the original.
+     * A 5-block crosshair pick from the camera. The block ray starts at the camera position (in
+     * float); the entity ray starts one eye height above it (on purpose).
      */
     private fun pick(yaw: Float, pitch: Float, x: Double, y: Double, z: Double): HitResult {
         val p = mc.player!!

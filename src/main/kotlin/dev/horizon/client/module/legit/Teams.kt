@@ -17,7 +17,7 @@ import java.util.Optional
 import java.util.UUID
 
 /**
- * Not in the original: universal multi-server teammate detection. Combines scoreboard team membership, scoreboard
+ * Universal multi-server teammate detection. Combines scoreboard team membership, scoreboard
  * `TeamColor` / prefix colour (for servers that give every player a unique scoreboard team for nametag health/ranks),
  * tab-list / display-name colour on the username itself, dyed leather armour colour (BedWars / Bridge / WoolWars), and
  * `[TAG]` clan prefixes. Never calls `Entity.getTeamColor()`, which `GlowEsp` overrides.

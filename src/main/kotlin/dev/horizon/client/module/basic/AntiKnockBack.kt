@@ -25,9 +25,9 @@ import net.minecraft.world.phys.Vec3
 import java.util.Optional
 
 /**
- * The original's "anti-knock-back" (`bs`): removes or scales velocity and explosion knockback; OldGrim also drops the next
+ * Removes or scales velocity and explosion knockback; OldGrim also drops the next
  * pings, GrimNew answers with a position + STOP_DESTROY_BLOCK pair, not-moving freezes movement packets.
- * `pause-on-flag` is read by nothing in the original.
+ * `pause-on-flag` is read by nothing.
  */
 class AntiKnockBack : Module("anti-knock-back", Categories.BASIC) {
     @Suppress("EnumEntryName")
@@ -45,19 +45,19 @@ class AntiKnockBack : Module("anti-knock-back", Categories.BASIC) {
     val vertical = float("vertical", 0.0f, 0.0f..100.0f) { mode.value == Mode.Custom }
     val horizontal = float("horizontal", 0.0f, 0.0f..100.0f) { mode.value == Mode.Custom }
 
-    /** The original's `S`: every movement packet is dropped after knockback taken standing still (not-moving). */
+    /** Every movement packet is dropped after knockback taken standing still (not-moving). */
     @Volatile
     var freeze = false
 
-    /** The original's `e`: GrimNew cancelled a knockback; the packet pair goes out at the next PlayerUpdate. */
+    /** GrimNew cancelled a knockback; the packet pair goes out at the next PlayerUpdate. */
     @Volatile
     private var grimPending = false
 
-    /** The original's `u`: OldGrim, how many more incoming pings to drop. */
+    /** OldGrim, how many more incoming pings to drop. */
     @Volatile
     private var pingSkips = 0
 
-    /** The original's `bs.x`, on every rotation queued (even with the module off): ignore-rotations lets the packet go. */
+    /** On every rotation queued (even with the module off): ignore-rotations lets the packet go. */
     fun onRotationQueued() {
         if (ignoreRotations.value) freeze = false
     }
@@ -93,7 +93,7 @@ class AntiKnockBack : Module("anti-knock-back", Categories.BASIC) {
                 val acc = pk as ClientboundExplodePacketAccessor
                 when (mode.value) {
                     Mode.Cancel -> acc.horizon_setPlayerKnockback(Optional.of(Vec3.ZERO))
-                    // y and z swapped, as in the original's bytecode
+                    // y and z swapped (on purpose)
                     Mode.Custom -> acc.horizon_setPlayerKnockback(Optional.of(Vec3(kb.x * horizontal.value / 100.0f,
                         kb.z * vertical.value / 100.0f, kb.y * horizontal.value / 100.0f)))
                     Mode.GrimNew -> if (LagBack.msSince() - 200 > 0) {
@@ -119,7 +119,7 @@ class AntiKnockBack : Module("anti-knock-back", Categories.BASIC) {
                 val pos = if (p.isVisuallyCrawling || oldBreak.value) BlockPos.containing(p.position()) else p.blockPosition().above()
                 if (level.isEmptyBlock(pos)) {
                     // A 26.3 server kicks for this PosRot when vanilla's sendPosition also sends a position this tick;
-                    // The original's target servers accept it.
+                    // servers on older versions accept it.
                     val acc = p as LocalPlayerAccessor
                     Packets.send(ServerboundMovePlayerPacket.PosRot(p.x, p.y, p.z, acc.horizon_yRotLast(), acc.horizon_xRotLast(),
                         p.onGround(), p.horizontalCollision))
@@ -144,7 +144,7 @@ class AntiKnockBack : Module("anti-knock-back", Categories.BASIC) {
         pingSkips = 0
     }
 
-    /** The original's `bs.s`: whether this knockback is to be handled (may start the not-moving freeze). */
+    /** Whether this knockback is to be handled (may start the not-moving freeze). */
     private fun shouldApply(): Boolean {
         val p = mc.player ?: return false
         val level = mc.level ?: return false

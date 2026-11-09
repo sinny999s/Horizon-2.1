@@ -21,13 +21,13 @@ import net.minecraft.world.item.enchantment.Enchantments
 
 private const val BLACK = 0xFF000000.toInt()
 
-/** The original's `eh`: draws nothing; its `enabled` turns the notifications (and the module toggle sounds) on. */
+/** Draws nothing; its `enabled` turns the notifications (and the module toggle sounds) on. */
 object NotificationsWidget : HudWidget("notifications") {
     override fun render() {}
 }
 
 /**
- * The original's `ep`: four arms around the screen centre (black outline, theme-gradient fill) spread by the attack
+ * Four arms around the screen centre (black outline, theme-gradient fill) spread by the attack
  * cooldown and the movement speed. Hides the vanilla crosshair; it has no size, so the editor can't grab it.
  */
 object Crosshair : HudWidget("crosshair") {
@@ -53,8 +53,8 @@ object Crosshair : HudWidget("crosshair") {
 }
 
 /**
- * The original's `m6`: the skin head, a rainbow "the original" with the version, then the player name and the server address
- * ("singleplayer" without one). The original showed its account avatar instead of the head when logged in to it.
+ * The skin head, a rainbow "Horizon" with the version, then the player name and the server address
+ * ("singleplayer" without one).
  */
 object WatermarkWidget : HudWidget("watermark-widget") {
     private val version by lazy {
@@ -67,8 +67,8 @@ object WatermarkWidget : HudWidget("watermark-widget") {
     }
 
     /**
-     * Not in the original: The original's watermark recoloured: the same head, plates and places, with the plates and text in the
-     * widgets' new look, the version grey and "the original" in the theme's flowing gradient (the mockup's .hgrad).
+     * The watermark recoloured: the same head, plates and places, with the plates and text in the
+     * widgets' new look, the version grey and "Horizon" in the theme's flowing gradient (the mockup's .hgrad).
      */
     private fun renderModern(p: net.minecraft.client.player.AbstractClientPlayer) {
         val ver = "v$version"
@@ -99,7 +99,7 @@ object WatermarkWidget : HudWidget("watermark-widget") {
 }
 
 /**
- * The original's `ew`: while gliding (or in the editor) a panel with a compass arrow, a pitch bar and flight stats
+ * While gliding (or in the editor) a panel with a compass arrow, a pitch bar and flight stats
  * (fireworks, elytra durability and range, speeds).
  */
 object FlightWidget : HudWidget("flight-widget") {
@@ -126,7 +126,7 @@ object FlightWidget : HudWidget("flight-widget") {
         size(120f, 55f)
     }
 
-    /** The stats, as the original works them out. */
+    /** The stats, quirks and all (on purpose). */
     private fun stats(p: net.minecraft.world.entity.player.Player): List<String> {
         var durability = 0
         var res = 0f
@@ -145,8 +145,8 @@ object FlightWidget : HudWidget("flight-widget") {
     }
 
     /**
-     * Not in the original: the new look (hud.css .flight): a compass ring with a needle along your heading (the original's
-     * letters: X up, Z right), a slim pitch track, and the stats.
+     * The new look (hud.css .flight): a compass ring with a needle along your heading (letters: X up, Z right), a slim
+     * pitch track, and the stats.
      */
     private fun renderModern(yaw: Float, pitch: Float, lines: List<String>) {
         plate(left, top, 120f, 55f, batched = false)
@@ -176,9 +176,9 @@ object FlightWidget : HudWidget("flight-widget") {
 }
 
 /**
- * The original's `ey`: a top-down outline of the block a hitbox corner is inside, turned with the player's yaw, with the
+ * A top-down outline of the block a hitbox corner is inside, turned with the player's yaw, with the
  * hitbox in it (red when a corner is free). In the editor it shows the block you stand in.
- * Not in the original: the new look (hud.css .phase): a plate with the block as a 32-unit outline and your hitbox in the
+ * The new look (hud.css .phase): a plate with the block as a 32-unit outline and your hitbox in the
  * theme colour.
  */
 object PhaseWidget : HudWidget("phase-widget") {
@@ -228,8 +228,8 @@ object PhaseWidget : HudWidget("phase-widget") {
 }
 
 /**
- * The original's `ei`: the media playing on the computer. The original read it through a bundled native library; without one
- * nothing plays, so only the placeholder shows, in chat and the Hud editor (as the original on macOS).
+ * The media playing on the computer. Reading it needs a native library; without one
+ * nothing plays, so only the placeholder shows, in chat and the Hud editor.
  */
 object MediaPlayerWidget : HudWidget("media-player-widget") {
     private val show = Animation(Easing.OUT_BACK, 250)
@@ -244,7 +244,7 @@ object MediaPlayerWidget : HudWidget("media-player-widget") {
         pose.scale(s, s)
         pose.translate(-(left + 60), -(top + 21.5f))
         if (editorMode) {
-            // Not in the original: the new look (hud.css .media): an art tile and what's playing
+            // The new look (hud.css .media): an art tile and what's playing
             plate(left, top, 120f, 43f, 1f, batched = false)
             Ui.dbox(left + 5.5f, top + 5.5f, 32f, 32f, 4f, 0x14FFFFFF, 0x05FFFFFF)
             Ui.icon("sound", left + 14.5f, top + 14.5f, 14f, Tok.T4)

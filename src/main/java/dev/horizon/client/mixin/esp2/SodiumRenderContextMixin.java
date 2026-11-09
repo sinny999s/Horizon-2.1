@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * X-ray with Sodium (not in the original): the blocks x-ray shows (the only ones Sodium still builds, see
+ * X-ray with Sodium: the blocks x-ray shows (the only ones Sodium still builds, see
  * SodiumBlockRendererMixin) draw every face, so an ore against stone shows all its sides.
  */
 @Pseudo

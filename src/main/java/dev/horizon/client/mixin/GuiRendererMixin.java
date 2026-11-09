@@ -16,10 +16,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Draws the client's GUI after vanilla's, as the original did: the main GuiRenderer gets two more GuiRenderers (each with its
+ * Draws the client's GUI after vanilla's: the main GuiRenderer gets two more GuiRenderers (each with its
  * own render state) for vanilla things the client GUI submits, one for the HUD's layer and one for the screens' layer
- * above it, and at the end of each vanilla GUI frame the client GUI is drawn on top (see {@link Overlay}). Not in
- * The original: while a screen is open, the HUD's layer (ESP, chams, nametags, widgets) goes first instead, so the screen
+ * above it, and at the end of each vanilla GUI frame the client GUI is drawn on top (see {@link Overlay}).
+ * While a screen is open, the HUD's layer (ESP, chams, nametags, widgets) goes first instead, so the screen
  * (an inventory, a chest) covers it as it covers vanilla's HUD.
  */
 @Mixin(GuiRenderer.class)

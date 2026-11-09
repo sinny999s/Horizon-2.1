@@ -24,8 +24,8 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 
 /**
- * The original's "auto-wither" (`r6`): placing soul sand with the use key (the stem) plans the rest of a wither (three more
- * soul sand, three wither skeleton skulls) around it, then places it with the block placer (`w4`), one block per tick
+ * Placing soul sand with the use key (the stem) plans the rest of a wither (three more
+ * soul sand, three wither skeleton skulls) around it, then places it with the block placer, one block per tick
  * (Vanilla) or up to blocks-per-action per tick with delay-per-action ticks in between (Instant).
  */
 class AutoWither : Module("auto-wither", Categories.WORLD) {
@@ -43,7 +43,7 @@ class AutoWither : Module("auto-wither", Categories.WORLD) {
     val render = bool("render", true)
     val pose = enum("pose", Pose.LYING)
 
-    /** Blocks still to place: position and whether it is soul sand (else a skull), in placing order (the original's `W`). */
+    /** Blocks still to place: position and whether it is soul sand (else a skull), in placing order. */
     private val plan = ArrayList<Pair<BlockPos, Boolean>>()
     private var wait = 0
     private val useTimer = MsTimer()
@@ -83,7 +83,7 @@ class AutoWither : Module("auto-wither", Categories.WORLD) {
         }
     }
 
-    /** The original's `F`: the wither around [stem], by the horizontal direction the player looks (none when looking up/down). */
+    /** The wither around [stem], by the horizontal direction the player looks (none when looking up/down). */
     private fun build(stem: BlockPos) {
         val standing = pose.value == Pose.STANDING
         fun add(p: BlockPos, sand: Boolean) {
@@ -122,7 +122,7 @@ class AutoWither : Module("auto-wither", Categories.WORLD) {
         }
     }
 
-    /** The original's `m`: hand the request to the rotation manager, or place now; then the 300 ms box. */
+    /** Hand the request to the rotation manager, or place now; then the 300 ms box. */
     private fun place(pos: BlockPos, req: RotationRequest) {
         if (rotate.value) {
             if (timing.value == Timing.Instant) RotationManager.queueInstant(req) else RotationManager.queue(req)

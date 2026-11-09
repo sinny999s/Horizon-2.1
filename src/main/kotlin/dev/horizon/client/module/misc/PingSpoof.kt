@@ -11,9 +11,9 @@ import net.minecraft.network.protocol.common.ClientboundPingPacket
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * The original's "ping-spoof" (`af`): pings and keep-alives are held back and handed to vanilla (which answers them) on the
+ * Pings and keep-alives are held back and handed to vanilla (which answers them) on the
  * first frame [delay] ms after they came. Nothing is flushed on disable or disconnect: what is held then is answered,
- * possibly on a later connection, when the module is next on (as in the original).
+ * possibly on a later connection, when the module is next on (on purpose).
  */
 class PingSpoof : Module("ping-spoof", Categories.MISC) {
     val delay = int("delay", 100, 1..29500)
@@ -46,7 +46,7 @@ class PingSpoof : Module("ping-spoof", Categories.MISC) {
     }
 
     private companion object {
-        /** The original's static `af.N`: held packets and when they came. */
+        /** Held packets and when they came. */
         val held = ConcurrentHashMap<Packet<*>, Long>()
     }
 }

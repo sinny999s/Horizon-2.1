@@ -25,7 +25,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 
 /**
- * The original's "auto-netherite-scrap" (`jn`): uses a netherite scrap trap on [placeNormal] or [placeWithRegion] (with a
+ * Uses a netherite scrap trap on [placeNormal] or [placeWithRegion] (with a
  * 50 s cooldown and optional 1.5-block target range check) and places a protection region block above the player's
  * head when inside an obsidian trap.
  */
@@ -79,13 +79,11 @@ class AutoNetheriteScrap : Module("auto-netherite-scrap", Categories.ATTACK) {
         }
     }
 
-    /** The original's `jn.v`. */
     private fun useWithRegion() {
         useScrap()
         waitingForRegion = true
     }
 
-    /** The original's `jn.C`. */
     private fun useScrap() {
         val pl = mc.player ?: return
         val hot = Inventory.hotbarFind(Items.NETHERITE_SCRAP)
@@ -107,11 +105,9 @@ class AutoNetheriteScrap : Module("auto-netherite-scrap", Categories.ATTACK) {
         }
     }
 
-    /** The original's `jn.b`. */
     private fun findRegionBlockSlot(): Int =
         regionBlocks.firstNotNullOfOrNull { block -> Inventory.find { it.`is`(block.asItem()) } }?.slot ?: -1
 
-    /** The original's `jn.t`. */
     private fun hasRegionBlockNearby(): Boolean {
         val pl = mc.player ?: return false
         val level = mc.level ?: return false

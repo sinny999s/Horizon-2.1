@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's `EntityLivingMixin.travelHook` / `travelPostHook` (PreElytraEvent / AfterElytraEvent). */
+/** Before and after the local player's `travel` (pre / after elytra event). */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityTravelMixin {
 	@Inject(method = "travel", at = @At("HEAD"), cancellable = true)

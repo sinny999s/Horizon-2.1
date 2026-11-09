@@ -12,7 +12,7 @@ class CameraOffsetEvent : Event() {
     var offset = 0f
 }
 
-/** Each fog value `FogRenderer.updateBuffer` writes (the original's ApplyFogEvent); cancelling replaces it with these. */
+/** Each fog value `FogRenderer.updateBuffer` writes; cancelling replaces it with these. */
 class ApplyFogEvent : Event() {
     var color = Vector4f(1f, 1f, 1f, 1f)
     var envStart = 0f

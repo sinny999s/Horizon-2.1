@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft
 import java.util.UUID
 
 /**
- * Not in the original: the rest of your Lunar profile, changed the way Lunar Client changes it, over Horizon's Lunar
+ * The rest of your Lunar profile, changed the way Lunar Client changes it, over Horizon's Lunar
  * connection ([LunarNetwork]):
  * - Badge: which of your badges shows by your name (BadgeService.EquipBadge).
  * - Lunar+ colour: the plus on your logo, from the colours Lunar offers you (CosmeticService.UpdateLunarPlusColor).

@@ -29,7 +29,7 @@ import java.nio.file.Files
 import kotlin.io.path.extension
 
 /**
- * The original's "inventory-manager" (`jl`): every tick (after [actionDelay]) up to [clickPerAction] pickup clicks move the
+ * Every tick (after [actionDelay]) up to [clickPerAction] pickup clicks move the
  * open menu's inventory towards the current kit's layout; the cleaner throws out [cleanerList] items, one per
  * [cleanerDelay] ms, and sends a close packet [cleanerDelay] + 100 ms after the last throw.
  */
@@ -68,7 +68,7 @@ class InventoryManager : Module("inventory-manager", Categories.EQUIP) {
             val inInventory = mc.gui.screen() is InventoryScreen
             val menu = p.containerMenu
             if (menu is ChestMenu && cleanChests.value) {
-                // The original reads the title of a screen it assumes is open (it throws without one).
+                // Reads the title of a screen it assumes is open.
                 val title = mc.gui.screen()?.title?.string ?: return@on
                 for (i in 0 until menu.container.containerSize) {
                     val slot = menu.getSlot(i)
@@ -85,14 +85,14 @@ class InventoryManager : Module("inventory-manager", Categories.EQUIP) {
         }
     }
 
-    /** The original's `jl.v`: throw the stack in [slot] if [cleanerDelay] has passed. */
+    /** Throw the stack in [slot] if [cleanerDelay] has passed. */
     private fun throwOut(slot: Int) {
         if (!throwTimer.passedAndReset(cleanerDelay.value.toLong())) return
         EquipUtil.click(slot, 1, ContainerInput.THROW)
         thrown = true
     }
 
-    /** The original's `jl.T`: the clicks that bring [menu]'s inventory part closer to the kit (only for 46/63/90-slot menus). */
+    /** The clicks that bring [menu]'s inventory part closer to the kit (only for 46/63/90-slot menus). */
     private fun plan(menu: AbstractContainerMenu): List<Int> {
         val out = ArrayList<Int>()
         val size = menu.slots.size
@@ -115,7 +115,7 @@ class InventoryManager : Module("inventory-manager", Categories.EQUIP) {
         return out
     }
 
-    /** The original's `jl.s`: -2 when the cursor holds [item], else the first slot in [range] with it that isn't already in place. */
+    /** -2 when the cursor holds [item], else the first slot in [range] with it that isn't already in place. */
     private fun source(item: Item, menu: AbstractContainerMenu, range: IntRange): Int {
         if (menu.carried.item == item) return -2
         val part = inventoryPart(menu.slots.size)
@@ -126,21 +126,20 @@ class InventoryManager : Module("inventory-manager", Categories.EQUIP) {
         return -1
     }
 
-    /** The original's `jl.N`. */
     private fun searchRange(size: Int) = when (size) {
         46 -> 9..44
         63 -> 0..62
         else -> 0..89
     }
 
-    /** The original's `jl.Z`: where the player's inventory (main, then hotbar) sits in the menu. */
+    /** Where the player's inventory (main, then hotbar) sits in the menu. */
     private fun inventoryPart(size: Int) = when (size) {
         46 -> 9..44
         63 -> 27..62
         else -> 54..89
     }
 
-    /** The original's `jl.y`: a kit named [name] from the open menu's slots 9..44. */
+    /** A kit named [name] from the open menu's slots 9..44. */
     fun snapshot(name: String): Kit {
         val items = LinkedHashMap<Int, Item>()
         val p = mc.player
@@ -149,7 +148,7 @@ class InventoryManager : Module("inventory-manager", Categories.EQUIP) {
     }
 
     private companion object {
-        /** The original's auction-screen filter, mis-encoded in its jar ("Аукцион", "покупки"), so it never matches. */
+        /** An auction-screen filter, mis-encoded ("Аукцион", "покупки"), so it never matches (on purpose). */
         val SKIP_TITLES = listOf(
             "РђСѓРєС†РёРѕРЅ",
             "РїРѕРєСѓРїРєРё",
@@ -157,7 +156,7 @@ class InventoryManager : Module("inventory-manager", Categories.EQUIP) {
     }
 }
 
-/** The original's `v5`: an item saved by its description id (unknown ids load as air). */
+/** An item saved by its description id (unknown ids load as air). */
 object ItemByDescriptionId : KSerializer<Item> {
     override val descriptor = PrimitiveSerialDescriptor("Item", PrimitiveKind.STRING)
     override fun serialize(encoder: Encoder, value: Item) = encoder.encodeString(value.descriptionId)
@@ -167,12 +166,12 @@ object ItemByDescriptionId : KSerializer<Item> {
     }
 }
 
-/** The original's kit (`wx`, "InventorySnapshot"): slot 0..26 main inventory, 27..35 hotbar. */
+/** A kit: slot 0..26 main inventory, 27..35 hotbar. */
 @Serializable
 class Kit(var id: String, var items: MutableMap<Int, @Serializable(with = ItemByDescriptionId::class) Item>)
 
 /**
- * The original's kit store (`wz`): `inventories/<id>.hzn`, read once at start-up and written with the other configs. The
+ * The kit store: `inventories/<id>.hzn`, read once at start-up and written with the other configs. The
  * current kit is the one named in shared.hzn (created empty if missing); choosing another doesn't change that name.
  */
 object Kits {

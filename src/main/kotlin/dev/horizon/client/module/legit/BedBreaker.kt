@@ -39,7 +39,7 @@ import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
- * Not in the original: digs into an enemy bed the way a player does. Near another team's bed (in reach), it looks at
+ * Digs into an enemy bed the way a player does. Near another team's bed (in reach), it looks at
  * every straight way from your eyes to the bed and what you'd have to break along it, and takes the quickest to dig
  * with the tools on your hotbar (one wool block beats two of end stone; obsidian is gone round, not through). It turns
  * the camera in whole mouse counts onto that way, takes out the best tool for the block in front, and mines through

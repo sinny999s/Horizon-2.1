@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// A full-screen triangle (the original's post/post.vsh drew a quad over the screen; same result).
+// A full-screen triangle.
 layout(location = 0) out vec2 uv;
 
 void main() {

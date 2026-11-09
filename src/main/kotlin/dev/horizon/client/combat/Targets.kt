@@ -13,7 +13,7 @@ import kotlin.math.min
 
 private val mc get() = Minecraft.getInstance()
 
-/** The original's `t5`: the player to fight. */
+/** The player to fight. */
 object TargetFinder {
     enum class Sort { DISTANCE, FOV, HEALTH }
 
@@ -31,7 +31,7 @@ object TargetFinder {
         }
     }
 
-    /** Yaw difference only, not wrapped again after the subtraction (as in the original). */
+    /** Yaw difference only, not wrapped again after the subtraction (on purpose). */
     fun fov(self: Player, p: Player): Float {
         val dx = p.x - self.x
         val dz = p.z - self.z
@@ -39,7 +39,7 @@ object TargetFinder {
     }
 }
 
-/** The original's `dk.j`: Grim's attack-range check against a crystal at [pos], aiming at [interact]. */
+/** Grim's attack-range check against a crystal at [pos], aiming at [interact]. */
 object GrimRange {
     fun check(pos: Vec3, interact: Vec3): Boolean {
         val p = mc.player ?: return false

@@ -1,7 +1,7 @@
 package dev.horizon.client.combat
 
 /**
- * Not in the original: what a line of Hypixel's chat says happened, for Session Stats. Hypixel announces every death
+ * What a line of Hypixel's chat says happened, for Session Stats. Hypixel announces every death
  * in chat ("Victim was knocked into the void by Killer.", "FINAL KILL!" on the end of a final one) and every bed
  * ("BED DESTRUCTION > Red Bed was destroyed by Killer!"). Kill messages come in many themes, so the shape is read, not
  * the words: one sentence opening with the victim's name, without a "name: message" colon. Kept free of the game so

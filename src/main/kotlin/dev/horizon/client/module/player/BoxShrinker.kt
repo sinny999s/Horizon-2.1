@@ -4,9 +4,9 @@ import dev.horizon.client.event.BoxContractEvent
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 
-/** The original's "box-shrinker" (`al`): the local player's bounding box is 1e-12 narrower on each side in X and Z. */
+/** The local player's bounding box is 1e-12 narrower on each side in X and Z. */
 class BoxShrinker : Module("box-shrinker", Categories.PLAYER) {
-    /** The original's `p`: set while the handler reads the real box, whose own call comes back through the event. */
+    /** Set while the handler reads the real box, whose own call comes back through the event. */
     private var reading = false
 
     init {

@@ -9,12 +9,12 @@ import dev.horizon.client.module.Module
 import net.minecraft.world.item.Items
 
 /**
- * The original's "re-filler" (`jh`): keeps a totem in the hotbar slot one was just used from, and every 10 ticks tops up the
+ * Keeps a totem in the hotbar slot one was just used from, and every 10 ticks tops up the
  * first half-empty hotbar stack from a matching main-inventory stack. Works with no screen or one of the client's own.
  */
 class ReFiller : Module("re-filler", Categories.EQUIP) {
     /**
-     * Ticks left to put a totem back into hotbar [slot] (the original's `L` and `O`). Set to 3 every tick a totem is held
+     * Ticks left to put a totem back into hotbar [slot]. Set to 3 every tick a totem is held
      * in the main hand, and by Offhand after its hot-bar swap; counted down while the slot holds no totem.
      */
     @Volatile
@@ -50,7 +50,7 @@ class ReFiller : Module("re-filler", Categories.EQUIP) {
         }
     }
 
-    /** The original's `jh.a`: fill hotbar [i] from the first main-inventory stack with the same item and name. */
+    /** Fill hotbar [i] from the first main-inventory stack with the same item and name. */
     private fun refill(i: Int): Boolean {
         val inv = mc.player?.inventory ?: return false
         val s = inv.getItem(i)

@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 
 /**
- * Not in the original: the hunt map's recorded regions for the world you're in, kept per world like Breadcrumbs (server or
+ * The hunt map's recorded regions for the world you're in, kept per world like Breadcrumbs (server or
  * singleplayer world, then dimension) under `horizon/huntmap/<key>/`. A region loads from disk the first time it's
  * needed and is saved and dropped from memory once many are loaded; a small summary of each stays for zoomed-out
  * views. All changes happen on the main thread; files are written on a background thread from copies taken here.

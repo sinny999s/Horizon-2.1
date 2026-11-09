@@ -13,7 +13,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Not in the original: the maths behind Aura's LEGIT `aim-model` HUMAN, kept free of the game so it can be simulated in
+ * The maths behind Aura's LEGIT `aim-model` HUMAN, kept free of the game so it can be simulated in
  * tests. Aiming with a mouse is a chain of ballistic submovements, not a spring:
  * - your own movement you feel at once, so it's made up for by a smooth, steady turn; only the target's own movement is
  *   seen late;

@@ -7,7 +7,7 @@ import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 
 /**
- * The original's "reverse-step" (`bw`): at PreSync, Motion pushes the velocity down by `motion` while on the ground; Timer
+ * At PreSync, Motion pushes the velocity down by `motion` while on the ground; Timer
  * runs the client at `timer` while falling faster than 0.1 (jump not held). Not in liquids, gliding, flying or webs.
  */
 class ReverseStep : Module("reverse-step", Categories.RAGE) {

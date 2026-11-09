@@ -35,7 +35,7 @@ import kotlin.math.floor
 import kotlin.math.max
 
 /**
- * Not in the original: where nether portals used to be, a sign of a base's old way in. Two ways to tell:
+ * Where nether portals used to be, a sign of a base's old way in. Two ways to tell:
  * - [emptyFrames]: a whole obsidian frame with no portal in it. Works anywhere, but only if the frame was left standing.
  * - The idea of Trouser-Streak's Portal Pattern Finder: carved caves are filled with cave air and a broken portal leaves
  *   plain air, so a flat portal-shaped patch of plain air in cave air is a portal someone removed, frame and all. Only

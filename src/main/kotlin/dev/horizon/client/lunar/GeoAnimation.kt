@@ -12,7 +12,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Not in the original: a Lunar GeckoLib cosmetic's animations (`.anim.json`, Bedrock animations as GeckoLib 4 reads
+ * A Lunar GeckoLib cosmetic's animations (`.anim.json`, Bedrock animations as GeckoLib 4 reads
  * them): per bone, rotation (degrees), position (pixels) and scale channels, each a constant vector or keyframes with
  * GeckoLib's easings; every number may be Molang ([Molang]). [sample] adds an animation's values at a time onto a
  * [GeoModel.Pose]. Game-free.

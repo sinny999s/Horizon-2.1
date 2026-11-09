@@ -38,9 +38,9 @@ object BasicUtil {
     }
 }
 
-/** The original's `p2` / `y6` inventory operations the basic modules use. */
+/** The inventory operations the basic modules use. */
 object Slots {
-    /** The original's `p2.i(searcher, mode)`: the hotbar, the whole inventory, or the hotbar and then the inventory. */
+    /** The hotbar, the whole inventory, or the hotbar and then the inventory. */
     fun find(mode: Switch, pred: (ItemStack) -> Boolean): Found? = when (mode) {
         Switch.NORMAL, Switch.SILENT -> Inventory.hotbarFind(pred)
         Switch.INVENTORY_NORMAL, Switch.INVENTORY_SILENT -> Inventory.find(pred)
@@ -48,7 +48,7 @@ object Slots {
     }
 
     /**
-     * The original's `p2.i(slot, mode, action)`: run [action] holding [slot] (a hotbar index, or a container slot for the
+     * Run [action] holding [slot] (a hotbar index, or a container slot for the
      * inventory modes), switching back afterwards in the silent modes. Gui-move ignores the clicks this makes.
      */
     fun withSwitch(slot: Int, mode: Switch, action: () -> Unit) {
@@ -82,8 +82,7 @@ object Slots {
     }
 
     /**
-     * The original's `p2.E(slot, 1)`: right-click with hotbar [slot], then select the old slot again. The original also sent a
-     * swing packet; 26.3 has none.
+     * Right-click with hotbar [slot], then select the old slot again. No swing packet is sent; 26.3 has none.
      */
     fun useHotbar(slot: Int) {
         val p = mc.player ?: return
@@ -94,7 +93,7 @@ object Slots {
         Inventory.selectHotbar(old)
     }
 
-    /** The original's `y6.Q`: a click on container slot [slot] of the open menu, then optionally a close packet. */
+    /** A click on container slot [slot] of the open menu, then optionally a close packet. */
     fun click(slot: Int, button: Int = 0, input: ContainerInput = ContainerInput.PICKUP, close: Boolean = false) {
         val p = mc.player ?: return
         mc.gameMode?.handleContainerInput(p.containerMenu.containerId, slot, button, input, p)
@@ -102,7 +101,7 @@ object Slots {
     }
 
     /**
-     * The original's `p2.J`: -2 when an elytra with damage under 430 is worn, else the container slot of the first such
+     * -2 when an elytra with damage under 430 is worn, else the container slot of the first such
      * elytra in inventory indices 0..35 (hotbar as 36..44), or -1.
      */
     fun elytra(): Int {
@@ -120,8 +119,8 @@ object Slots {
 }
 
 /**
- * The original's `_7.u(message)`: turn the module off and say why in chat. The original's off switch (`_7.p`) has no "already
- * off" check, so a second call notifies again.
+ * Turn the module off and say why in chat. The off switch has no "already off" check, so a second call notifies again
+ * (on purpose).
  */
 fun Module.disableWith(message: String) {
     enabledSetting.value = false
@@ -132,7 +131,7 @@ fun Module.disableWith(message: String) {
 }
 
 /**
- * The original's `kk.q` / `kk.S`: when the server last corrected our position (a "rubberband"), and when we last used a
+ * When the server last corrected our position (a "rubberband"), and when we last used a
  * chorus fruit or anyone threw a pearl (corrections within 10 s after those don't count).
  */
 object Rubberband {
@@ -142,7 +141,7 @@ object Rubberband {
     @Volatile
     private var lastChorusOrPearl = -1L
 
-    /** The original's `kk.e()`: milliseconds since the last rubberband. */
+    /** Milliseconds since the last rubberband. */
     fun sinceLast(): Long = System.currentTimeMillis() - lastCorrection
 
     fun init() {
@@ -165,7 +164,7 @@ object Rubberband {
         }
     }
 
-    /** The original's StopUsingItemEvent handler (`MultiPlayerGameMode.releaseUsingItem` HEAD). */
+    /** Called at `MultiPlayerGameMode.releaseUsingItem` HEAD. */
     fun stopUsing() {
         if (mc.player?.useItem?.`is`(Items.CHORUS_FRUIT) == true) lastChorusOrPearl = System.currentTimeMillis()
     }

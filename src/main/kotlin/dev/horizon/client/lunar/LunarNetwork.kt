@@ -44,7 +44,7 @@ import javax.crypto.KeyGenerator
 import javax.net.ssl.SSLContext
 
 /**
- * Not in the original: Lunar Spoof's link to Lunar's own services, after Moonlight's `AuthClient`, `WSClient`,
+ * Lunar Spoof's link to Lunar's own services, after Moonlight's `AuthClient`, `WSClient`,
  * `SubscriptionManager` and `PeerRegistry`. It signs in to Lunar's authenticator the way a Lunar Client does, by joining
  * a Mojang session with your own account (so your token goes only to Mojang, never to Lunar), keeps Lunar's game
  * websocket open with the token it gets, asks it which players in the tab list use Lunar (LoadTabLogos), and keeps

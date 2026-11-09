@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * Not in the original: Lunar Spoof's tab list logo (Moonlight's GuiPlayerTabOverlayMixin). A Lunar player's name is
+ * Lunar Spoof's tab list logo (Moonlight's GuiPlayerTabOverlayMixin). A Lunar player's name is
  * drawn after Lunar's logo (tinted their logo colour, with the Lunar+ plus) and badge ([LunarNameTag]), and counts as
  * that much wider when the columns are sized.
  */

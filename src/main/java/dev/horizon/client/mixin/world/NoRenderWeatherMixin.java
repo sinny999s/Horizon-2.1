@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * The original's LevelRendererMixin cancelled 26.2's `addWeatherPass` (rain/snow, then the world border). 26.3 has no such
+ * Rain/snow and the world border. 26.2 drew them in `addWeatherPass`; 26.3 has no such
  * pass: both are drawn inside the main pass, by the classic or the order-independent-transparency path, so each of those
  * draws is cancelled here and in {@link NoRenderWorldBorderMixin}.
  */

@@ -48,7 +48,7 @@ import kotlin.math.sqrt
 import kotlin.math.tan
 
 /**
- * Not in the original: GodBridge assist module.
+ * GodBridge assist module.
  * Assists with advanced bridging techniques:
  * - Legit: Automatically sneaks at the edge of blocks when moving backwards (Ninja / Fast Bridge).
  * - GodBridge: Automates a hand-played god bridge. The camera is held still (or turned with ordinary mouse counts

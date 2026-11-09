@@ -10,12 +10,12 @@ import dev.horizon.client.hud.HudWidget
 import dev.horizon.client.render.Canvas
 
 /**
- * The original's `ec`: a 16-high tile per enabled item macro, the item and its key; the key is grey while held and red when
+ * A 16-high tile per enabled item macro, the item and its key; the key is grey while held and red when
  * the item isn't in the inventory.
- * Not in the original: the new look (hud.css .mtile): the item and its key in a 16-tall tile, the cooldown shown.
+ * The new look (hud.css .mtile): the item and its key in a 16-tall tile, the cooldown shown.
  */
 object MacroWidget : HudWidget("macro-widget") {
-    /** Not in the original: a tile drawn this frame, for its keycap and cooldown over the plates. */
+    /** A tile drawn this frame, for its keycap and cooldown over the plates. */
     private class Tile(val x: Float, val w: Float, val label: String, val color: Int, val cooldown: Float)
 
     private val tiles = ArrayList<Tile>()

@@ -22,7 +22,7 @@ import dev.horizon.client.event.TickEvent
 private val mc get() = Minecraft.getInstance()
 
 /**
- * The original's `gl` (TimerManager): the client's tick-rate factor. Reset to 1 at the start of every player tick
+ * The client's tick-rate factor. Reset to 1 at the start of every player tick
  * (PlayerUpdate +20); a module that wants a factor sets it again every tick, the last write wins. The
  * `DeltaTracker.Timer` mixin applies it to the frame's ms-to-ticks step while it isn't 1 (with the raw 50 ms base).
  */
@@ -35,9 +35,9 @@ object TimerManager {
     }
 }
 
-/** The bits of the original's `kk` the movement modules read (`kk.D()`, last tick's horizontal speed, is ServerInfo's). */
+/** Helpers the movement modules read (last tick's horizontal speed is ServerInfo's). */
 object Movement {
-    /** `kk.s`: a movement key is pushing the input (the move vector isn't zero). */
+    /** A movement key is pushing the input (the move vector isn't zero). */
     fun moving(): Boolean {
         val p = mc.player ?: return false
         if (mc.level == null) return false
@@ -46,7 +46,7 @@ object Movement {
     }
 
     /**
-     * `kk.h` (through `kk.C`'s defaults): [speed] in the direction [forward]/[strafe] point from [yaw], as (dx, dz);
+     * [speed] in the direction [forward]/[strafe] point from [yaw], as (dx, dz);
      * by default the input's move vector and the player's yaw.
      */
     fun strafe(speed: Float, forward: Float? = null, strafe: Float? = null, yaw: Float? = null): DoubleArray {
@@ -66,7 +66,7 @@ object Movement {
         return doubleArrayOf(f * speed * c + s * speed * sn, f * speed * sn - s * speed * c)
     }
 
-    /** `nq.V`: [p]'s box touches a cobweb (blocks within 2 around, 1 below to 4 above its block). */
+    /** [p]'s box touches a cobweb (blocks within 2 around, 1 below to 4 above its block). */
     fun inCobweb(p: Player): Boolean {
         val level = mc.level ?: return false
         val c = BlockPos.containing(p.position())
@@ -77,19 +77,19 @@ object Movement {
         return false
     }
 
-    /** `kk.b`: [speed] straight along the player's yaw, as (dx, dz). */
+    /** [speed] straight along the player's yaw, as (dx, dz). */
     fun forward(speed: Double): DoubleArray {
         val yaw = mc.player!!.yRot
         return doubleArrayOf(speed * cos(Math.toRadians((yaw + 90f).toDouble())), speed * sin(Math.toRadians((yaw + 90f).toDouble())))
     }
 
-    /** The player's horizontal distance moved last tick, taken at Tick (the original's `kk.t`, `kk.D()`). */
+    /** The player's horizontal distance moved last tick, taken at Tick. */
     var lastHorizontal = 0f
         private set
 
     private var plugged = false
 
-    /** Plugs the always-on tracking (the original's `kk` is on the bus from startup); modules reading it call this when built. */
+    /** Plugs the always-on tracking; modules reading it call this when built. */
     fun init() {
         if (plugged) return
         plugged = true
@@ -100,7 +100,7 @@ object Movement {
     }
 
     /**
-     * The original's `kk.h`: [speed] blocks along [yaw] for the given input (a diagonal turns the yaw by 45° and moves
+     * [speed] blocks along [yaw] for the given input (a diagonal turns the yaw by 45° and moves
      * straight), as (x, z).
      */
     fun direction(speed: Float, forwardIn: Float, strafeIn: Float, yawIn: Float): DoubleArray {
@@ -120,7 +120,7 @@ object Movement {
     }
 
     /**
-     * The original's `kk.s(event, speed)`: the move's x/z set to [speed] blocks in the direction of the movement input (a
+     * The move's x/z set to [speed] blocks in the direction of the movement input (a
      * diagonal turns the yaw by 45°), or zero with no input.
      */
     fun strafe(e: MoveEvent, speed: Double) {
@@ -145,7 +145,7 @@ object Movement {
         e.z = forward * speed * s - strafe * speed * c
     }
 
-    /** The original's `kk.i`: the NCP base speed 0.2873, scaled up by Speed and down by Jump Boost and Slowness. */
+    /** The NCP base speed 0.2873, scaled up by Speed and down by Jump Boost and Slowness. */
     fun baseSpeed(): Double {
         val p = mc.player ?: return 0.0
         var v = 0.2873
@@ -155,7 +155,7 @@ object Movement {
         return v
     }
 
-    /** The original's `kk.q`: the jump's vertical speed, 0.39999995 plus 0.1 per Jump Boost level. */
+    /** The jump's vertical speed, 0.39999995 plus 0.1 per Jump Boost level. */
     fun jumpMotion(): Double {
         val p = mc.player ?: return 0.0
         var v = 0.39999995f.toDouble()
@@ -163,7 +163,7 @@ object Movement {
         return v
     }
 
-    /** The original's `kk.A`: the yaw the held movement keys point in (the key mappings, not the input). */
+    /** The yaw the held movement keys point in (the key mappings, not the input). */
     fun keysYaw(): Float {
         val o = mc.options
         val forward = if (o.keyUp.isDown) 1.0 else if (o.keyDown.isDown) -1.0 else 0.0
@@ -180,7 +180,7 @@ object Movement {
     }
 }
 
-/** The original's `p2.i`: find a stack the way a [Switch] mode looks (hotbar, whole inventory, or hotbar first). */
+/** Find a stack the way a [Switch] mode looks (hotbar, whole inventory, or hotbar first). */
 fun switchFind(mode: Switch, pred: (ItemStack) -> Boolean): Found? = when (mode) {
     Switch.NORMAL, Switch.SILENT -> Inventory.hotbarFind(pred)
     Switch.INVENTORY_NORMAL, Switch.INVENTORY_SILENT -> Inventory.find(pred)
@@ -188,8 +188,8 @@ fun switchFind(mode: Switch, pred: (ItemStack) -> Boolean): Found? = when (mode)
 }
 
 /**
- * The original's `p2.i(slot, mode, action)`: switch to [slot] (a hotbar index, or a container slot id for the inventory
- * modes), run [action], and switch back for the silent modes. (the original also raises gui-move's pause flag meanwhile.)
+ * Switch to [slot] (a hotbar index, or a container slot id for the inventory
+ * modes), run [action], and switch back for the silent modes. (Also raises gui-move's pause flag meanwhile.)
  */
 fun switchAnd(slot: Int, mode: Switch, action: () -> Unit) {
     val p = mc.player ?: return

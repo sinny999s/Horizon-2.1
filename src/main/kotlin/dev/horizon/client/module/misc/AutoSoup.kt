@@ -8,7 +8,7 @@ import dev.horizon.client.module.Switch
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.Items
 
-/** The original's "auto-soup" (`aw`): every player tick at or below [minHealth], switches to mushroom stew and uses it. */
+/** Every player tick at or below [minHealth], switches to mushroom stew and uses it. */
 class AutoSoup : Module("auto-soup", Categories.MISC) {
     val minHealth = float("min-health", 5.0f, 1.0f..20.0f)
     val switch = enum("switch", Switch.SILENT_FULL)

@@ -18,7 +18,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 
 /**
- * Not in the original: ViaFabricPlus's version choice ([Via]) as a popup over the Multiplayer screen, in place of its own
+ * ViaFabricPlus's version choice ([Via]) as a popup over the Multiplayer screen, in place of its own
  * screen: for all servers, or for one [server] (right-clicking it), where "Default" leaves it to the all-servers choice.
  * Versions are grouped as ViaFabricPlus's tabs group them (modern, legacy, beta, alpha, classic, April Fools); typing
  * searches, Enter takes the best match, a click outside or Esc closes it.

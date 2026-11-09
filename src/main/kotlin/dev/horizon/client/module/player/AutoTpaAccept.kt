@@ -8,7 +8,7 @@ import dev.horizon.client.module.Module
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
 
 /**
- * The original's "auto-tpa-accept" (`ar`): a system message mentioning "tpaccept" is answered with `/tpaccept` (naming the
+ * A system message mentioning "tpaccept" is answered with `/tpaccept` (naming the
  * sender with Grief on). At most one message per 250 ms is looked at.
  */
 class AutoTpaAccept : Module("auto-tpa-accept", Categories.PLAYER) {
@@ -18,7 +18,7 @@ class AutoTpaAccept : Module("auto-tpa-accept", Categories.PLAYER) {
     private val timer = MsTimer()
 
     init {
-        // `ar.Q` (network thread, as the original's ReceivePacket)
+        // On the network thread.
         on<ReceivePacketEvent> { e ->
             val p = e.packet as? ClientboundSystemChatPacket ?: return@on
             if (!timer.passed(250)) return@on
@@ -32,7 +32,7 @@ class AutoTpaAccept : Module("auto-tpa-accept", Categories.PLAYER) {
         }
     }
 
-    /** `ar.c`: the first listed player whose name the message contains, else "-". */
+    /** The first listed player whose name the message contains, else "-". */
     private fun sender(text: String): String =
         mc.connection?.listedOnlinePlayers?.firstOrNull { it.profile.name in text }?.profile?.name ?: "-"
 }

@@ -20,7 +20,7 @@ import net.minecraft.world.item.trading.MerchantOffer
 import net.minecraft.world.phys.EntityHitResult
 
 /**
- * The original's "auto-trader" (`an`): looks at and opens the nearest villager within 4 blocks that wasn't traded with in
+ * Looks at and opens the nearest villager within 4 blocks that wasn't traded with in
  * the last 160 ticks, then in its trade screen takes every trade that gives a [buyItem] or costs a [sellItem] (with
  * enough of the first cost item), one per [tradeDelay] ticks, emptying the input slots between trades, and closes it.
  */
@@ -89,7 +89,7 @@ class AutoTrader : Module("auto-trader", Categories.MISC) {
         tradeTicks = tradeDelay.value
     }
 
-    /** The original's `an.j`, once the rotation is sent. */
+    /** Called once the rotation is sent. */
     private fun open(villager: Entity) {
         val player = mc.player ?: return
         mc.gameMode?.interact(player, villager, EntityHitResult(villager, villager.boundingBox.center), InteractionHand.MAIN_HAND)
@@ -97,7 +97,7 @@ class AutoTrader : Module("auto-trader", Categories.MISC) {
         openTicks = openDelay.value
     }
 
-    /** The original's `an.Q`: a wanted result we can pay for, or a sold item we have enough of. */
+    /** A wanted result we can pay for, or a sold item we have enough of. */
     private fun wanted(offer: MerchantOffer): Boolean {
         for (item in buyItem.value) {
             val enough = offer.costA.count <= Inventory.count(offer.costA.item)

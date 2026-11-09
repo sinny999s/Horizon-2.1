@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 import java.util.UUID;
 
-/** The original's BossHealthOverlayMixin: the boss bars, while there are any. */
+/** The boss bars, while there are any. */
 @Mixin(BossHealthOverlay.class)
 public abstract class NoRenderBossBarMixin {
 	@Shadow

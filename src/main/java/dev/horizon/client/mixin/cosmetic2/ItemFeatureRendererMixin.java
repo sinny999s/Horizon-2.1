@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * The original's ItemFeatureRendererMixin: item quads can be sent to ItemCommandEvent's provider, without glint (26.2 drew
+ * Item quads can be sent to ItemCommandEvent's provider, without glint (26.2 drew
  * the glint in a separate pass; 26.3 picks a glint render type in the main pass, so the foil type is forced there).
  */
 @Mixin(ItemFeatureRenderer.class)

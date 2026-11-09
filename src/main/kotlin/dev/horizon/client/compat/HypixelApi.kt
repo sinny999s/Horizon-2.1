@@ -28,7 +28,7 @@ import net.minecraft.resources.Identifier
 import java.util.UUID
 
 /**
- * Not in the original: what Hypixel says about you, through its official Mod API. Hypixel's protocol library
+ * What Hypixel says about you, through its official Mod API. Hypixel's protocol library
  * (`net.hypixel:mod-api`) is inside Horizon's jar, and [Connection] carries its packets the way Hypixel's own Fabric mod
  * does (after HypixelDev/FabricModAPI, MIT), so nothing else needs installing. If that mod is installed anyway, it
  * carries them and Horizon only listens: two of them would register the same channels.

@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's GuiMixin hooks for no-render: held item name, scoreboard, vignette, portal, effects and nausea overlays. */
+/** Hooks for no-render: held item name, scoreboard, vignette, portal, effects and nausea overlays. */
 @Mixin(Hud.class)
 public abstract class NoRenderHudMixin {
 	@Inject(method = "extractSelectedItemName", at = @At("HEAD"), cancellable = true)

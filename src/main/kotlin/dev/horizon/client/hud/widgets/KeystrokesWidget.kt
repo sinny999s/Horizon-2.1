@@ -16,7 +16,7 @@ import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
 /**
- * Not in the original: Keystrokes HUD widget displaying WASD, optional Sneak/Sprint, LMB/RMB with live rolling 1-second
+ * Keystrokes HUD widget displaying WASD, optional Sneak/Sprint, LMB/RMB with live rolling 1-second
  * CPS counters (counting both physical clicks and synthetic clicks from AutoClicker / TriggerBot / Aura), and a spacebar
  * indicator, rendered in Horizon's frosted-glass HUD style with smooth theme-accent key-press animations.
  */

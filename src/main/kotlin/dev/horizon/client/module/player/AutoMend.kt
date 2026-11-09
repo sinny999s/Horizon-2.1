@@ -25,7 +25,7 @@ import net.minecraft.world.item.enchantment.Enchantments
 import kotlin.math.ceil
 
 /**
- * The original's "auto-mend" (`ap`): throws XP bottles at its own feet while the most worn mending armour piece is below
+ * Throws XP bottles at its own feet while the most worn mending armour piece is below
  * `min-durability`, until every piece is at `max-durability`.
  */
 class AutoMend : Module("auto-mend", Categories.PLAYER) {
@@ -42,7 +42,7 @@ class AutoMend : Module("auto-mend", Categories.PLAYER) {
     /** Reset by every placer-module placement: Auto Mend waits 500 ms after one. */
     val placeTimer = MsTimer()
 
-    /** True while mending (the original's `ap.H`); AutoCrystal pauses meanwhile. */
+    /** True while mending; AutoCrystal pauses meanwhile. */
     @Volatile
     var mending = false
 
@@ -98,7 +98,7 @@ class AutoMend : Module("auto-mend", Categories.PLAYER) {
         mending = false
     }
 
-    /** The original's `p2.E`: select [slot], use it ([count] times for XP bottles), select the previous slot again. */
+    /** Select [slot], use it ([count] times for XP bottles), select the previous slot again. */
     private fun useInstant(slot: Int, count: Int) {
         val p = mc.player ?: return
         val gm = mc.gameMode ?: return
@@ -107,13 +107,12 @@ class AutoMend : Module("auto-mend", Categories.PLAYER) {
         Inventory.selectHotbar(slot)
         val n = if (p.inventory.getItem(slot).item == Items.EXPERIENCE_BOTTLE) count else 1
         repeat(n) { gm.useItem(p, InteractionHand.MAIN_HAND) }
-        // The original sent a swing packet here; 26.3 has none.
+        // 26.3 has no swing packet to send here.
         Inventory.selectHotbar(prev)
     }
 
     private fun hasMending(s: ItemStack) = EnchantmentHelper.getEnchantmentsForCrafting(s).keySet().any { it.`is`(Enchantments.MENDING) }
 
-    /** The original's `ap.f`. */
     private fun durabilityPct(s: ItemStack): Float =
         if (!s.isEmpty && s.maxDamage != 0) (s.maxDamage - s.damageValue).toFloat() / s.maxDamage * 100.0f else 100.0f
 }

@@ -50,7 +50,7 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Not in the original: what an Apollo server shows Lunar Client players, drawn with Horizon's own HUD and 3D drawing
+ * What an Apollo server shows Lunar Client players, drawn with Horizon's own HUD and 3D drawing
  * (Apollo's `waypoint`, `team`, `beam`, `hologram`, `title`, `cooldown`, `border`, `glow`, `notification`, `stopwatch`
  * and `tntcountdown` modules). These come only after Lunar Spoof's Apollo handshake, and are cleared on each join.
  * - Waypoints: a coloured label with the distance and a line up from the spot. Beacon beams: a coloured beam.

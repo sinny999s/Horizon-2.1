@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.GrassBlock
 import net.minecraft.world.level.block.LiquidBlock
 
 /**
- * The original's "auto-sweet-berries" (`_i`): auto-web with sweet berry bushes, planted under the enemy's predicted feet
+ * Auto-web with sweet berry bushes, planted under the enemy's predicted feet
  * (and around them with `directions`).
  */
 class AutoSweetBerries : PlacerModule("auto-sweet-berries", Categories.ATTACK, 150) {
@@ -35,7 +35,7 @@ class AutoSweetBerries : PlacerModule("auto-sweet-berries", Categories.ATTACK, 1
         on<PlayerUpdateEvent> { tick() }
     }
 
-    /** The original's `_i.r` (auto-web's `_h.l` with "in a bush" for "webbed"). */
+    /** Auto-web's tick, with "in a bush" for "webbed". */
     private fun tick() {
         val self = mc.player ?: return
         val level = mc.level ?: return
@@ -60,16 +60,16 @@ class AutoSweetBerries : PlacerModule("auto-sweet-berries", Categories.ATTACK, 1
         }
     }
 
-    /** The original's `nq.w`: a bush (any age) in the feet block. */
+    /** A bush (any age) in the feet block. */
     private fun inBush(p: Player): Boolean = mc.level?.getBlockState(BlockPos.containing(p.position()))?.block == Blocks.SWEET_BERRY_BUSH
 
-    /** Grass block or dirt (the original's own soil test, narrower than vanilla's). */
+    /** Grass block or dirt (a soil test narrower than vanilla's). */
     private fun soil(b: BlockPos): Boolean {
         val block = mc.level?.getBlockState(b)?.block ?: return false
         return block is GrassBlock || block == Blocks.DIRT
     }
 
-    /** The original's `_i.K`: the predicted feet block, then (with `directions`) its N, S, W, E neighbours; never our feet. */
+    /** The predicted feet block, then (with `directions`) its N, S, W, E neighbours; never our feet. */
     private fun plant(target: Player) {
         val self = mc.player ?: return
         val level = mc.level ?: return

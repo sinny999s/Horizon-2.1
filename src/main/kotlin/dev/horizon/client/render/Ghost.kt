@@ -15,11 +15,11 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 
-/** The original's player ghost (`h3.c`): the player's skinned model, unlit, in one colour, at [pos]. */
+/** Player ghost: the player's skinned model, unlit, in one colour, at [pos]. */
 object Ghost {
     private val mc get() = Minecraft.getInstance()
 
-    /** The original's `dw`: takes each model vertex's (already transformed) position and UV, with one colour for all. */
+    /** Takes each model vertex's (already transformed) position and UV, with one colour for all. */
     private class Collector(val out: VertexConsumer, val color: Int) : VertexConsumer {
         private var x = 0f
         private var y = 0f
@@ -71,7 +71,7 @@ object Ghost {
         stack.popPose()
     }
 
-    /** The original's `e2.f`: vanilla's rotations, without the death roll, sleeping, upside-down and freezing. */
+    /** Vanilla's rotations, without the death roll, sleeping, upside-down and freezing. */
     private fun setupRotations(rs: AvatarRenderState, stack: PoseStack, bodyRot: Float) {
         if (rs.isFallFlying) {
             stack.rotateDegrees(Axis.YP, 180f - bodyRot)

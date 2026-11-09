@@ -5,7 +5,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Not in the original: millisecond-scheduled 1.8.x spam-click pacing.
+ * Millisecond-scheduled 1.8.x spam-click pacing.
  *
  * Scheduling clicks on a continuous millisecond timeline (consumed at most once per 50 ms client tick) avoids the
  * coarse `20 / cps` integer tick division that collapses 11..20 CPS to the same 1-tick interval, while never sending

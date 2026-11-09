@@ -27,12 +27,12 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Not in the original: the Windows screen in the new style (UI > Style: New), built from design/clickgui/windows.js and
- * windows.css. The original's five windows (gui/windows/) with the same data and actions, redesigned: every entry has its
- * own controls (eye, radio, switch, bind) and a click opens it in the editor (right click too, as in the original); windows
+ * The Windows screen in the new style (UI > Style: New), built from design/clickgui/windows.js and
+ * windows.css. Five windows: every entry has its
+ * own controls (eye, radio, switch, bind) and a click opens it in the editor (right click too); windows
  * come forward when clicked and grow from their corner; Delete asks once more; Homies removes a friend from its trash
  * button. The windows sit on the mockup's 800x450 stage (its 1600x900 halved), centred and shrunk to fit the screen;
- * where they are moved to is kept until the game closes, as the original's.
+ * where they are moved to is kept until the game closes.
  */
 object ModernWindows : Screen(Component.literal("horizon-windows")) {
     private val mc get() = Minecraft.getInstance()
@@ -116,7 +116,7 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
 
     override fun onFilesDrop(paths: List<Path>) = Configs.filesDropped(paths)
 
-    /** The proxies' "+" dialog is open: a dropped file is a proxy list (the original's import). */
+    /** The proxies' "+" dialog is open: a dropped file is a proxy list. */
     val proxyDialogOpen get() = ProxiesPane.dialog != null
 
     fun proxiesImported() {
@@ -190,7 +190,7 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
         Canvas.quad(hw, hh, hw, hh, m, corner, e, c)
     }
 
-    // ---- the top navigation (the original's top bar: UI / Windows / Hud) ----
+    // ---- the top navigation (UI / Windows / Hud) ----
 
     /** The top bar of the new Windows screen and HUD editor, [active] being 1 or 2; [t] is the screen's entrance. */
     internal fun topNav(t: Float, active: Int) {
@@ -701,7 +701,7 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
     private var inGameY = 0f
 
     /**
-     * Not in the original: the main menu's Proxies button. Only the proxies pane shows, centred over the menu's
+     * The main menu's Proxies button. Only the proxies pane shows, centred over the menu's
      * panorama, so a proxy can be picked (and is used) before the first connection; Esc goes back to [from]. The pane's
      * in-game place is put back afterwards.
      */
@@ -758,7 +758,7 @@ internal abstract class Pane(val id: String, val title: String, val icon: String
     open fun opened() {}
 }
 
-/** A window's small dialog (the original's Name / Create): a name field, maybe more, Cancel and the action. */
+/** A window's small dialog: a name field, maybe more, Cancel and the action. */
 internal class Dialog(val title: String, val text: String?, max: Int, val create: String = "Create", val label: String = "Name",
                       val extra: ((Float, Float, Float) -> Unit)? = null, val onCreate: (String) -> Unit) {
     val field = Ui.Field("", max)

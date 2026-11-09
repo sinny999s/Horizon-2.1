@@ -10,7 +10,7 @@ import net.minecraft.world.phys.AABB
 import java.awt.Color
 
 /**
- * The original's "pearl-phase-esp" (`e1`): standing on the ground with free space at the feet, the bottom face of every block
+ * Standing on the ground with free space at the feet, the bottom face of every block
  * collision at feet + 0.21 within [range] of the player's box is outlined and filled — [unsafe] when the block under that
  * block can be replaced (a phase would drop through), else [safe].
  */
@@ -32,7 +32,7 @@ class PearlPhaseEsp : Module("pearl-phase-esp", Categories.ESP) {
         }
     }
 
-    /** `e1.n`: each colliding shape's bottom face (a flat box) and its colour, in collision order. */
+    /** Each colliding shape's bottom face (a flat box) and its colour, in collision order. */
     private fun faces(): Map<AABB, Int> {
         val p = mc.player!!
         val level = mc.level!!

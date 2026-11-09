@@ -16,8 +16,8 @@ import net.minecraft.world.item.ShearsItem
 import net.minecraft.world.phys.EntityHitResult
 
 /**
- * The original's "auto-shear" (`rn`): every `delay` ticks, shears the closest grown, unsheared sheep whose eyes are within
- * entity reach (closest by its feet position, as the original's `sx` sorts).
+ * Every `delay` ticks, shears the closest grown, unsheared sheep whose eyes are within
+ * entity reach (closest by its feet position).
  */
 class AutoShear : Module("auto-shear", Categories.WORLD) {
     val switch = enum("switch", Switch.SILENT_FULL)

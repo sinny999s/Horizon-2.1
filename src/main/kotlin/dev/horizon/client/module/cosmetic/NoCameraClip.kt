@@ -9,7 +9,7 @@ import dev.horizon.client.render.Easing
 import net.minecraft.client.CameraType
 
 /**
- * The original's "no-camera-clip" (`rw`): the third-person camera goes through blocks, [distance] blocks back, easing out
+ * The third-person camera goes through blocks, [distance] blocks back, easing out
  * from the player (600 ms, OUT_QUINT) every time the camera mode changes.
  */
 class NoCameraClip : Module("no-camera-clip", Categories.COSMETIC) {

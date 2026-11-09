@@ -12,11 +12,11 @@ import dev.horizon.client.render.Themes
 import java.nio.file.Files
 import java.nio.file.Path
 
-/** The two kinds of named config the config panel shows (the original's `u`). */
+/** The two kinds of named config the config panel shows. */
 enum class ConfigType { MODULES, WIDGETS }
 
 /**
- * The original's config manager (`un`) and config actions (`yf`): start-up loading, the autosave, and Load / Delete / Create
+ * The config manager and config actions: start-up loading, the autosave, and Load / Delete / Create
  * from the config panel. Everything is kept in memory and written by the autosave (every 60 s in a world, every 2.5 s
  * while the Windows screen is open) and when the game closes.
  */
@@ -36,11 +36,11 @@ object Configs {
         Config.apply()
         Config.reconcile(null)
         WidgetConfig.apply()
-        // Not in the original: Horizon's Lunar settings (global; carried over from Lunar Spoof's on first start).
+        // Horizon's Lunar settings (global; carried over from Lunar Spoof's on first start).
         dev.horizon.client.lunar.LunarSettings.load()
     }
 
-    /** The original's `un.j()`: the live settings go into the current configs, then every file is written. */
+    /** The live settings go into the current configs, then every file is written. */
     fun saveAll() {
         Config.snapshot(Config.current.id)
         WidgetConfig.snapshot(WidgetConfig.current.id)
@@ -56,7 +56,7 @@ object Configs {
         Kits.save()
     }
 
-    /** The original's autosave (`zw`): save, then re-read the config folders; the config panel rebuilds on its next frame. */
+    /** Save, then re-read the config folders; the config panel rebuilds on its next frame. */
     fun autosave() {
         saveAll()
         Config.reload()
@@ -64,7 +64,7 @@ object Configs {
     }
 
     /**
-     * The original's `yf.E`: the live settings are kept in the config being left, then [id] becomes current and is applied.
+     * The live settings are kept in the config being left, then [id] becomes current and is applied.
      * The name switches even when [id] doesn't exist. Prints the bound keys to chat.
      */
     fun load(id: String, type: ConfigType) {
@@ -91,7 +91,7 @@ object Configs {
     }
 
     /**
-     * The original's `yf.q`: deleting the current config loads the first one; deleting the only other one creates and loads
+     * Deleting the current config loads the first one; deleting the only other one creates and loads
      * "default". No confirmation.
      */
     fun delete(id: String, type: ConfigType) {
@@ -106,7 +106,7 @@ object Configs {
         Files.deleteIfExists(configs.dir.resolve("$id.hzn"))
     }
 
-    /** The original's `yf.x`: the live settings saved as [id] (replacing one with that name); doesn't switch to it. */
+    /** The live settings saved as [id] (replacing one with that name); doesn't switch to it. */
     fun create(id: String, type: ConfigType) {
         val configs = of(type)
         configs.snapshot(id)
@@ -114,7 +114,7 @@ object Configs {
     }
 
     /**
-     * The original's file drop: with the proxy window's "+" dialog open, a proxy list; anywhere else a `.hzn` is added as
+     * A file drop: with the proxy window's "+" dialog open, a proxy list; anywhere else a `.hzn` is added as
      * a module config under the id written inside it.
      */
     fun filesDropped(paths: List<Path>) {

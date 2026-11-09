@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-/** The tab list's 80-player limit, liftable to 1000 through PlayerListSizeEvent (the original's PlayerTabOverlayMixin). */
+/** The tab list's 80-player limit, liftable to 1000 through PlayerListSizeEvent. */
 @Mixin(PlayerTabOverlay.class)
 public abstract class PlayerTabOverlayMixin {
 	@ModifyArg(method = "getPlayerInfos", at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;limit(J)Ljava/util/stream/Stream;"))

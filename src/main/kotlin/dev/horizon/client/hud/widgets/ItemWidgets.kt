@@ -17,8 +17,8 @@ private fun armor(): List<ItemStack> {
 }
 
 /**
- * The original's `e3`: the four armour pieces with durability bars.
- * Not in the original: the new look (hud.css .slots): four 20-unit slots, dividers between them.
+ * The four armour pieces with durability bars.
+ * The new look (hud.css .slots): four 20-unit slots, dividers between them.
  */
 object ArmorWidget : HudWidget("armor-widget") {
     override fun render() {
@@ -51,9 +51,9 @@ object ArmorWidget : HudWidget("armor-widget") {
 }
 
 /**
- * The original's `ms`: totems, crystals, xp, gapples, crapples, fireworks and obsidian (as enabled) with their counts,
+ * Totems, crystals, xp, gapples, crapples, fireworks and obsidian (as enabled) with their counts,
  * "-" for none.
- * Not in the original: the new look (hud.css .res): 20-unit slots, the count under each item.
+ * The new look (hud.css .res): 20-unit slots, the count under each item.
  */
 object PvpResourcesWidget : HudWidget("pvp-resources-widget") {
     private val totems = bool("totems", true)
@@ -93,10 +93,9 @@ object PvpResourcesWidget : HudWidget("pvp-resources-widget") {
 }
 
 /**
- * The original's `el`: "Inventory" and the 27 main-inventory slots at 0.75 scale with their counts. The original rendered the
- * items into an offscreen target with flat lighting; here they are the game's GUI items, so block items keep the
- * game's 3-D lighting. The counts are drawn after the items.
- * Not in the original: the new look (hud.css .panel and .inv): one panel, its header row, 15-unit cells 1 apart.
+ * "Inventory" and the 27 main-inventory slots at 0.75 scale with their counts. The items are the game's GUI items, so
+ * block items keep the game's 3-D lighting. The counts are drawn after the items.
+ * The new look (hud.css .panel and .inv): one panel, its header row, 15-unit cells 1 apart.
  */
 object InventoryWidget : HudWidget("inventory-widget") {
     override fun render() {

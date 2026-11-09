@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The original's "gui-move" (`bn`): with a screen open (not chat) the movement keys follow the physical keys. The bypasses
+ * With a screen open (not chat) the movement keys follow the physical keys. The bypasses
  * change what a click while moving does: strict NCP lifts the player a little first, matrix stops forward movement,
  * LEGIT plays the clicks only on the client and sends them (with the close) once the screen is closed and the player
  * stood still for a tick, and disable-clicks drops them.
@@ -39,37 +39,37 @@ class GuiMove : Module("gui-move", Categories.BASIC) {
     val bypass = enum("bypass", Bypass.NONE)
 
     /**
-     * Set around the client's own inventory operations (the original's `bn.d`, set through `bn.f`): gui-move then leaves
+     * Set around the client's own inventory operations: gui-move then leaves
      * their clicks and closes alone.
      */
     @Volatile
     var internalClick = false
 
-    /** A click LEGIT holds back (the original's `to`). */
+    /** A click LEGIT holds back. */
     private class HeldClick(val containerId: Int, val slot: Int, val button: Int, val input: ContainerInput)
 
     private var keys: List<KeyMapping> = emptyList()
     private val heldClicks = ConcurrentLinkedQueue<HeldClick>()
 
-    /** The held clicks are being sent (the original's `h`). */
+    /** The held clicks are being sent. */
     private val sending = AtomicBoolean(false)
 
-    /** The screen was closed while clicks were held (the original's `T`). */
+    /** The screen was closed while clicks were held. */
     @Volatile
     private var closed = false
 
-    /** Strict NCP stopped the sprint for a click; it is resumed after the click packet (the original's `L`). */
+    /** Strict NCP stopped the sprint for a click; it is resumed after the click packet. */
     private var resprint = false
 
-    /** LEGIT's send steps: 0 idle, 1 stood still for a tick (the original's `u`). */
+    /** LEGIT's send steps: 0 idle, 1 stood still for a tick. */
     private var step = 0
     private var wasSprinting = false
 
-    /** The server opened the screen, or a click came while standing still (the original's `P`): LEGIT then keeps keys up. */
+    /** The server opened the screen, or a click came while standing still: LEGIT then keeps keys up. */
     @Volatile
     private var stillScreen = false
 
-    /** Menu contents before the first held click, and at send time (the original's `M`, `t`). */
+    /** Menu contents before the first held click, and at send time. */
     private val before = HashMap<Int, ItemStack>()
     private val atSend = HashMap<Int, ItemStack>()
 
@@ -111,7 +111,6 @@ class GuiMove : Module("gui-move", Categories.BASIC) {
         }
     }
 
-    /** The original's `bn.k`. */
     private fun tick() {
         val p = mc.player ?: return
         val o = mc.options
@@ -151,7 +150,7 @@ class GuiMove : Module("gui-move", Categories.BASIC) {
     }
 
     /**
-     * The original's `bn.T` (ClickSlotEvent). The original's event carries the click's container id; this one doesn't, so the
+     * This event doesn't carry the click's container id, so the
      * open menu's id is used (vanilla ignores clicks for any other id anyway).
      */
     private fun click(e: ContainerClickEvent) {
@@ -165,7 +164,7 @@ class GuiMove : Module("gui-move", Categories.BASIC) {
         val containerId = p.containerMenu.containerId
         when (bypass.value) {
             Bypass.STRICT_NCP, Bypass.STRICT_NCP_2 -> {
-                // The click is played here and then again by vanilla, as in the original.
+                // The click is played here and then again by vanilla (on purpose).
                 clickLocally(e, p)
                 val lift = if (bypass.value == Bypass.STRICT_NCP) 0.0656 else 2.71875E-7
                 if (!p.onGround()) return
@@ -193,18 +192,17 @@ class GuiMove : Module("gui-move", Categories.BASIC) {
         }
     }
 
-    /** The original's `bn.w`: the click on the client's menu only (the original skips it for another container's id). */
+    /** The click on the client's menu only. */
     private fun clickLocally(e: ContainerClickEvent, p: Player) {
         p.containerMenu.clicked(e.slotId, e.button, e.input, p)
     }
 
-    /** The original's `bn.m`: copies of the menu's first 46 slots. */
+    /** Copies of the menu's first 46 slots. */
     private fun save(into: HashMap<Int, ItemStack>) {
         val menu = mc.player!!.containerMenu
         for (i in 0 until 46) into[i] = menu.getSlot(i).item.copy()
     }
 
-    /** The original's `bn.c`. */
     private fun restore(from: HashMap<Int, ItemStack>) {
         val menu = mc.player!!.containerMenu
         for (i in 0 until 46) menu.setItem(i, menu.stateId, from[i]!!)

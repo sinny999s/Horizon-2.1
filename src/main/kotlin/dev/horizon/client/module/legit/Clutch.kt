@@ -30,7 +30,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * Not in the original: saves a fall into the void the way a player clutches. Knocked off (or jumping off) with nothing
+ * Saves a fall into the void the way a player clutches. Knocked off (or jumping off) with nothing
  * to land on within [minDrop] blocks, it turns the camera in whole mouse counts onto the side of a block nearby and
  * right-clicks through vanilla once the crosshair is on a face whose new block would catch you, all before your feet
  * sink past it. Knocked further out than that from the edge, it builds out to you the way a player clutches: a short

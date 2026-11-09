@@ -51,22 +51,21 @@ import kotlin.properties.ObservableProperty
 import kotlin.reflect.KProperty
 
 /**
- * The original's "RPC" (`a9`): Discord rich presence over Discord's local IPC (the original's own client, `p6`/`p1`, not a
- * library). The module has no handlers of its own: an always-on driver (`px`) checks its enabled state every tick and,
- * every 5 s while on, sets the presence ("Playing on <ip>", "public beta test", the original's image and button); turning
- * it off closes the connection. On the very first title screen it switches itself, assistant and move-fix on and asks
- * "Enable Discord RPC?" (`oi`).
+ * Discord rich presence over Discord's local IPC (its own client, not a library). The module has no handlers of its own:
+ * an always-on driver checks its enabled state every tick and, every 5 s while on, sets the presence ("Playing on <ip>",
+ * "public beta test", an image and button); turning it off closes the connection. On the very first title screen it
+ * switches itself, assistant and move-fix on and asks "Enable Discord RPC?".
  */
 class RPC : Module("RPC", Categories.MISC) {
     init {
         Driver.module = this
         EventBus.on<TickEvent>(Driver) { Driver.tick() }
         EventBus.on<TitleScreenInitEvent>(Driver) { Driver.titleScreen() }
-        // The original's shutdown hook (`k1`) closes the connection after saving its config.
+        // Closes the connection on shutdown.
         Runtime.getRuntime().addShutdownHook(Thread { Presence.disconnect() })
     }
 
-    /** The original's `px`: always on the bus, whatever the module state. */
+    /** Always on the bus, whatever the module state. */
     private object Driver {
         lateinit var module: RPC
         private val timer = MsTimer()
@@ -91,7 +90,7 @@ class RPC : Module("RPC", Categories.MISC) {
             return if (mc.gui.screen() is JoinMultiplayerScreen) "Selecting server..." else ""
         }
 
-        /** The original's `px.V`: the first title screen ever (per `rpcAsked`) turns these on and asks. */
+        /** The first title screen ever (per `rpcAsked`) turns these on and asks. */
         fun titleScreen() {
             if (!titleSeen && !Storage.shared.rpcAsked) {
                 module.enabledSetting.value = true
@@ -104,17 +103,17 @@ class RPC : Module("RPC", Categories.MISC) {
     }
 
     private companion object {
-        /** The original's Discord application. */
+        /** The Discord application. */
         const val APP_ID = 1238952344641732699L
     }
 }
 
-// ---- the presence and the IPC client (the original's `p1` on `p6`) ----
+// ---- the presence and the IPC client ----
 
 /**
- * The original's `p1`/`p6`: what the presence shows, and the connection. Changing [appId] (re)connects; changing anything
+ * What the presence shows, and the connection. Changing [appId] (re)connects; changing anything
  * else builds a new activity, sent by the update thread (every 5 s once Discord said READY) or at READY. Values are
- * only acted on when they change, so turning the module off and on again doesn't reconnect (as in the original).
+ * only acted on when they change, so turning the module off and on again doesn't reconnect (on purpose).
  */
 private object Presence {
     private val json = Json {
@@ -149,7 +148,6 @@ private object Presence {
 
     val connected get() = connection != null
 
-    /** The original's `yb`. */
     private class Watched<T>(initial: T, private val isAppId: Boolean = false) : ObservableProperty<T>(initial) {
         override fun afterChange(property: KProperty<*>, oldValue: T, newValue: T) {
             if (oldValue == newValue) return
@@ -157,7 +155,6 @@ private object Presence {
         }
     }
 
-    /** The original's `p1.q`. */
     private fun build(): Activity {
         val buttons = ArrayList<Button>()
         button1?.let { buttons += Button(it.first, it.second) }
@@ -168,7 +165,6 @@ private object Presence {
         return Activity(details, state, Timestamps(startedAt), assets, buttons)
     }
 
-    /** The original's `p6.j`. */
     private fun connect(appId: Long) {
         if (connection != null) disconnect()
         connection = open()
@@ -182,7 +178,6 @@ private object Presence {
         }
     }
 
-    /** The original's `p6.a()`. */
     fun disconnect() {
         val c = connection ?: return
         c.close()
@@ -192,7 +187,6 @@ private object Presence {
         user = noUser
     }
 
-    /** The original's `p6.I`. */
     private fun sendPending() {
         val c = connection
         val a = pending
@@ -200,7 +194,7 @@ private object Presence {
         pending = null
     }
 
-    /** The original's `p6.a(packet)`, on the connection's reader thread. */
+    /** Runs on the connection's reader thread. */
     fun handle(packet: IpcPacket) {
         when (packet.opcode) {
             Opcode.FRAME -> {
@@ -226,7 +220,7 @@ private object Presence {
 
     private fun <T> encode(serializer: SerializationStrategy<T>, value: T): JsonObject = json.encodeToJsonElement(serializer, value).jsonObject
 
-    /** The original's `kh.Y`: little-endian opcode and length, then the JSON with a random nonce added. */
+    /** Little-endian opcode and length, then the JSON with a random nonce added. */
     fun frame(opcode: Opcode, obj: JsonObject): ByteBuffer {
         val map = obj.toMutableMap()
         map["nonce"] = JsonPrimitive(UUID.randomUUID().toString())
@@ -241,7 +235,7 @@ private object Presence {
 
     private fun pid(): Int = ManagementFactory.getRuntimeMXBean().name.substringBefore('@').toInt()
 
-    /** The original's `p6.H`: the first of `discord-ipc-0..9` that opens. */
+    /** The first of `discord-ipc-0..9` that opens. */
     private fun open(): IpcConnection? {
         if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("win")) {
             for (i in 0 until 10) runCatching { return PipeConnection("\\\\?\\pipe\\discord-ipc-$i") }
@@ -288,16 +282,14 @@ private class Payload(val evt: Evt?, val cmd: Cmd?, val data: PayloadData)
 @Serializable
 private class PayloadData(val user: User?, val code: Int?, val message: String?)
 
-/** The original's `hk`: a data class, so the screen can tell "no user yet" by equality. */
+/** A data class, so the screen can tell "no user yet" by equality. */
 @Serializable
 private data class User(val id: String = "none", val username: String = "none", val avatar: String = "none") {
-    /** The original's `hk.P(128, true)`. */
     fun avatarUrl() = "https://cdn.discordapp.com/avatars/$id/$avatar.png?size=128"
 }
 
 private class IpcPacket(val opcode: Opcode?, val payload: Payload)
 
-/** The original's `kh`. */
 private abstract class IpcConnection {
     fun send(opcode: Opcode, obj: JsonObject) = write(Presence.frame(opcode, obj))
 
@@ -306,7 +298,7 @@ private abstract class IpcConnection {
     abstract fun close()
 }
 
-/** The original's `ke`: a Windows named pipe, read by a polling thread. */
+/** A Windows named pipe, read by a polling thread. */
 private class PipeConnection(name: String) : IpcConnection() {
     private val file = RandomAccessFile(name, "rw")
 
@@ -344,7 +336,7 @@ private class PipeConnection(name: String) : IpcConnection() {
     }
 }
 
-/** The original's `ky`: a Unix domain socket, read through a selector. */
+/** A Unix domain socket, read through a selector. */
 private class SocketConnection(path: String) : IpcConnection() {
     private val selector = Selector.open()
     private val channel = SocketChannel.open(UnixDomainSocketAddress.of(path))
@@ -375,7 +367,7 @@ private class SocketConnection(path: String) : IpcConnection() {
         runCatching { channel.write(buf) }
     }
 
-    /** The original's `ky.Q`: one frame, read across as many wakeups as it takes. */
+    /** One frame, read across as many wakeups as it takes. */
     private fun read(ch: ReadableByteChannel): IpcPacket? {
         if (!opcodeRead) {
             if (!header(ch)) return null
@@ -417,9 +409,9 @@ private class SocketConnection(path: String) : IpcConnection() {
     }
 }
 
-// ---- the first-start prompt (the original's `oi`) ----
+// ---- the first-start prompt ----
 
-/** The original's `vu`: a 100×25 glass button, its tint mix easing up on hover (OUT_QUINT, 200 ms). */
+/** A 100×25 glass button, its tint mix easing up on hover (OUT_QUINT, 200 ms). */
 private class ConfirmButton(private val label: String, private val action: () -> Unit) {
     private var x = 0f
     private var y = 0f
@@ -446,8 +438,8 @@ private class ConfirmButton(private val label: String, private val action: () ->
 }
 
 /**
- * The original's `oi`: "Enable Discord RPC?", the Discord avatar (a placeholder until Discord answered) and the original's
- * picture, with No/Yes buttons that set the module and go back to the title screen.
+ * "Enable Discord RPC?", the Discord avatar (a placeholder until Discord answered) and a picture, with No/Yes buttons
+ * that set the module and go back to the title screen.
  */
 private class ConfirmScreen(private val module: RPC) : Screen(Component.nullToEmpty("horizon-discord-confirm")) {
     private val picture = Identifier.fromNamespaceAndPath(HorizonClient.ID, "textures/exclude/discord_confirm.png")

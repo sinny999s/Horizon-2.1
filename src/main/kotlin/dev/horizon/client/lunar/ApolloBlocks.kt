@@ -4,7 +4,7 @@ import com.google.protobuf.Value
 import com.lunarclient.apollo.configurable.v1.ConfigurableSettings
 
 /**
- * Not in the original: what an Apollo server's settings override ([com.lunarclient.apollo.configurable.v1.OverrideConfigurableSettingsMessage])
+ * What an Apollo server's settings override ([com.lunarclient.apollo.configurable.v1.OverrideConfigurableSettingsMessage])
  * asks of Lunar's mods, to show you. Apollo sends Lunar's mod options under its `mod_setting` module, keyed
  * `<mod>.<option>` (`freelook.enabled` false turns Freelook off), or names a Lunar mod directly (`lunar_client_mod`,
  * off with `enable` false). Horizon has none of Lunar's mods, so nothing here changes what Horizon does. Game-free.

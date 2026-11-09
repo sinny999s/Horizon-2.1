@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's CameraMixin updateHook: the free camera's detach (its rotation/position hooks are mixin/esp2/CameraMixin). */
+/** The free camera's detach (its rotation/position hooks are mixin/esp2/CameraMixin). */
 @Mixin(Camera.class)
 public abstract class FreeCamCameraMixin {
 	@Shadow

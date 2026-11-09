@@ -6,7 +6,7 @@ import dev.horizon.client.HorizonClient
 import net.minecraft.client.renderer.texture.DynamicTexture
 import java.util.concurrent.ConcurrentLinkedQueue
 
-/** Not in the original: ARGB pixel arrays as GPU textures for the hunt map (main thread only). */
+/** ARGB pixel arrays as GPU textures for the hunt map (main thread only). */
 internal object MapTex {
     fun create(px: IntArray, size: Int): DynamicTexture {
         val img = NativeImage(size, size, false)
@@ -29,7 +29,7 @@ internal object MapTex {
 }
 
 /**
- * Not in the original: the parchment tiles on the GPU, made on [SeedTerrain]'s threads and uploaded a few a frame. A tile that
+ * The parchment tiles on the GPU, made on [SeedTerrain]'s threads and uploaded a few a frame. A tile that
  * isn't ready yet is drawn from a coarser one that is.
  */
 internal object SeedTiles {
@@ -120,7 +120,7 @@ internal object SeedTiles {
 }
 
 /**
- * Not in the original: the recorded regions on the GPU. Each region has a full-detail texture (512 square, only when zoomed
+ * The recorded regions on the GPU. Each region has a full-detail texture (512 square, only when zoomed
  * in), a 64x64 overview from its summary, and a 32x32 overlay of chunk states, each rebuilt when the data changes.
  */
 internal object RegionTextures {

@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.ShulkerBoxBlock
 
 /**
- * Not in the original: hovering a shulker box (or any item holding container contents) in an inventory or container shows
+ * Hovering a shulker box (or any item holding container contents) in an inventory or container shows
  * its slots as a grid in the tooltip, tinted with the box's colour; with [hideList] vanilla's text list goes.
  */
 class ShulkerView : Module("shulker-view", Categories.MISC) {

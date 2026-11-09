@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// The original's damage-tint vignette: core/default/colored_texture over the whole screen (v down), one colour.
+// The damage-tint vignette: colored_texture over the whole screen (v down), one colour.
 uniform sampler2D Sampler0;
 
 layout(std140) uniform UBO {

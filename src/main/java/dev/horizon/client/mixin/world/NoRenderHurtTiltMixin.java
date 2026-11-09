@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** The original's GameRendererMixin `bobHurt` hook: the camera tilt when hurt. */
+/** The camera tilt when hurt. */
 @Mixin(GameRenderer.class)
 public abstract class NoRenderHurtTiltMixin {
 	@Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)

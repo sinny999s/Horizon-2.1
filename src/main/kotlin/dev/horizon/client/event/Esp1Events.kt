@@ -5,5 +5,5 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState
 /** Vanilla is about to draw an entity's name tag (`EntityRenderer`/`AvatarRenderer.submitNameDisplay` HEAD); cancelling hides it. */
 class RenderNameTagEvent(val state: EntityRenderState) : Event()
 
-/** `MouseHandler.onButton` HEAD (the original's InputEvent for the mouse): [action] 1 = press, 0 = release. */
+/** `MouseHandler.onButton` HEAD: [action] 1 = press, 0 = release. */
 class MouseButtonEvent(val button: Int, val action: Int) : Event()

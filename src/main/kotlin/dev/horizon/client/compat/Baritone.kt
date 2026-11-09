@@ -7,7 +7,7 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
 /**
- * Not in the original: Baritone, when it's installed next to the client: its commands, its elytra (nether flight planned by
+ * Baritone, when it's installed next to the client: its commands, its elytra (nether flight planned by
  * nether-pathfinder) and its settings. Reached by reflection through its public API (`baritone.api`), so the client
  * neither needs nor bundles it. Without it, [present] is false and the rest does nothing.
  */

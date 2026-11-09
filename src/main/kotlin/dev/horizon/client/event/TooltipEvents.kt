@@ -8,7 +8,7 @@ import net.minecraft.world.item.ItemStack
 import java.util.Optional
 
 /**
- * Not in the original: `ItemStack.getTooltipImage` RETURN when the item has no image of its own (and the container text
+ * `ItemStack.getTooltipImage` RETURN when the item has no image of its own (and the container text
  * lines, which are dropped when [hideList] is set with an image, and the tooltip lines, cut to [maxLineWidth] px when
  * it isn't 0). A handler may supply [image]. One shared instance.
  */

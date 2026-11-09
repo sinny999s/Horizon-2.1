@@ -19,7 +19,7 @@ import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.SourceDataLine
 
 /**
- * Not in the original: Lunar's emote music ("jams": song clips some emotes play). Lunar sends a playing emote's
+ * Lunar's emote music ("jams": song clips some emotes play). Lunar sends a playing emote's
  * music as an MP3 URL (UseEmotePush's `emote_soundtrack_url`); it's streamed and played around the emoting player as
  * Lunar plays it: louder near them, gone past 16 blocks, at Lunar's volumes (others' 0.3, your own 0.5, times Minecraft's
  * master volume), looping while the emote lasts. Your own emotes play their music when a jam is attached to their wheel

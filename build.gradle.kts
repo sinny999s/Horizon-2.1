@@ -50,7 +50,7 @@ dependencies {
     // Kotlin's standard library and kotlinx.serialization come from Fabric Language Kotlin at runtime.
     implementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
     // SVG icons (Horizon rasterised its icons with JSVG 1.x), shipped inside the mod jar (MIT).
-    // Not in the original: MP3 decoding for Lunar emote music (jams).
+    // MP3 decoding for Lunar emote music (jams).
     implementation("javazoom:jlayer:1.0.1") { isTransitive = false }
     include("javazoom:jlayer:1.0.1") { isTransitive = false }
     implementation("com.github.weisj:jsvg:1.4.0")

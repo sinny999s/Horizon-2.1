@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.ceil
 
 /**
- * Not in the original: automatically opens nearby chests, trapped chests, barrels, and shulker boxes within reach.
+ * Automatically opens nearby chests, trapped chests, barrels, and shulker boxes within reach.
  * Pairs with ChestStealer so you can loot entire stash rooms hands-free.
  */
 class ChestAura : Module("chest-aura", Categories.WORLD) {

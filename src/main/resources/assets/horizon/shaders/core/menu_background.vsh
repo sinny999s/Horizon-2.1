@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// Not in the original: the menu background's full-screen quad. UV0 carries (seconds, calm), Color the accent colour.
+// The menu background's full-screen quad. UV0 carries (seconds, calm), Color the accent colour.
 
 layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;

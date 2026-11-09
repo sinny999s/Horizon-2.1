@@ -31,7 +31,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 /**
- * The original's "auto-mine" (`jj`): picks the block to mine on the enemy (burrow block, CEV obsidian over the head, or the
+ * Picks the block to mine on the enemy (burrow block, CEV obsidian over the head, or the
  * best city block, scored by the crystal spots it opens) and hands it to Speed Mine; frees us when crawling.
  */
 class AutoMine : Module("auto-mine", Categories.ATTACK) {
@@ -48,13 +48,13 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
     val holdCev = bool("hold-cev", true, parent = holdSelection.value) { syncWithRebreak.value }
     val holdSurr = bool("hold-surr", true, parent = holdSelection.value) { syncWithRebreak.value }
 
-    /** The original's `qn`: a candidate block and its score (geometry only, no damage maths). */
+    /** A candidate block and its score (geometry only, no damage maths). */
     private data class Candidate(val pos: BlockPos, val score: Float)
 
-    /** `jj.u`: the hand-off gate; target logic waits 60 ticks after a hand-off. */
+    /** The hand-off gate; target logic waits 60 ticks after a hand-off. */
     private val gate = TickTimer()
 
-    /** `jj.q`: the last tick's candidates, drawn with `debug`. */
+    /** The last tick's candidates, drawn with `debug`. */
     private var debugList = ArrayList<Candidate>()
 
     init {
@@ -64,7 +64,6 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
 
     private val sm get() = Modules.get<SpeedMine>()
 
-    /** The original's `jj.Y`. */
     private fun tick() {
         val p = mc.player ?: return
         debugList.clear()
@@ -98,7 +97,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         select(cand)
     }
 
-    /** The original's `jj.s`: crawling under a block (not swimming) → mine the head block, else the one underneath. */
+    /** Crawling under a block (not swimming) → mine the head block, else the one underneath. */
     private fun antiCrawl(): Boolean {
         val p = mc.player ?: return false
         val feet = BlockPos.containing(p.position())
@@ -123,7 +122,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         return s.getDestroySpeed(level, pos) > 0 && s.block != Blocks.AIR && s.block != Blocks.CAVE_AIR && !s.canBeReplaced()
     }
 
-    /** The original's `jj.I`: an ender chest within 2.2 of our eyes (anyone's, our own surround's too). */
+    /** An ender chest within 2.2 of our eyes (anyone's, our own surround's too). */
     private fun eChestMine() {
         val p = mc.player ?: return
         for (be in ServerInfo.blockEntities) {
@@ -134,7 +133,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         }
     }
 
-    /** The original's `jj.f(long, Player)`: a shulker box within 2.2 of the target's eyes, forced. */
+    /** A shulker box within 2.2 of the target's eyes, forced. */
     private fun antiShulker(target: Player) {
         for (be in ServerInfo.blockEntities) {
             if (target.eyePosition.distanceTo(Vec3.atCenterOf(be.blockPos)) <= 2.2 && be is ShulkerBoxBlockEntity) {
@@ -144,7 +143,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         }
     }
 
-    /** The original's `qo.a`: the bind is held (polled each tick); never with chat open. */
+    /** The bind is held (polled each tick); never with chat open. */
     private fun held(b: Bind): Boolean {
         if (b.key == -1 || mc.gui.screen() is ChatScreen) return false
         return if (b.mouse) b.key in Keys.heldMouse else Keys.down(b.key)
@@ -161,7 +160,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         )
     }
 
-    /** The original's `jj.f(Player, long, List)`: leave Speed Mine on its rebreak block when that's a CEV/surround/CIV block. */
+    /** Leave Speed Mine on its rebreak block when that's a CEV/surround/CIV block. */
     private fun holdForRebreak(target: Player, corners: List<BlockPos>): Boolean {
         val level = mc.level ?: return false
         val sm = sm
@@ -183,7 +182,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         return false
     }
 
-    /** The original's `jj.G`: the obsidian two to five blocks above the target's corners (CEV). */
+    /** The obsidian two to five blocks above the target's corners (CEV). */
     private fun cevCandidates(target: Player, corners: List<BlockPos>, out: MutableList<Candidate>, force: Boolean) {
         val p = mc.player ?: return
         if (target.isVisuallyCrawling && !cevCrawlers.value) return
@@ -207,7 +206,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
     }
 
     /**
-     * One side of the target's feet block (the original's city scoring): the surround block there, scored by the crystal
+     * One side of the target's feet block (city scoring): the surround block there, scored by the crystal
      * spots mining it would open, plus its solid second-layer neighbours as their own candidates. Returns whether the
      * side is open (exactly `Blocks.AIR`).
      */
@@ -253,7 +252,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         return open
     }
 
-    /** The tail of `jj.Y`: the best candidate; with double-mine the 100-point CEV block goes second. */
+    /** The best candidate; with double-mine the 100-point CEV block goes second. */
     private fun select(cand: List<Candidate>) {
         val dm = sm.enabled && sm.doubleMine.value
         if (dm) {
@@ -268,7 +267,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         }
     }
 
-    /** The original's `jj.o`: hand the block to Speed Mine (vanilla mining without it). */
+    /** Hand the block to Speed Mine (vanilla mining without it). */
     private fun mine(pos: BlockPos, force: Boolean) {
         val p = mc.player ?: return
         val sm = sm
@@ -282,7 +281,7 @@ class AutoMine : Module("auto-mine", Categories.ATTACK) {
         p.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false)
     }
 
-    /** The original's `jj.d`: each candidate's outline and score, pulsing in the theme colour. */
+    /** Each candidate's outline and score, pulsing in the theme colour. */
     private fun render() {
         for (c in debugList) {
             val phase = (System.currentTimeMillis() / 2.0 % 360).toInt()

@@ -3,15 +3,15 @@ package dev.horizon.client.render
 import java.awt.Color
 import kotlin.math.roundToInt
 
-/** The original's colour helpers (`sf.q.x`, `sf.q.P`, ...) on ARGB ints. */
+/** Colour helpers on ARGB ints. */
 object Colors {
     fun alpha(c: Int) = c ushr 24
     fun alphaF(c: Int) = (c ushr 24) / 255f
 
-    /** The original's `sf.q.x(c, a)`: replaces the alpha with `(int)(255 * clamp(a, 0, 1))` (truncated). */
+    /** Replaces the alpha with `(int)(255 * clamp(a, 0, 1))` (truncated). */
     fun withAlpha(c: Int, a: Float): Int = ((255f * a.coerceIn(0f, 1f)).toInt() shl 24) or (c and 0xFFFFFF)
 
-    /** The original's `sf.q.P(c1, c2, t)`: each channel, alpha included, `roundToInt(c1 + (c2 - c1) * clamp(t))`. */
+    /** Each channel, alpha included, `roundToInt(c1 + (c2 - c1) * clamp(t))`. */
     fun lerp(c1: Int, c2: Int, t: Float): Int {
         val k = t.coerceIn(0f, 1f)
         fun ch(shift: Int): Int {

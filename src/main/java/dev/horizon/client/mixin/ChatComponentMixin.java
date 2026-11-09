@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Better Chat (not in the original): with chat closed and no screen open, vanilla's chat waits for the client's layer,
+ * Better Chat: with chat closed and no screen open, vanilla's chat waits for the client's layer,
  * which draws its pane first (BetterChat.renderLayer); every chat draw also has the line strips it fills counted for the
  * pane.
  */

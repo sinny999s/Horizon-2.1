@@ -35,11 +35,11 @@ import kotlin.math.roundToInt
 
 private val mc get() = Minecraft.getInstance()
 
-/** The original's `nr`: how a request wants movement corrected (SILENT is read nowhere, so it acts as NONE). */
+/** How a request wants movement corrected (SILENT is read nowhere, so it acts as NONE). */
 enum class MoveFixKind { NONE, SILENT, FORCE }
 
 /**
- * The original's `v1`: a rotation; [restore] sends the real rotation again after an instant request's action. Mutable: the
+ * A rotation; [restore] sends the real rotation again after an instant request's action. Mutable: the
  * rotation manager snaps the winning request's rotation in place, and Aura reads that snapped value back.
  */
 class Rotation(var yaw: Float, var pitch: Float, val restore: Boolean = false, var moveFix: MoveFixKind = MoveFixKind.NONE) {
@@ -48,7 +48,7 @@ class Rotation(var yaw: Float, var pitch: Float, val restore: Boolean = false, v
         return this
     }
 
-    /** The original's `v1.v`: snaps to the mouse-sensitivity grid around the last sent rotation, in place (double maths). */
+    /** Snaps to the mouse-sensitivity grid around the last sent rotation, in place (double maths). */
     fun gcdFix(): Rotation {
         val g = Math.pow(mc.options.sensitivity().get() * 0.6 + 0.2, 3.0) * 8.0 * 0.15f.toDouble()
         val ly = lastYaw
@@ -64,7 +64,7 @@ class Rotation(var yaw: Float, var pitch: Float, val restore: Boolean = false, v
         val lastYaw: Float get() = (mc.player as? LocalPlayerAccessor)?.horizon_yRotLast() ?: 0f
         val lastPitch: Float get() = (mc.player as? LocalPlayerAccessor)?.horizon_xRotLast() ?: 0f
 
-        /** The original's `n8.C`: from the eyes, the last sent rotation as the base (so the yaw stays continuous); double maths. */
+        /** From the eyes, the last sent rotation as the base (so the yaw stays continuous); double maths. */
         fun lookAt(to: Vec3, restore: Boolean = false): Rotation {
             val p = mc.player ?: return Rotation(0f, 0f)
             val dx = to.x - p.x
@@ -78,17 +78,17 @@ class Rotation(var yaw: Float, var pitch: Float, val restore: Boolean = false, v
     }
 }
 
-/** The original's `p8`: a rotation wanted this tick, and what to do once the server has it (run at PostSync). */
+/** A rotation wanted this tick, and what to do once the server has it (run at PostSync). */
 open class RotationRequest(val rotation: Rotation, val priority: Int, var action: () -> Unit)
 
-/** The original's `ps`: the action runs the moment the request wins (PlayerUpdate −20), before the movement packet. */
+/** The action runs the moment the request wins (PlayerUpdate −20), before the movement packet. */
 class InstantRequest(rotation: Rotation, priority: Int, action: () -> Unit) : RotationRequest(rotation, priority, action)
 
-/** The original's `pv`: the action runs one tick later (PlayerUpdate +20). */
+/** The action runs one tick later (PlayerUpdate +20). */
 class GrimRequest(rotation: Rotation, priority: Int, action: () -> Unit) : RotationRequest(rotation, priority, action)
 
 /**
- * The original's rotation manager (`n8`): every tick the highest-priority request wins (the first one queued on a tie), its
+ * The rotation manager: every tick the highest-priority request wins (the first one queued on a tie), its
  * rotation is put on the player for the movement packet only, and restored afterwards. Instant-queue requests send
  * their own rotation packet and act at once. With Move Fix it also makes the player's movement follow that rotation.
  */
@@ -98,17 +98,17 @@ object RotationManager {
     private var selected: RotationRequest? = null
     private var deferred: (() -> Unit)? = null
 
-    /** The original's `u`: the rotation this tick's movement packet will carry (from the −20 pass until PreSync). */
+    /** The rotation this tick's movement packet will carry (from the −20 pass until PreSync). */
     private var pending: Rotation? = null
     private var savedYaw = 0f
     private var savedPitch = 0f
 
-    /** The real rotation while travel runs with the server one (the original's `P`, never cleared). */
+    /** The real rotation while travel runs with the server one (never cleared). */
     private var travelSaved: Rotation? = null
     private var useYaw = 0f
     private var usePitch = 0f
 
-    /** The rotation sent with this tick's movement packet, and the previous one (the original's `Q`, `N`). */
+    /** The rotation sent with this tick's movement packet, and the previous one. */
     var current: Rotation? = null
         private set
     var previous: Rotation? = null
@@ -124,13 +124,13 @@ object RotationManager {
         instant += r
     }
 
-    /** The original's `n8.v`: a rotation with nothing to do afterwards. */
+    /** A rotation with nothing to do afterwards. */
     fun rotate(rot: Rotation, priority: Int = 150) {
         Modules.get<AntiKnockBack>().onRotationQueued()
         queue += RotationRequest(rot, priority) {}
     }
 
-    /** The original's `n8.N`: the best queued rotation (snapped in place), else the player's or the last sent one. */
+    /** The best queued rotation (snapped in place), else the player's or the last sent one. */
     fun peek(useCurrent: Boolean = false): Rotation {
         var best: RotationRequest? = null
         for (r in queue) if (best == null || r.priority > best.priority) best = r
@@ -143,7 +143,7 @@ object RotationManager {
 
     private fun freeing() = Modules.get<FreeCam>().enabled || Modules.get<FreeLook>().enabled || Modules.get<ElytraRecast>().enabled
 
-    /** The original's `n8.p`: FREE-mode move fix (remap the keys, own velocity maths). */
+    /** FREE-mode move fix (remap the keys, own velocity maths). */
     private fun silentFix(): Boolean {
         val r = pending ?: return false
         val p = mc.player ?: return false
@@ -152,7 +152,7 @@ object RotationManager {
             !freeing()
     }
 
-    /** The original's `n8.H`: travel runs with the server rotation. */
+    /** Travel runs with the server rotation. */
     private fun travelFix(): Boolean {
         val r = pending ?: return false
         val p = mc.player ?: return false
@@ -244,7 +244,7 @@ object RotationManager {
             e.yaw = 0f
             e.pitch = Mth.wrapDegrees(Mth.lerp(pt, n.pitch, q.pitch))
         }
-        // Client-look: with Aura's setting on, the camera follows the server rotation (the original's `n8.i`).
+        // Client-look: with Aura's setting on, the camera follows the server rotation.
         EventBus.on<Render3DEvent>(this) {
             val q = current ?: return@on
             val n = previous ?: return@on
@@ -257,7 +257,7 @@ object RotationManager {
         }
     }
 
-    /** The original's `n8.p(KeyboardInputEvent)`: the keys, turned to the server yaw and rounded to 8 directions. */
+    /** The keys, turned to the server yaw and rounded to 8 directions. */
     private fun remapInput() {
         if (!silentFix()) return
         val p = mc.player ?: return
@@ -276,7 +276,7 @@ object RotationManager {
         input.keyPresses = Input(f2 > 0, f2 < 0, s2 > 0, s2 < 0, old.jump(), old.shift(), sprint)
     }
 
-    /** The original's `n8.m`: vanilla's input vector, with Math.sin/cos. */
+    /** Vanilla's input vector, with Math.sin/cos. */
     private fun inputVector(yaw: Float, input: Vec3, speed: Float): Vec3 {
         val d = input.lengthSqr()
         if (d < 1.0E-7) return Vec3.ZERO

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** The original's `MinecraftMixin.doAttackHook`: a cancelled AttackEvent makes `startAttack` return false. */
+/** A cancelled AttackEvent makes `startAttack` return false. */
 @Mixin(Minecraft.class)
 public abstract class StartAttackMixin {
 	@Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)

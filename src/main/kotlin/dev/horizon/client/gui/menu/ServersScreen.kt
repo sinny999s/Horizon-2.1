@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 
 /**
- * Not in the original: the Multiplayer screen in the client's style ([ListMenu] over vanilla's): each server as a pane with
+ * The Multiplayer screen in the client's style ([ListMenu] over vanilla's): each server as a pane with
  * its icon, name and MOTD (in Minecraft's font, as servers design them), its player count, ping in ms and signal bars;
  * LAN games below, as vanilla lists them. Vanilla pings a server when its row is drawn, so each frame the rows are also
  * drawn into a frame that never reaches the screen. With ViaFabricPlus, its button becomes "Join as <version>", which

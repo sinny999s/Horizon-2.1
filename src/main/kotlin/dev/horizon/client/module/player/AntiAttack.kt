@@ -10,7 +10,7 @@ import net.minecraft.world.entity.npc.villager.Villager
 import net.minecraft.world.entity.player.Player
 
 /**
- * The original's "anti-attack" (`am`): drops attack packets aimed at friends, villagers, or zombified piglins that aren't
+ * Drops attack packets aimed at friends, villagers, or zombified piglins that aren't
  * already after us.
  */
 class AntiAttack : Module("anti-attack", Categories.PLAYER) {
@@ -19,7 +19,7 @@ class AntiAttack : Module("anti-attack", Categories.PLAYER) {
     val zoglins = bool("zoglins", true)
 
     init {
-        // `am.f`; the target comes from the level by the packet's id (criticals' `j1.g`).
+        // The target comes from the level by the packet's id.
         on<SendPacketEvent> { e ->
             val p = e.packet as? ServerboundAttackPacket ?: return@on
             try {

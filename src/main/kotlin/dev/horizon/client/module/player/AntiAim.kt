@@ -8,11 +8,10 @@ import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 
 /**
- * The original's "anti-aim" (`ad`): every tick (not while attacking or using, and with Off Ground Only not on the ground) a
+ * Every tick (not while attacking or using, and with Off Ground Only not on the ground) a
  * server-side rotation from the yaw and pitch modes, queued at priority 0 so any other rotation wins.
  *
- * The original's code swaps the two delays: the yaw modes count "pitch-delay" and the pitch modes "yaw-delay" (its
- * properties are named the other way round from their settings); kept as is.
+ * The two delays are swapped on purpose: the yaw modes count "pitch-delay" and the pitch modes "yaw-delay".
  */
 class AntiAim : Module("anti-aim", Categories.PLAYER) {
     enum class Yaw { OFF, RANDOM, SPIN, SIN, FIX, STATIC, JITTER }
@@ -26,14 +25,13 @@ class AntiAim : Module("anti-aim", Categories.PLAYER) {
     val yawOffset = float("yaw-offset", 0.0f, -180.0f..180.0f)
     val offGroundOnly = bool("off-ground-only", true)
 
-    // The original's statics `I`, `M`, `U`, `r`: they survive turning the module off and on.
+    // These survive turning the module off and on (on purpose).
     private var yawValue = 0f
     private var pitchValue = 0f
     private var yawPhase = 0f
     private var pitchPhase = 0f
 
     init {
-        // `ad.b`
         on<PlayerUpdateEvent>(10) {
             val p = mc.player ?: return@on
             if (mc.options.keyAttack.isDown) return@on
