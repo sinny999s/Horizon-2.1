@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
  * - Yours: with `share-picks` on, your locker picks go up when they change (and every few hours); off, they're taken down.
  * - Theirs: players around you on a server are looked up (64 at a time, each again after five minutes); a Horizon
  *   user's picks are drawn on them instead of what Lunar says they wear ([LunarCosmetics]).
- * All network work runs on its own thread.
+ * All network work runs on its own thread. Public configs sign in the same way ([signIn]).
  */
 object HorizonShare {
     /** Where the deployed `share-worker` is (set once it's deployed; `share-url` in lunar.hzn overrides it). */
@@ -64,6 +64,15 @@ object HorizonShare {
     private var tick = 0
 
     private val url get() = LunarSettings.shareUrl.value.trim().trimEnd('/')
+
+    /** The service's address (public configs use it too: [dev.horizon.client.config.PublicConfigs]). */
+    val serviceUrl: String get() = url
+
+    /** A token for the account you're on now, signing in when needed; blocks, so never on the game thread. */
+    fun signIn(): String = token()
+
+    /** The token you already have for the account you're on now, if any (no signing in). */
+    fun currentToken(): String? = token?.takeIf { System.currentTimeMillis() < tokenUntil && tokenAccount == mc.user.profileId }
 
     /** A Horizon user's shared picks for [uuid], or null. */
     fun picks(uuid: UUID): List<Int>? = shared[uuid]?.takeIf { it.isNotEmpty() }
@@ -136,10 +145,11 @@ object HorizonShare {
         return out
     }
 
-    /** A token for your account (signing in with Mojang when there's none or it's old). Pool thread. */
+    /** A token for your account (signing in with Mojang when there's none or it's old). Off the game thread. */
+    @Synchronized
     private fun token(): String {
         val t = token
-        if (t != null && System.currentTimeMillis() < tokenUntil) return t
+        if (t != null && System.currentTimeMillis() < tokenUntil && tokenAccount == mc.user.profileId) return t
         val user = mc.user
         val pair = try {
             mc.profileKeyPairManager.prepareKeyPair().get(15, TimeUnit.SECONDS).orElse(null)

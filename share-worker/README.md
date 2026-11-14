@@ -1,8 +1,11 @@
 # Horizon share
 
-A small Cloudflare Worker that lets Horizon users see each other's Lunar locker picks (client-side cosmetics too).
-Horizon's side is `src/main/kotlin/dev/horizon/client/lunar/HorizonShare.kt`. Free Cloudflare plan is enough
-(Workers + one D1 database).
+A small Cloudflare Worker for what Horizon users share with each other:
+- Lunar locker picks (client-side cosmetics too). Horizon's side: `src/main/kotlin/dev/horizon/client/lunar/HorizonShare.kt`.
+- Public configs (`src/configs.js`): publish, browse, load, star and report module configs. Horizon's side:
+  `config/PublicConfigs.kt`, `config/PublicConfigData.kt` and `gui/modern/PublicConfigsScreen.kt`.
+
+Both sign in the same way (`src/cert.js`, `src/token.js`). Free Cloudflare plan is enough (Workers + one D1 database).
 
 ## Deploy (once)
 
@@ -58,3 +61,20 @@ account sign in without Mojang.
     npx wrangler dev --local --port 8787
 
 Then `tools/examples/lunar-share.txt` (its header says how to point the dev client at it).
+
+Public configs: `node test/configs-test.mjs` (the worker running as above, with `--var ADMIN_UUIDS:` plus
+`ad` repeated 16 times), and `node test/seed-configs.mjs ../run/horizon/modules` fills it with sample configs for
+`tools/examples/public-configs.txt`.
+
+## Public configs: moderation
+
+A config is hidden by itself once 5 accounts report it. Admins (the account ids, 32 hex digits without dashes, in the
+`ADMIN_UUIDS` variable, comma-separated: Workers & Pages > horizon-share > Settings > Variables) see hidden ones in
+the browser, can delete any config, and can call `/configs/hide` and `/configs/ban`. Without the game, from this folder:
+
+    npx wrangler d1 execute horizon-share --remote --command "SELECT id, name, author, reports, hidden FROM configs ORDER BY reports DESC LIMIT 20"
+    npx wrangler d1 execute horizon-share --remote --command "UPDATE configs SET hidden = 1 WHERE id = '<id>'"
+    npx wrangler d1 execute horizon-share --remote --command "UPDATE authors SET banned = 1 WHERE uuid = '<account id>'"
+
+Updating the database's tables after a change to `schema.sql` (every statement is `IF NOT EXISTS`, so it's safe to
+run again): `npx wrangler d1 execute horizon-share --remote --file=schema.sql`, then `npx wrangler deploy`.

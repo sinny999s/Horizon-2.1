@@ -30,10 +30,10 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * The redesigned ClickGUI (UI > Style: New), built from design/clickgui/index.html. One glass window
- * over the blurred world: a sidebar of the categories and their tabs, a grid of module cards, and an inspector
- * with the selected module's settings. Controls: left click a card toggles it, right click opens
- * its settings, middle click binds it, Ctrl+Shift+click resets it, Alt shows every bind; typing anywhere searches.
+ * The redesigned ClickGUI (UI > Style: New), built from design/clickgui/index.html. One glass window
+ * over the blurred world: a sidebar of the categories and their tabs, a grid of module cards, and an inspector
+ * with the selected module's settings. Controls: left click a card toggles it, right click opens
+ * its settings, middle click binds it, Ctrl+Shift+click resets it, Alt shows every bind; typing anywhere searches.
  * Windows and HUD open their own screens.
  */
 object ModernGui : Screen(Component.literal("horizon-modern")) {
@@ -340,6 +340,12 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
     /** How far from their ends the sidebar's list and the module grid fade out ([Ui.fade]). */
     private const val NAV_FADE = 8f
     private const val GRID_FADE = 10f
+
+    /** For ShotBot: opens the profile menu (configs, public configs, Ghost Mode...). */
+    @JvmStatic
+    fun testProfile() {
+        popover = ProfileMenu(5.5f, PROFILE_Y)
+    }
 
     private fun profile() {
         val y = PROFILE_Y

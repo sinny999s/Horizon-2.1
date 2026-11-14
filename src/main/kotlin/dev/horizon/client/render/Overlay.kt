@@ -60,6 +60,7 @@ object Overlay {
         if (screen === ModernGui) ModernGui.draw()
         if (screen === dev.horizon.client.gui.modern.LunarLockerScreen) dev.horizon.client.gui.modern.LunarLockerScreen.draw(graphics)
         if (screen === dev.horizon.client.gui.modern.LunarFriendsScreen) dev.horizon.client.gui.modern.LunarFriendsScreen.draw()
+        if (screen === dev.horizon.client.gui.modern.PublicConfigsScreen) dev.horizon.client.gui.modern.PublicConfigsScreen.draw()
         if (screen === dev.horizon.client.gui.modern.LunarEmoteWheel) dev.horizon.client.gui.modern.LunarEmoteWheel.draw()
         if (screen === dev.horizon.client.gui.popup.PopupScreen) dev.horizon.client.gui.popup.PopupScreen.draw()
         if (screen === dev.horizon.client.gui.modern.ModernWindows) dev.horizon.client.gui.modern.ModernWindows.draw()

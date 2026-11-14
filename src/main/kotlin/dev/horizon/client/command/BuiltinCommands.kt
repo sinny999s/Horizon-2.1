@@ -114,7 +114,7 @@ object FriendCommand : ClientCommand("friend") {
     }
 }
 
-/** Module configs — `cfg list`, `cfg folder`, `cfg reset`, `cfg save|load|remove <name>`. */
+/** Module configs — `cfg list`, `cfg folder`, `cfg reset`, `cfg save|load|remove <name>`, `cfg browse` (public ones). */
 object ConfigCommand : ClientCommand("cfg") {
     override fun build(builder: Builder) {
         builder.then(literal("list").executes {
@@ -124,6 +124,11 @@ object ConfigCommand : ClientCommand("cfg") {
                     .append(c.id).append(ChatFormatting.RESET)
             }
             message(sb.toString())
+            1
+        })
+        builder.then(literal("browse").executes {
+            // After the chat screen this runs from has closed.
+            net.minecraft.client.Minecraft.getInstance().let { mc -> mc.schedule(Runnable { mc.gui.setScreen(dev.horizon.client.gui.modern.PublicConfigsScreen) }) }
             1
         })
         builder.then(literal("folder").executes {
@@ -161,7 +166,7 @@ object ConfigCommand : ClientCommand("cfg") {
             message("$name removed")
             1
         }))
-        builder.executes { message(ChatFormatting.RED.toString() + "cfg <load/remove/save> <id> / cfg list"); 1 }
+        builder.executes { message(ChatFormatting.RED.toString() + "cfg <load/remove/save> <id> / cfg list / cfg browse"); 1 }
     }
 }
 

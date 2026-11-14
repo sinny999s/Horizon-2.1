@@ -285,11 +285,14 @@ internal class ThemeMenu(private val ax: Float, private val ay: Float) : Popover
     }
 }
 
-/** The sidebar's profile: switch module configs, turn Ghost Mode on or off, or open the Windows and HUD editor. */
+/**
+ * The sidebar's profile: switch module configs (or browse public ones), turn Ghost Mode on or off, or open the Windows
+ * and HUD editor.
+ */
 internal class ProfileMenu(private val ax: Float, private val ay: Float) : Popover() {
     override fun draw(): Boolean {
         val configs = Configs.of(ConfigType.MODULES).list.toList()
-        card(ax, ay - (configs.size * 15f + 80f), 120f, configs.size * 15f + 76f)
+        card(ax, ay - (configs.size * 15f + 95f), 120f, configs.size * 15f + 91f)
         var py = y + 4f
         Ui.text(Type.section, "CONFIGS", x + 6f, py + 5f, Tok.T4)
         py += 10f
@@ -304,6 +307,8 @@ internal class ProfileMenu(private val ax: Float, private val ay: Float) : Popov
             }
             py += 15f
         }
+        option("open:public", x + 3f, py, w - 6f, "Public configs", false, "globe") { Minecraft.getInstance().gui.setScreen(PublicConfigsScreen) }
+        py += 15f
         Ui.box(x + 4f, py + 2f, w - 8f, 0.5f, 0f, Tok.LINE)
         py += 5f
         // Ghost Mode's switch, saved with the config above.
