@@ -12,7 +12,9 @@ import java.util.Locale
 import kotlin.math.max
 
 /**
- * A row per enabled module (not the ClickGUI), built like the other list widgets but with no header: a
+ * A row per enabled module (not the ClickGUI, nor a module hidden from it: [Module.listHidden], by default everything
+ * visual and what only runs in the background; the eye in the ClickGUI's module header), built like the other list
+ * widgets but with no header: a
  * plate with the name and, with [modes], another with the module's mode; rows slide in and out over 250 ms, and on the
  * right half of the screen it's right-aligned. Rows go widest first (or by name) and glide to their new places when
  * the order changes. Empty, it shows a faint "Array List" plate in chat or the HUD editor, to be grabbed.
@@ -45,7 +47,7 @@ object ArrayListWidget : HudWidget("array-list-widget") {
         for (m in Modules.all) {
             if (m is ClickGuiModule) continue
             val row = rows.firstOrNull { it.module === m }
-            if (m.enabled) {
+            if (m.enabled && !m.listHidden) {
                 if (row == null) rows += Row(m) else row.removing = false
             } else {
                 row?.removing = true

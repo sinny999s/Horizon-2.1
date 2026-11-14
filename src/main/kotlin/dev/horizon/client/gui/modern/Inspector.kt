@@ -28,14 +28,16 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * The new ClickGUI's right column: the selected module's header (name, switch, description, bind, hold, favourite,
- * reset) and its settings, one row each in declaration order, the way the mockup lays them out. Rows slide open and
+ * The new ClickGUI's right column: the selected module's header (name, switch, description, bind, hold, Array List eye,
+ * favourite, reset) and its settings, one row each in declaration order, the way the mockup lays them out. Rows slide open and
  * shut as their visibility changes; groups open and close; a middle click puts a setting back to its default.
  */
 internal object Inspector {
     private var scroll = 0f
     private var scrollMax = 0f
     private var hover: Setting<*>? = null
+    /** The module whose Array List eye the pointer is on, for the footer. */
+    private var arrayListHover: Module? = null
     private var flash: Setting<*>? = null
     private var flashAt = 0L
     private var revealing: Setting<*>? = null
@@ -82,6 +84,7 @@ internal object Inspector {
             empty(x, y, w, h)
             return
         }
+        arrayListHover = null
         val headH = header(m, x, y, w)
         val footH = 17.5f
         val by = y + headH
@@ -162,7 +165,7 @@ internal object Inspector {
         Ui.button("close", ix, cy, 14f, null, "x") { ModernGui.select(null) }
         ix -= 17f
         Ui.button("reset", ix, cy, 14f, null, "reset") {
-            m.settings.forEach { if (it.id != "enabled" && it.id != "bind") it.reset() }
+            m.settings.forEach { if (it.id !in Module.META) it.reset() }
             Sounds.SETTINGS_CLOSE.play()
         }
         ix -= 17f
@@ -170,6 +173,18 @@ internal object Inspector {
         val fo = Ui.hit("btn:fav", ix, cy, 14f, 14f, { if (it == Keys.MOUSE_LEFT) GuiData.toggleFav(m) })
         Ui.box(ix, cy, 14f, 14f, 4f, if (fo) Tok.FILL2 else Tok.FILL, 0.5f, if (fo) Tok.LINE2 else Tok.LINE)
         Ui.icon(if (fav) "favon" else "fav", ix + 3.5f, cy + 3.5f, 7f, if (fav) 0xFFFFC94D.toInt() else if (fo) Tok.T1 else Tok.T2)
+        // Shown in the Array List or not (the footer says which while the pointer is on it).
+        ix -= 17f
+        val hid = m.listHidden
+        val ho = Ui.hit("btn:hidden", ix, cy, 14f, 14f, {
+            if (it == Keys.MOUSE_LEFT) {
+                m.listHidden = !hid
+                Sounds.SWITCH_RIGHT.play()
+            }
+        })
+        if (ho) arrayListHover = m
+        Ui.box(ix, cy, 14f, 14f, 4f, if (ho) Tok.FILL2 else Tok.FILL, 0.5f, if (ho) Tok.LINE2 else Tok.LINE)
+        Ui.icon(if (hid) "eyeoff" else "eye", ix + 3.25f, cy + 3.25f, 7.5f, if (ho) Tok.T1 else if (hid) Tok.T3 else Tok.T2)
         Ui.box(x, y + headH, w, 0.5f, 0f, Tok.LINE)
         return headH + 0.5f
     }
@@ -184,11 +199,15 @@ internal object Inspector {
             Ui.text(font, text, tx, cy, if (strong) Tok.T2 else Tok.T3)
             tx += font.width(text) + 4f
         }
-        if (s != null) {
+        val eye = arrayListHover
+        if (eye != null) {
+            part(if (eye.listHidden) "Hidden from the Array List" else "Shown in the Array List", true)
+            part("· click to ${if (eye.listHidden) "show" else "hide"} it", false)
+        } else if (s != null) {
             part(GuiData.name(s), true)
             if (GuiData.valued(s)) part("· default ${GuiData.defaultText(s)} · middle click resets", false)
         } else {
-            val n = m.settings.count { GuiData.valued(it) && it.id != "enabled" && it.id != "bind" }
+            val n = m.settings.count { GuiData.valued(it) && it.id !in Module.META }
             part("$n", true)
             part("settings ·", false)
             part("${GuiData.changedCount(m)}", true)
@@ -209,7 +228,7 @@ internal object Inspector {
         val groups = HashMap<Any, GroupSetting>()
         for (s in m.settings) if (s is GroupSetting) groups[s.value] = s
         for (s in m.settings) {
-            if (s.id == "enabled" || s.id == "bind") continue
+            if (s.id in Module.META) continue
             val g = s.parent?.let { groups[it] }
             if (g != null) {
                 if (g.value.mode == GroupMode.BOOLS) continue

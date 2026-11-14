@@ -33,13 +33,19 @@ import java.awt.Color
 
 /**
  * A module. Its settings are kept in declaration order, which is the order the ClickGUI shows them;
- * the first two are always "enabled" and "bind" (not shown as widgets).
+ * the first three are always "enabled", "bind" and "hidden" ([META], not shown as widgets).
  */
 abstract class Module(override val id: String, val subCategory: SubCategory, val aliases: List<String> = emptyList(),
                       defaultBind: Bind = Bind()) : SettingsHolder {
     override val settings = ArrayList<Setting<*>>()
     val enabledSetting = bool("enabled", false)
     val bindSetting = bind("bind", defaultBind)
+
+    /**
+     * Left out of the Array List (the eye in the ClickGUI's module header). Saved with the config. By default the
+     * modules that don't change how you play are: everything visual, and what only runs in the background ([QUIET]).
+     */
+    val hiddenSetting = bool("hidden", subCategory in Categories.VISUAL.subCategories || id in QUIET)
 
     /** The display name: each id part capitalised and followed by a space ("Auto Crystal "). */
     val name: String = id.split("-").joinToString("") { it.replaceFirstChar { c -> c.uppercaseChar() } + " " }
@@ -55,6 +61,26 @@ abstract class Module(override val id: String, val subCategory: SubCategory, val
         set(v) {
             bindSetting.value = v
         }
+
+    /** Left out of the Array List ([hiddenSetting]). */
+    var listHidden: Boolean
+        get() = hiddenSetting.value
+        set(v) {
+            hiddenSetting.value = v
+        }
+
+    companion object {
+        /** The settings every module has, kept out of its settings list in the GUI: on/off, its bind, Array List. */
+        val META = setOf("enabled", "bind", "hidden")
+
+        /** Outside the visual categories, modules that only run in the background: hidden from the Array List by default. */
+        private val QUIET = setOf(
+            "no-render", "zoom", "death-waypoints", "hunt-map", "server-helper", "tps-sync",
+            "lunar-spoof", "anti-resource-pack", "extra-tab", "fast-latency", "name-protect", "notifier", "party-protect",
+            "shulker-view", "translator", "discord-alerts", "message-append", "team-communication",
+            "teams", "threat-alerts", "ghost-mode", "auto-auth", "auto-reconnect", "armor-alert",
+        )
+    }
 
     private class Handler(val type: Class<out Event>, val priority: Int, val fn: (Event) -> Unit)
 

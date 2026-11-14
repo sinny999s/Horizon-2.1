@@ -91,7 +91,7 @@ internal object GuiData {
 
     fun changed(s: Setting<*>) = valued(s) && s.id != "enabled" && s.save() != defaultSave(s)
 
-    fun changedCount(m: Module) = m.settings.count { changed(it) && it.id != "bind" }
+    fun changedCount(m: Module) = m.settings.count { changed(it) && it.id != "bind" && it.id != "hidden" }
 
     /** The default, as the footer names it. */
     fun defaultText(s: Setting<*>): String = when (s) {

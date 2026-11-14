@@ -216,7 +216,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         Ui.box(sx, 5.75f, SEARCH_W, 18f, 5.5f, if (focusedNow) 0x59000000 else 0x40000000, 0.5f,
             if (focusedNow) Tok.alpha(Tok.a1, 0.55f) else if (over) 0x26FFFFFF else Tok.LINE2)
         Ui.icon("search", sx + 6f, 10.75f, 8f, Tok.T3)
-        val total = shown().sumOf { m -> m.settings.count { GuiData.valued(it) && it.id != "enabled" && it.id != "bind" } }
+        val total = shown().sumOf { m -> m.settings.count { GuiData.valued(it) && it.id !in Module.META } }
         Ui.fieldText(search, sx + 19f, 14.75f, SEARCH_W - 54f, Type.label, "Search ${shown().size} modules and $total settings")
         Ui.keycap(sx + SEARCH_W - 4.5f - Type.chip.width("Ctrl F") - 6f, 10.25f, "Ctrl F")
 
@@ -501,7 +501,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
             }
         }
         // the gear: settings count, opens the inspector
-        val n = m.settings.count { GuiData.valued(it) && it.id != "enabled" && it.id != "bind" }
+        val n = m.settings.count { GuiData.valued(it) && it.id !in Module.META }
         val gw = Type.chip.width("$n") + 14.5f
         val gx = cx + w - 7.5f - gw
         val gOver = Ui.hit("gear:" + m.id, gx, fy - 0.75f, gw, 11f, { if (it == Keys.MOUSE_LEFT) select(m) })
@@ -622,7 +622,7 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
                 if (q in GuiData.description(m).lowercase(Locale.ROOT)) 1 else 0)
             if (sc > 0) mods += SearchHit(m, null) to sc
             for (s in m.settings) {
-                if (!GuiData.valued(s) || s.id == "enabled" || s.id == "bind") continue
+                if (!GuiData.valued(s) || s.id in Module.META) continue
                 val ss = max(score(GuiData.name(s), q), score(s.id, q))
                 if (ss > 0) sets += SearchHit(m, s) to ss
             }
