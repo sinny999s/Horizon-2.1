@@ -637,6 +637,35 @@ object LegitRotation : AuraRotation() {
     var silentPitch = 0f
         private set
 
+    /** `follow-mouse`: how the hidden look shares the turning with your own hand, and where the camera looked a frame ago. */
+    private val follow = FollowMouse(human)
+    private var camYaw = 0f
+    private var camPitch = 0f
+
+    /** The hidden look, for [follow]. */
+    private val hidden = object : FollowMouse.Look {
+        override val yaw get() = silentYaw.toDouble()
+        override val pitch get() = silentPitch.toDouble()
+
+        override fun add(dYaw: Double, dPitch: Double) {
+            silentYaw += dYaw.toFloat()
+            silentPitch = (silentPitch + dPitch.toFloat()).coerceIn(-90f, 90f)
+        }
+
+        override fun turn(dYaw: Double, dPitch: Double) = turnBy(doubleArrayOf(dYaw, dPitch))
+
+        override fun settle(dYaw: Double, dPitch: Double) {
+            val p = mc.player ?: return
+            val f = mc.options.sensitivity().get() * 0.6 + 0.2
+            val perCount = f * f * f * 8.0
+            val countsX = Math.round(dYaw / (perCount * 0.15))
+            val countsY = Math.round(dPitch / (perCount * 0.15))
+            carryX = 0.0
+            carryY = 0.0
+            if (countsX != 0L || countsY != 0L) this@LegitRotation.turn(p, countsX * perCount, countsY * perCount)
+        }
+    }
+
     private fun lookYaw(p: LocalPlayer) = if (silentActive) silentYaw else p.yRot
     private fun lookPitch(p: LocalPlayer) = if (silentActive) silentPitch else p.xRot
 
@@ -647,12 +676,23 @@ object LegitRotation : AuraRotation() {
         silentPitch = (silentPitch + (y * 0.15).toFloat()).coerceIn(-90f, 90f)
     }
 
-    /** `silent` with no target: turn the hidden look back onto the camera, at most max-aim-speed; done within 1 degree. */
-    private fun silentBack(aura: Aura, p: LocalPlayer, dt: Double) {
+    /**
+     * `silent` with no target: turn the hidden look back onto the camera; done within 1 degree. HUMAN makes it one more
+     * movement of the hand, SPRING eases it at no more than max-aim-speed. With `follow-mouse` your own turn carries it
+     * along meanwhile ([moveYaw], [movePitch]), so only what lies between the two is left to close.
+     */
+    private fun silentBack(aura: Aura, p: LocalPlayer, dt: Double, moveYaw: Double, movePitch: Double) {
+        if (aura.followMouse.value) hidden.add(moveYaw, movePitch)
         val dYaw = Mth.wrapDegrees(p.yRot - silentYaw).toDouble()
         val dPitch = (p.xRot - silentPitch).toDouble()
         if (abs(dYaw) < 1.0 && abs(dPitch) < 1.0) {
             silentActive = false
+            // Nothing of the hand's last movement is left for the camera to glide out of.
+            human.rest()
+            return
+        }
+        if (aura.aimModel.value == Aura.AimModel.HUMAN) {
+            turnBy(human.onto(dt, dYaw, dPitch, BACK_SIZE, humanParams(aura)))
             return
         }
         val k = 1.0 - exp(-dt * 10.0)
@@ -667,8 +707,62 @@ object LegitRotation : AuraRotation() {
         turnBy(doubleArrayOf(sy, sp))
     }
 
+    /**
+     * `follow-mouse`, each frame before the hand's own turn ([FollowMouse]): what you turn towards the target, the
+     * hidden look turns too. True when your own crosshair has stayed on the target, so the hidden look goes with the
+     * camera: the hand only watches then, and the spot you aim at on them is the one it keeps when it takes over.
+     */
+    private fun followMouse(
+        aura: Aura, t: Entity, p: LocalPlayer, now: Double, dt: Double, moveYaw: Double, movePitch: Double, shift: Vec3, eyeNow: Vec3,
+    ): Boolean {
+        val box = t.boundingBox
+        val c = box.center.add(shift)
+        val spotNow = aimPoint(aura, t).add(shift)
+        val flat = max(hypot(c.x - eyeNow.x, c.z - eyeNow.z), 0.3)
+        val width = deg(2.0 * kotlin.math.atan(box.xsize / 2.0 / flat))
+        val camera = Rotation(p.yRot, p.xRot)
+        val reach = aura.range.value + 0.75f
+        val outer = crosshairOn(t, camera, reach, OUTER)
+        val inner = outer && crosshairOn(t, camera, reach, INNER)
+        val errYaw = HumanAim.wrap(HumanAim.yawTo(hv(eyeNow), hv(spotNow)) - silentYaw)
+        val errPitch = HumanAim.pitchTo(hv(eyeNow), hv(spotNow)) - silentPitch
+        val params = humanParams(aura)
+        val leading = follow.frame(
+            hidden, now, dt, moveYaw, movePitch, p.yRot.toDouble(), p.xRot.toDouble(), inner, outer, errYaw, errPitch, width, params
+        )
+        if (!leading) return false
+        if (aura.aimModel.value == Aura.AimModel.HUMAN) {
+            val eyeVel = p.position().subtract(p.xo, p.yo, p.zo).scale(20.0)
+            human.watch(now, dt, silentYaw.toDouble(), silentPitch.toDouble(), hv(eyeNow), hv(eyeVel), hv(spotNow), hv(c), params)
+        }
+        vYaw = 0.0
+        vPitch = 0.0
+        lastSeen = null
+        // Where your crosshair is on them, as fractions of the box, kept off its very edges.
+        val at = eyeNow.add(viewVec(p.xRot, p.yRot).scale(eyeNow.distanceTo(c))).subtract(shift)
+        spot = Vec3(
+            clampD((at.x - box.minX) / box.xsize, 0.25, 0.75),
+            clampD((at.y - box.minY) / box.ysize, 0.2, 0.9),
+            clampD((at.z - box.minZ) / box.zsize, 0.25, 0.75)
+        )
+        spotTo = spot
+        return true
+    }
+
+    /** Is the look's crosshair on [t], its box drawn in on every side by [shrink] of its width (less of its height)? */
+    private fun crosshairOn(t: Entity, look: Rotation, reach: Float, shrink: Double): Boolean {
+        val box = t.boundingBox
+        t.boundingBox = box.inflate(-box.xsize * shrink, -box.ysize * shrink * 0.4, -box.zsize * shrink)
+        try {
+            return rayHitsTarget(t, look, reach, true)
+        } finally {
+            t.boundingBox = box
+        }
+    }
+
     fun reset() {
         silentActive = false
+        follow.reset()
         target = null
         vYaw = 0.0
         vPitch = 0.0
@@ -715,19 +809,29 @@ object LegitRotation : AuraRotation() {
     fun frame(aura: Aura) {
         val p = mc.player ?: return
         val now = System.nanoTime()
-        // A hidden look left over from before Aura last stopped calling this (off, another rotation) starts over.
-        if (!aura.silent.value || (last != 0L && now - last > 250_000_000L)) silentActive = false
+        // A hidden look left over from before Aura last stopped calling this (another rotation for a while) starts over. A
+        // frame that only took long (a lag spike) doesn't count: the look would jump to the camera and have to come back.
+        if (!aura.silent.value || (last != 0L && now - last > 2_000_000_000L)) silentActive = false
+        val missed = last == 0L || now - last > 250_000_000L
         val dt = if (last == 0L) 0.0 else ((now - last) / 1e9).coerceIn(0.0, 0.05)
         last = now
-        val t = aura.target
+        // How far your own hand turned the camera since the last frame (follow-mouse; nothing else turns it with `silent`).
+        // After missed frames there's no telling what turned it meanwhile.
+        val moveYaw = if (missed) 0.0 else Mth.wrapDegrees(p.yRot - camYaw).toDouble()
+        val movePitch = if (missed) 0.0 else (p.xRot - camPitch).toDouble()
+        camYaw = p.yRot
+        camPitch = p.xRot
+        // Killed or teleported out of range since Aura's last tick (which lets go of it on its next): nothing to chase.
+        val t = aura.target?.takeUnless { !it.isAlive || p.eyePosition.distanceTo(it.boundingBox.center) > aura.searchRange() + 1.0 }
         val humanAim = aura.aimModel.value == Aura.AimModel.HUMAN
         if (mc.gui.screen() != null) human.reset()
         if (t == null || mc.gui.screen() != null || (aura.requireClick.value && !PlayerState.physical(mc.options.keyAttack))) {
             target = null
             vYaw = 0.0
             vPitch = 0.0
+            follow.reset()
             if (silentActive) {
-                silentBack(aura, p, dt)
+                silentBack(aura, p, dt, moveYaw, movePitch)
                 return
             }
             // A hand doesn't stop dead when the target goes: it glides out.
@@ -740,12 +844,14 @@ object LegitRotation : AuraRotation() {
             silentPitch = p.xRot
             carryX = 0.0
             carryY = 0.0
+            follow.reset()
         }
         if (t !== target) {
             target = t
             acquired = now
             lastSeen = null
             relVel = Vec3.ZERO
+            follow.reset()
             val rLo = minOf(aura.reactionMin.value, aura.reactionMax.value) / 1000.0
             val rHi = maxOf(aura.reactionMin.value, aura.reactionMax.value) / 1000.0
             reaction = if (rHi <= 0.0) 0.0 else Rng.double(rLo, rHi)
@@ -758,6 +864,11 @@ object LegitRotation : AuraRotation() {
             nextSpot = now
             human.retarget(humanParams(aura))
         }
+        // Where you and it are this frame, as drawn (positions move once a tick; the frame is between two ticks).
+        val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+        val shift = t.getPosition(pt).subtract(t.position())
+        val eyeNow = p.getEyePosition(pt)
+        if (silentActive && aura.followMouse.value && followMouse(aura, t, p, now / 1e9, dt, moveYaw, movePitch, shift, eyeNow)) return
         if ((now - acquired) / 1e9 < reaction) {
             if (humanAim) turnBy(human.release(dt))
             return
@@ -774,12 +885,8 @@ object LegitRotation : AuraRotation() {
 
         val aim = aimPoint(aura, t)
         if (humanAim) {
-            // Where you and it are this frame, as drawn (positions move once a tick; the frame is between two ticks).
-            val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-            val shift = t.getPosition(pt).subtract(t.position())
             val c = t.boundingBox.center.add(shift)
             val spotNow = aim.add(shift)
-            val eyeNow = p.getEyePosition(pt)
             val eyeVel = p.position().subtract(p.xo, p.yo, p.zo).scale(20.0)
             val flat = max(hypot(c.x - eyeNow.x, c.z - eyeNow.z), 0.3)
             val width = deg(2.0 * kotlin.math.atan(t.boundingBox.xsize / 2.0 / flat))
@@ -793,10 +900,6 @@ object LegitRotation : AuraRotation() {
             )
             return
         }
-        // Where you and it are this frame, as drawn (positions move once a tick; the frame is between two ticks).
-        val pt = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
-        val shift = t.getPosition(pt).subtract(t.position())
-        val eyeNow = p.getEyePosition(pt)
 
         // `tracking`. How its box moves against your eyes (it strafing, you moving), smoothed over
         // about 0.1 s as a person reads it, turned into how fast the aim point swings across your view. The hand matches
@@ -898,6 +1001,13 @@ object LegitRotation : AuraRotation() {
         relax = aura.hitboxRelax.value / 100.0,
         tremor = aura.tremor.value.toDouble(),
     )
+
+    /** `follow-mouse`: how far each side of the target's box is drawn in for your crosshair to count as well on it, and as on it. */
+    private const val INNER = 0.2
+    private const val OUTER = 0.04
+
+    /** The width (degrees) the turn back to the camera is timed for: nothing small to land on. */
+    private const val BACK_SIZE = 6.0
 
     private fun pickSpot(mode: Aura.LegitSpot): Vec3 = when (mode) {
         Aura.LegitSpot.WANDER, Aura.LegitSpot.CLOSEST -> Vec3(Rng.double(0.30, 0.70), Rng.double(0.56, 0.86), Rng.double(0.30, 0.70))

@@ -167,6 +167,13 @@ class Aura : Module("aura", Categories.ATTACK) {
      * Move Fix so you walk the way the server sees you face.
      */
     val silent = bool("silent", false, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
+    /**
+     * `silent` working with your own hand instead of beside it ([FollowMouse]). What you turn towards the target, the
+     * hidden look turns too, on top of the hand's turn, so it is never behind your own aim. And once your own crosshair
+     * has rested on the target for a moment, the hidden look goes to your camera and stays with it: what is sent is your
+     * own aim, until your crosshair leaves them and the hand takes over again.
+     */
+    val followMouse = bool("follow-mouse", true, parent = legit.value) { rotationMode.value == RotationMode.LEGIT && silent.value }
     // HUMAN only (see HumanAim): how late you see the target move, how often a flick lands past it, how far off it
     // lands, how much a path bows. `tracking` (both models): how well you keep up with a strafing target.
     val perceptionDelay = int("perception-delay", 100, 0..300, parent = legit.value) { isHumanAim() }
@@ -307,6 +314,9 @@ class Aura : Module("aura", Categories.ATTACK) {
     }
 
     fun isHumanAim() = rotationMode.value == RotationMode.LEGIT && aimModel.value == AimModel.HUMAN
+
+    /** How far targets are looked for ([AuraTargets.searchRange]). */
+    fun searchRange(): Float = finder.searchRange()
 
     /** Aura is fighting someone with a weapon. */
     fun isAttacking(): Boolean = enabled && target != null && weapon.gate()

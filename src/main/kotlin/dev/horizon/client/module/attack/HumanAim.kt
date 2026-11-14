@@ -28,7 +28,9 @@ import kotlin.math.sqrt
  * - when the target is gone the hand glides to a stop instead of halting dead.
  *
  * Positions are in blocks (interpolated to the frame), angles in degrees, times in seconds. [step] returns how far to
- * turn this frame; the caller turns it into whole mouse counts.
+ * turn this frame; the caller turns it into whole mouse counts. For Aura's `follow-mouse` ([FollowMouse]) the look can
+ * also be turned from outside while a movement runs ([credit]), turned onto something that isn't a target ([onto]),
+ * or left alone for a while with the hand only watching ([watch]).
  */
 class HumanAim(private val rng: Random) {
     class Params(
@@ -55,7 +57,7 @@ class HumanAim(private val rng: Random) {
         val tremor: Double = 0.35,
     )
 
-    private class Sub(val dYaw: Double, val dPitch: Double, val duration: Double, val bow: Double) {
+    private class Sub(var dYaw: Double, var dPitch: Double, val duration: Double, val bow: Double) {
         var t = 0.0
     }
 
@@ -85,6 +87,10 @@ class HumanAim(private val rng: Random) {
     private var ffPitchNow = 0.0
     private var tremPitch = 0.0
     private var clickKick = 0.0
+
+    /** How far off the aim the look is, as the eye reports it this frame ([perceive]). */
+    private var errYaw = 0.0
+    private var errPitch = 0.0
 
     /** Submovements started so far (for tests and traces). */
     var submovements = 0
@@ -150,7 +156,135 @@ class HumanAim(private val rng: Random) {
         if (topSpeed <= 0.0) retarget(p)
         record(now, center)
         if (dt <= 0.0) return doubleArrayOf(0.0, 0.0)
+        perceive(now, dt, yaw, pitch, eye, eyeVel, spot, center, p)
+        var outYaw = ffYawNow * dt
+        var outPitch = ffPitchNow * dt
 
+        // Plan the next submovement once the last has run and the short gap after it is over.
+        if (sub == null) {
+            pause -= dt
+            if (pause <= 0.0) {
+                val dist = hypot(errYaw, errPitch)
+                // The dead zone is the box's shape: a player is three times as tall as wide, so a few degrees up or
+                // down on them is still on them.
+                val dw = if (onBox) max(MIN_DEAD, p.relax * width * 0.5) else MIN_DEAD
+                val dh = if (onBox) max(MIN_DEAD, p.relax * height * 0.5 * p.pitchScale) else MIN_DEAD
+                val outside = (errYaw / dw) * (errYaw / dw) + (errPitch / dh) * (errPitch / dh) > 1.0
+                if (outside) sub = plan(errYaw, errPitch, dist, size, p)
+            }
+        }
+        val moved = advance(dt)
+        outYaw += moved[0]
+        outPitch += moved[1]
+
+        // Tremor: band-limited noise (an Ornstein-Uhlenbeck speed), a touch stronger just after a click.
+        clickKick *= exp(-dt * 28.0)
+        val sigma = p.tremor * TREMOR_GAIN * (1.0 + clickKick * 0.65)
+        val decay = exp(-dt / TREMOR_TAU)
+        val kick = sigma * sqrt(1.0 - decay * decay)
+        tremYaw = tremYaw * decay + kick * rng.nextGaussian()
+        tremPitch = tremPitch * decay + kick * rng.nextGaussian() * max(p.pitchScale, 0.25)
+        val cap = sigma * 2.5
+        tremYaw = tremYaw.coerceIn(-cap, cap)
+        tremPitch = tremPitch.coerceIn(-cap, cap)
+        outYaw += tremYaw * dt
+        outPitch += tremPitch * dt
+        return capped(outYaw, outPitch, dt)
+    }
+
+    /**
+     * A frame in which the hand leaves the look alone (your own crosshair is on the target, [FollowMouse]): it keeps
+     * watching the target as in [step], so that it follows at once when it takes over.
+     */
+    fun watch(now: Double, dt: Double, yaw: Double, pitch: Double, eye: V, eyeVel: V, spot: V, center: V, p: Params) {
+        if (topSpeed <= 0.0) retarget(p)
+        record(now, center)
+        if (dt > 0.0) perceive(now, dt, yaw, pitch, eye, eyeVel, spot, center, p)
+    }
+
+    /**
+     * One frame of turning onto something that is your own and not a target (the camera, for Aura's hidden look),
+     * [errYaw], [errPitch] away now: nothing to see late or to follow, only submovements, timed for something [size]
+     * degrees wide. A movement still under way is finished first.
+     */
+    fun onto(dt: Double, errYaw: Double, errPitch: Double, size: Double, p: Params): DoubleArray {
+        if (topSpeed <= 0.0) retarget(p)
+        if (dt <= 0.0) return doubleArrayOf(0.0, 0.0)
+        if (sub == null) {
+            pause -= dt
+            val dist = hypot(errYaw, errPitch)
+            if (pause <= 0.0 && dist > MIN_DEAD) sub = plan(errYaw, errPitch, dist, size, p)
+        }
+        val moved = advance(dt)
+        return capped(moved[0], moved[1], dt)
+    }
+
+    /**
+     * The look was turned [dYaw], [dPitch] towards the aim from outside (your own hand, [FollowMouse]): that much less
+     * is left of the movement under way, which ends early when nothing is.
+     */
+    fun credit(dYaw: Double, dPitch: Double) {
+        val s = sub ?: return
+        val left = 1.0 - minJerk(s.t / s.duration)
+        if (left < 1e-3) return
+        val yawLeft = less(s.dYaw * left, dYaw)
+        val pitchLeft = less(s.dPitch * left, dPitch)
+        if (hypot(yawLeft, pitchLeft) < MIN_DEAD) {
+            sub = null
+            pause = GAP_LO + (GAP_HI - GAP_LO) * rng.nextDouble()
+            return
+        }
+        s.dYaw = yawLeft / left
+        s.dPitch = pitchLeft / left
+    }
+
+    /** The look is where it should be without the hand's doing ([FollowMouse]): nothing is under way, nothing to glide out. */
+    fun rest() {
+        sub = null
+        pause = 0.0
+        velYaw = 0.0
+        velPitch = 0.0
+    }
+
+    /** [left] with [by] taken off it when they point the same way, never past zero. */
+    private fun less(left: Double, by: Double) = if (left * by <= 0.0) left else if (abs(by) >= abs(left)) 0.0 else left - by
+
+    /** Runs the submovement under way for [dt]; returns its turn. */
+    private fun advance(dt: Double): DoubleArray {
+        val s = sub ?: return doubleArrayOf(0.0, 0.0)
+        val t0 = s.t / s.duration
+        s.t = min(s.duration, s.t + dt)
+        val t1 = s.t / s.duration
+        val ds = minJerk(t1) - minJerk(t0)
+        val db = bowShape(t1) - bowShape(t0)
+        val out = doubleArrayOf(s.dYaw * ds - s.dPitch * s.bow * db, s.dPitch * ds + s.dYaw * s.bow * db)
+        if (s.t >= s.duration) {
+            sub = null
+            pause = GAP_LO + (GAP_HI - GAP_LO) * rng.nextDouble()
+        }
+        return out
+    }
+
+    /** The frame's turn, never faster than the hand can go; its speed is what [release] glides out from. */
+    private fun capped(yaw: Double, pitch: Double, dt: Double): DoubleArray {
+        var outYaw = yaw
+        var outPitch = pitch
+        val speed = hypot(outYaw, outPitch) / dt
+        val limit = topSpeed * 1.08
+        if (speed > limit) {
+            outYaw *= limit / speed
+            outPitch *= limit / speed
+        }
+        velYaw = outYaw / dt
+        velPitch = outPitch / dt
+        return doubleArrayOf(outYaw, outPitch)
+    }
+
+    /**
+     * What the eye reports this frame: how far off the aim the look is ([errYaw], [errPitch]), and the steady turn that
+     * follows you and the target ([ffYawNow], [ffPitchNow]).
+     */
+    private fun perceive(now: Double, dt: Double, yaw: Double, pitch: Double, eye: V, eyeVel: V, spot: V, center: V, p: Params) {
         // What the eye reports of the target: where it was perceptionDelay ago, with its speed and that speed's change,
         // carried forward to now as far as `tracking` predicts (people read a strafe's rhythm, so not just its speed).
         val d = p.perceptionDelay
@@ -178,8 +312,8 @@ class HumanAim(private val rng: Random) {
 
         val wantYaw = yawTo(eye, aim)
         val wantPitch = pitchTo(eye, aim)
-        val errYaw = wrap(wantYaw - yaw)
-        val errPitch = (wantPitch - pitch) * p.pitchScale
+        errYaw = wrap(wantYaw - yaw)
+        errPitch = (wantPitch - pitch) * p.pitchScale
 
         // The turn that keeps the crosshair where it is on the target as you and it move: all of your own movement,
         // `tracking` of the target's as seen.
@@ -196,59 +330,6 @@ class HumanAim(private val rng: Random) {
         val follow = 1.0 - exp(-dt / FOLLOW_TAU)
         ffYawNow += (ffYaw - ffYawNow) * follow
         ffPitchNow += (ffPitch - ffPitchNow) * follow
-        var outYaw = ffYawNow * dt
-        var outPitch = ffPitchNow * dt
-
-        // Plan the next submovement once the last has run and the short gap after it is over.
-        if (sub == null) {
-            pause -= dt
-            if (pause <= 0.0) {
-                val dist = hypot(errYaw, errPitch)
-                // The dead zone is the box's shape: a player is three times as tall as wide, so a few degrees up or
-                // down on them is still on them.
-                val dw = if (onBox) max(MIN_DEAD, p.relax * width * 0.5) else MIN_DEAD
-                val dh = if (onBox) max(MIN_DEAD, p.relax * height * 0.5 * p.pitchScale) else MIN_DEAD
-                val outside = (errYaw / dw) * (errYaw / dw) + (errPitch / dh) * (errPitch / dh) > 1.0
-                if (outside) sub = plan(errYaw, errPitch, dist, size, p)
-            }
-        }
-        sub?.let { s ->
-            val t0 = s.t / s.duration
-            s.t = min(s.duration, s.t + dt)
-            val t1 = s.t / s.duration
-            val ds = minJerk(t1) - minJerk(t0)
-            val db = bowShape(t1) - bowShape(t0)
-            outYaw += s.dYaw * ds - s.dPitch * s.bow * db
-            outPitch += s.dPitch * ds + s.dYaw * s.bow * db
-            if (s.t >= s.duration) {
-                sub = null
-                pause = GAP_LO + (GAP_HI - GAP_LO) * rng.nextDouble()
-            }
-        }
-
-        // Tremor: band-limited noise (an Ornstein-Uhlenbeck speed), a touch stronger just after a click.
-        clickKick *= exp(-dt * 28.0)
-        val sigma = p.tremor * TREMOR_GAIN * (1.0 + clickKick * 0.65)
-        val decay = exp(-dt / TREMOR_TAU)
-        val kick = sigma * sqrt(1.0 - decay * decay)
-        tremYaw = tremYaw * decay + kick * rng.nextGaussian()
-        tremPitch = tremPitch * decay + kick * rng.nextGaussian() * max(p.pitchScale, 0.25)
-        val cap = sigma * 2.5
-        tremYaw = tremYaw.coerceIn(-cap, cap)
-        tremPitch = tremPitch.coerceIn(-cap, cap)
-        outYaw += tremYaw * dt
-        outPitch += tremPitch * dt
-
-        // Never faster than the hand can go.
-        val speed = hypot(outYaw, outPitch) / dt
-        val limit = topSpeed * 1.08
-        if (speed > limit) {
-            outYaw *= limit / speed
-            outPitch *= limit / speed
-        }
-        velYaw = outYaw / dt
-        velPitch = outPitch / dt
-        return doubleArrayOf(outYaw, outPitch)
     }
 
     private fun plan(errYaw: Double, errPitch: Double, dist: Double, width: Double, p: Params): Sub {
