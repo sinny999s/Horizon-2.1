@@ -68,9 +68,11 @@ Public configs: `node test/configs-test.mjs` (the worker running as above, with 
 
 ## Public configs: moderation
 
-A config is hidden by itself once 5 accounts report it. Admins (the account ids, 32 hex digits without dashes, in the
-`ADMIN_UUIDS` variable, comma-separated: Workers & Pages > horizon-share > Settings > Variables) see hidden ones in
-the browser, can delete any config, and can call `/configs/hide` and `/configs/ban`. Without the game, from this folder:
+A config is hidden by itself once 5 accounts report it. Admins are the account ids (32 hex digits without dashes) in
+the `ADMIN_UUIDS` secret, comma-separated (`npx wrangler secret put ADMIN_UUIDS`; a secret, so the ids stay out of
+this repo). In the game's configs browser an admin gets Reported (the reported and hidden configs, and banned
+authors'), each config's report count, and a moderation bar: hide or show it, ban or unban its author, take it down.
+Testing locally (`DEV_INSECURE=1`), `--var 'ADMIN_UUIDS:*'` makes everyone an admin. Without the game, from this folder:
 
     npx wrangler d1 execute horizon-share --remote --command "SELECT id, name, author, reports, hidden FROM configs ORDER BY reports DESC LIMIT 20"
     npx wrangler d1 execute horizon-share --remote --command "UPDATE configs SET hidden = 1 WHERE id = '<id>'"

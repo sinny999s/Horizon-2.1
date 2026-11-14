@@ -154,6 +154,25 @@ await post("/configs/ban", { token: admin, uuid: acct("b"), banned: false });
 r = await post("/configs/get", { id: bravo });
 expect("unbanned, they're back", r.status === 200, r);
 
+// What admins get.
+r = await post("/configs/list", { token: admin, q: name.toLowerCase() });
+expect("the list tells an admin they are one", r.admin === true, r.admin);
+r = await post("/configs/list", { token: A, q: name.toLowerCase() });
+expect("and others they aren't, without the reports", r.admin === false && r.configs[0] && !("reports" in r.configs[0]), r);
+r = await post("/configs/list", { token: A, reported: true });
+expect("only admins see the reported list", r.status === 403, r);
+await post("/configs/ban", { token: admin, uuid: acct("b"), banned: true });
+r = await post("/configs/list", { token: admin, reported: true });
+const reported = r.configs || [];
+expect("the reported list has the reported config and the banned author's",
+  reported.some((c) => c.id === id && c.reports === 5) && reported.some((c) => c.id === bravo && c.authorBanned === true),
+  reported.map((c) => [c.name, c.reports, c.hidden, c.authorBanned]));
+await post("/configs/ban", { token: admin, uuid: acct("b"), banned: false });
+r = await post("/configs/delete", { token: admin, id: bravo });
+expect("an admin takes down someone else's", r.ok === true, r);
+r = await post("/configs/get", { id: bravo });
+expect("and it's gone", r.status === 404, r);
+
 // Sizes.
 const big = { modules: Array.from({ length: 700 }, (_, i) => ({ id: "m" + i, settings: Array.from({ length: 30 }, (_, j) => ({ id: "s" + j, value: "x".repeat(20) })) })) };
 r = await post("/configs/publish", { token: A, name: "Huge " + run.slice(-4), data: big, author: "Alpha" });

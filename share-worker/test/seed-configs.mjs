@@ -1,5 +1,6 @@
 // Fills a LOCAL Worker (DEV_INSECURE=1) with sample public configs from made-up authors, for trying the browser in the
 // dev client:   node test/seed-configs.mjs <modules folder with .hzn configs> [http://127.0.0.1:8787]
+// (Run the Worker with `--var 'ADMIN_UUIDS:*'` to be an admin in the dev client: locally, that makes everyone one.)
 // "Bedwars Legit" also carries what a bad config might try (a chat command, Spammer on, a webhook, a number out of
 // range), which Horizon must drop when it loads it.
 import { readFileSync } from "node:fs";
@@ -55,4 +56,7 @@ for (const [name, n] of Object.entries(stars)) {
   for (const fan of fans.slice(0, n)) await post("/configs/like", { token: await signIn(fan), id: ids[name], like: true });
 }
 for (const fan of fans) for (const name of ["Bedwars Legit", "6b6t Crystal PvP", "Blatant Bridge"]) await post("/configs/get", { token: await signIn(fan), id: ids[name] });
+// Reports: 5 hide "Blatant Bridge"; "Base Hunting" has 2.
+for (const fan of fans.slice(0, 5)) await post("/configs/report", { token: await signIn(fan), id: ids["Blatant Bridge"], reason: "blatant" });
+for (const fan of fans.slice(5, 7)) await post("/configs/report", { token: await signIn(fan), id: ids["Base Hunting"], reason: "spam" });
 console.log("seeded", Object.keys(ids).length, "configs");

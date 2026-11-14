@@ -60,10 +60,14 @@ object PublicConfigs {
         val updated: Long = 0,
         val liked: Boolean = false,
         val mine: Boolean = false,
+        /** Only for admins: reports, whether it's hidden, and whether its author is banned. */
+        val reports: Int? = null,
+        val hidden: Boolean? = null,
+        val authorBanned: Boolean? = null,
     )
 
     @Serializable
-    private class Page(val configs: List<Meta> = emptyList(), val more: Boolean = false)
+    private class Page(val configs: List<Meta> = emptyList(), val more: Boolean = false, val admin: Boolean = false)
 
     @Serializable
     class Data(val modules: List<HolderEntry> = emptyList())
@@ -101,7 +105,14 @@ object PublicConfigs {
     var tag: String? = null
     var sort = Sort.POPULAR
     var mine = false
+
+    /** Only the reported and hidden ones, and banned authors' (admins). */
+    var reported = false
     val configs = ArrayList<Meta>()
+
+    /** You moderate public configs (the service says so with each list). */
+    var admin = false
+        private set
     var more = false
         private set
     var loading = false
@@ -129,17 +140,21 @@ object PublicConfigs {
         loading = true
         error = null
         val mine = mine
+        val reported = reported && admin
         val body = buildJsonObject {
             put("q", query.trim())
             tag?.let { put("tag", it) }
             put("sort", sort.key)
             put("page", page)
             put("mine", mine)
+            if (reported) put("reported", true)
         }
-        async({ json.decodeFromJsonElement<Page>(post("/configs/list", body, if (mine) Sign.ALWAYS else Sign.IF_SIGNED_IN)) }) { r ->
+        val sign = if (mine || reported) Sign.ALWAYS else Sign.IF_SIGNED_IN
+        async({ json.decodeFromJsonElement<Page>(post("/configs/list", body, sign)) }) { r ->
             if (gen != generation) return@async
             loading = false
             r.onSuccess { p ->
+                admin = p.admin
                 if (reset) configs.clear()
                 val have = configs.mapTo(HashSet()) { it.id }
                 configs += p.configs.filter { it.id !in have }
@@ -242,12 +257,43 @@ object PublicConfigs {
         async({ post("/configs/report", body, Sign.ALWAYS); Unit }, done)
     }
 
-    /** Takes your public config [meta] down (your own copy of it, if you loaded it, stays). */
+    /** Takes [meta] down: yours, or anyone's for an admin (a copy someone loaded stays theirs). */
     fun delete(meta: Meta, done: (Result<Unit>) -> Unit) {
         val body = buildJsonObject { put("id", meta.id) }
         async({ post("/configs/delete", body, Sign.ALWAYS); Unit }) { r ->
             r.onSuccess { configs.removeIf { it.id == meta.id } }
             done(r)
+        }
+    }
+
+    // ---- moderating (admins) ----
+
+    /** Hides [meta] from everyone but its author and admins, or shows it again. */
+    fun hide(meta: Meta, hidden: Boolean, done: (Result<Meta>) -> Unit) {
+        val body = buildJsonObject {
+            put("id", meta.id)
+            put("hidden", hidden)
+        }
+        async({ post("/configs/hide", body, Sign.ALWAYS); Unit }) { r ->
+            r.onSuccess {
+                val m = meta.copy(hidden = hidden)
+                replace(m)
+                done(Result.success(m))
+            }.onFailure { done(Result.failure(it)) }
+        }
+    }
+
+    /** Bans [meta]'s author (they can't publish, and their configs are hidden), or lifts the ban. */
+    fun ban(meta: Meta, banned: Boolean, done: (Result<Meta>) -> Unit) {
+        val body = buildJsonObject {
+            put("uuid", meta.author.uuid)
+            put("banned", banned)
+        }
+        async({ post("/configs/ban", body, Sign.ALWAYS); Unit }) { r ->
+            r.onSuccess {
+                for (i in configs.indices) if (configs[i].author.uuid == meta.author.uuid) configs[i] = configs[i].copy(authorBanned = banned)
+                done(Result.success(meta.copy(authorBanned = banned)))
+            }.onFailure { done(Result.failure(it)) }
         }
     }
 

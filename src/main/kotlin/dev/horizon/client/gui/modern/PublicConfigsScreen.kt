@@ -28,8 +28,9 @@ import kotlin.math.min
  * name, description or author), sort them (popular, most starred, recent), filter by a tag or show only yours. Pick one
  * to see who made it, what it's for and which modules it turns on, then Load it (it becomes a config of yours and is
  * switched to), star it, or report it (yours: take it down). Publish shares your current config: settings only, never
- * keybinds or anything personal ([dev.horizon.client.config.PublicConfigData]). Opened from the ClickGUI's profile menu
- * or `cfg browse`.
+ * keybinds or anything personal ([dev.horizon.client.config.PublicConfigData]). Admins also get Reported (the reported
+ * and hidden configs, and banned authors'), each config's reports, and a moderation bar: hide or show it, ban or unban
+ * its author, take it down. Opened from the ClickGUI's profile menu or `cfg browse`.
  */
 object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs")) {
     const val W = 560f
@@ -65,9 +66,24 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
     private var noteUntil = 0L
     private var busy: String? = null
 
-    /** A Report or Delete click waits for a second one until then (and on that config). */
+    /** A Report, Take down or Ban click waits for a second one until then (on that config, for that [confirmWhat]). */
     private var confirm: String? = null
     private var confirmUntil = 0L
+    private var confirmWhat = ""
+
+    /** Whether this click on [what] for [m] is the second one; the first only arms it. */
+    private fun confirmed(m: Meta, what: String): Boolean {
+        if (confirm == m.id && confirmWhat == what && System.currentTimeMillis() <= confirmUntil) {
+            confirm = null
+            return true
+        }
+        confirm = m.id
+        confirmWhat = what
+        confirmUntil = System.currentTimeMillis() + 4000
+        return false
+    }
+
+    private fun armed(m: Meta, what: String) = confirm == m.id && confirmWhat == what && System.currentTimeMillis() < confirmUntil
 
     fun open() = mc.gui.setScreen(this)
 
@@ -104,13 +120,14 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
 
     /**
      * For ShotBot: picks the listed config named [what] (or the first one); or "publish" (the form), "tag:<tag>"
-     * ("tag:all" for all), "mine", "search:<text>", "sort:<popular|top|recent>".
+     * ("tag:all" for all), "mine", "reported" (admins), "search:<text>", "sort:<popular|top|recent>".
      */
     @JvmStatic
     fun show(what: String) {
         when {
             what == "publish" -> startPublish()
             what == "mine" -> filter(null, true)
+            what == "reported" -> filter(null, false, true)
             what.startsWith("tag:") -> filter(what.substring(4).takeIf { it != "all" }, false)
             what.startsWith("search:") -> {
                 search.text = what.substring(7)
@@ -124,13 +141,20 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
         }
     }
 
-    /** For ShotBot: presses the open config's Load, or Publish on the form. */
+    /**
+     * For ShotBot: presses the open config's Load, star or Publish on the form; for an admin "hide", "unhide", "ban",
+     * "unban", "takedown" (without the second click those ask for).
+     */
     @JvmStatic
     fun press(what: String) {
+        val m = selected
         when (what) {
-            "load" -> selected?.let { load(it) }
+            "load" -> m?.let { load(it) }
             "publish" -> publish()
-            "star" -> selected?.let { star(it) }
+            "star" -> m?.let { star(it) }
+            "hide", "unhide" -> m?.let { hide(it, what == "hide") }
+            "ban", "unban" -> m?.let { if (what == "ban") confirmed(it, "ban"); ban(it, what == "ban") }
+            "takedown" -> m?.let { confirmed(it, "remove"); remove(it) }
         }
     }
 
@@ -280,19 +304,28 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
 
     private fun chips() {
         var x = 8f
-        val all = PublicConfigs.tag == null && !PublicConfigs.mine
+        val special = PublicConfigs.mine || PublicConfigs.reported
+        val all = PublicConfigs.tag == null && !special
         x += chip("tag:all", x, CHIPS, "All", all) { filter(null, false) } + 4f
         for (t in PublicConfigs.TAGS) {
-            x += chip("tag:$t", x, CHIPS, tagLabel(t), PublicConfigs.tag == t && !PublicConfigs.mine) { filter(if (PublicConfigs.tag == t) null else t, false) } + 4f
+            x += chip("tag:$t", x, CHIPS, tagLabel(t), PublicConfigs.tag == t && !special) { filter(if (PublicConfigs.tag == t) null else t, false) } + 4f
         }
         val yw = Type.small.width("Yours") + 24f
         chip("tag:mine", W - 8f - yw, CHIPS, "Yours", PublicConfigs.mine, "player") { filter(null, !PublicConfigs.mine) }
+        // Admins: the reported ones (the tags leave room for it only by dropping the gap before Yours).
+        if (PublicConfigs.admin) {
+            val rw = Type.small.width("Reported") + 24f
+            chip("tag:reported", W - 8f - yw - 4f - rw, CHIPS, "Reported", PublicConfigs.reported, "flag") {
+                filter(null, false, !PublicConfigs.reported)
+            }
+        }
         Ui.box(0f, TOP - 4f, W, 0.5f, 0f, Tok.LINE)
     }
 
-    private fun filter(tag: String?, mine: Boolean) {
+    private fun filter(tag: String?, mine: Boolean, reported: Boolean = false) {
         PublicConfigs.tag = tag
         PublicConfigs.mine = mine
+        PublicConfigs.reported = reported
         PublicConfigs.refresh()
         scroll = 0f
     }
@@ -330,6 +363,7 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
                 PublicConfigs.loading -> listOf("Loading configs...")
                 err != null -> listOf(err, "Click a tag or search again to retry")
                 PublicConfigs.mine -> listOf("You haven't published any configs", "Publish shares your current one")
+                PublicConfigs.reported -> listOf("Nothing reported", "Reported and hidden configs show here")
                 PublicConfigs.query.isNotBlank() || PublicConfigs.tag != null -> listOf("No configs match", "Try another search or tag")
                 else -> listOf("No public configs yet", "Be the first: Publish yours")
             }
@@ -354,9 +388,30 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
         val sw = Type.small.width(stars) + 9f
         Ui.icon(if (m.liked) "favon" else "fav", x + w - 6f - sw, y + 6.5f, 6f, if (m.liked) Tok.light(Tok.a1, 0.2f) else Tok.T3)
         Ui.textR(Type.small, stars, x + w - 6f, y + 9.5f, Tok.T3)
-        Ui.text(Type.semi, Ui.fit(Type.semi, m.name, w - 34f - sw), tx, y + 9.5f, Tok.T1)
+        Ui.text(Type.semi, Ui.fit(Type.semi, m.name, w - 34f - sw), tx, y + 9.5f, if (m.hidden == true) Tok.T2 else Tok.T1)
+        // Admins: why it needs a look, on the right of the second line.
+        val flag = modFlag(m)
+        val fw = if (flag != null) Type.tiny.width(flag) + 8f else 0f
+        if (flag != null) {
+            Ui.box(x + w - 6f - fw, y + 15.5f, fw, 9f, 4.5f, Tok.alpha(RED, 0.14f), 0.5f, Tok.alpha(RED, 0.45f))
+            Ui.textC(Type.tiny, flag, x + w - 6f - fw / 2f, y + 20f, RED_TEXT)
+        }
         val by = "by ${m.author.name}" + (if (m.tags.isNotEmpty()) "  ·  " + m.tags.joinToString(", ") { tagLabel(it) } else "")
-        Ui.text(Type.small, Ui.fit(Type.small, by, w - 32f), tx, y + 19.5f, Tok.T3)
+        Ui.text(Type.small, Ui.fit(Type.small, by, w - 32f - (if (flag != null) fw + 4f else 0f)), tx, y + 19.5f, Tok.T3)
+    }
+
+    private val RED = 0xFFFF5A5A.toInt()
+    private val RED_TEXT = 0xFFFF8A8A.toInt()
+
+    /** For admins: "Banned", "Hidden" or "<n> reports"; null when there's nothing to look at (or you aren't one). */
+    private fun modFlag(m: Meta): String? {
+        val reports = m.reports ?: return null
+        return when {
+            m.authorBanned == true -> "Banned"
+            m.hidden == true -> "Hidden"
+            reports > 0 -> if (reports == 1) "1 report" else "$reports reports"
+            else -> null
+        }
     }
 
     /** The author's head (minotar by account id), a plain tile until it is in. */
@@ -404,12 +459,18 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
         }
         button("load", if (busy == "load") "Loading..." else "Load", "load", accent = true) { load(m) }
         button("star", m.likes.toString(), if (m.liked) "favon" else "fav", active = m.liked) { star(m) }
-        val sure = confirm == m.id && System.currentTimeMillis() < confirmUntil
-        if (m.mine) button("delete", if (sure) "Take down?" else null, "trash", active = sure) { remove(m) }
-        else button("report", if (sure) "Report?" else null, "flag", active = sure) { report(m) }
+        // Yours, or anyone's for an admin: take it down; others': report it.
+        if (m.mine || PublicConfigs.admin) {
+            val sure = armed(m, "remove")
+            button("delete", if (sure) "Take down?" else null, "trash", active = sure) { remove(m) }
+        } else {
+            val sure = armed(m, "report")
+            button("report", if (sure) "Report?" else null, "flag", active = sure) { report(m) }
+        }
 
         var y = hy + 34f
         Ui.box(x0, y - 6f, cw, 0.5f, 0f, Tok.LINE)
+        if (PublicConfigs.admin && !m.mine) y = moderation(m, x0, cw, px, pw, y)
         // What it's for.
         val desc = m.description.ifBlank { "No description." }
         for (l in Ui.wrap(Type.body, desc, pw, 4)) {
@@ -487,28 +548,74 @@ object PublicConfigsScreen : Screen(Component.literal("horizon-public-configs"))
     }
 
     private fun report(m: Meta) {
-        if (confirm != m.id || System.currentTimeMillis() > confirmUntil) {
-            confirm = m.id
-            confirmUntil = System.currentTimeMillis() + 4000
-            return
-        }
-        confirm = null
+        if (!confirmed(m, "report")) return
         PublicConfigs.report(m, "reported in Horizon") { r ->
             r.onSuccess { say("Reported \"${m.name}\". Thanks") }.onFailure { say(PublicConfigs.message(it), true) }
         }
     }
 
     private fun remove(m: Meta) {
-        if (confirm != m.id || System.currentTimeMillis() > confirmUntil) {
-            confirm = m.id
-            confirmUntil = System.currentTimeMillis() + 4000
-            return
-        }
-        confirm = null
+        if (!confirmed(m, "remove")) return
         PublicConfigs.delete(m) { r ->
             r.onSuccess {
                 if (selected?.id == m.id) selected = null
                 say("Took \"${m.name}\" down")
+            }.onFailure { say(PublicConfigs.message(it), true) }
+        }
+    }
+
+    // ---- moderating (admins) ----
+
+    /** The moderation bar under the header, from [y]: what's wrong with [m], and hide or show it, ban or unban its author. */
+    private fun moderation(m: Meta, x0: Float, cw: Float, px: Float, pw: Float, y: Float): Float {
+        val reports = m.reports ?: 0
+        val hidden = m.hidden == true
+        val banned = m.authorBanned == true
+        val bad = hidden || banned || reports > 0
+        val h = 22f
+        Ui.box(px, y, pw, h, 6f, if (bad) Tok.alpha(RED, 0.08f) else Tok.FILL, 0.5f, if (bad) Tok.alpha(RED, 0.35f) else Tok.LINE)
+        Ui.icon("flag", px + 7f, y + (h - 7f) / 2f, 7f, if (bad) RED_TEXT else Tok.T3)
+        val status = listOfNotNull(
+            if (hidden) "Hidden" else "Shown",
+            if (reports == 1) "1 report" else "$reports reports",
+            if (banned) "author banned" else null,
+        ).joinToString("  ·  ")
+        // Right to left: ban, hide.
+        var bx = px + pw - 3f
+        fun button(id: String, label: String, icon: String, active: Boolean = false, click: () -> Unit) {
+            bx -= Type.small.width(label) + 19f
+            Ui.button(id, bx, y + 3f, 16f, label, icon, active = active, click = click)
+            bx -= 4f
+        }
+        val sure = armed(m, "ban")
+        if (banned) button("unban", "Unban author", "check") { ban(m, false) }
+        else button("ban", if (sure) "Ban ${m.author.name}?" else "Ban author", "x", active = sure) { ban(m, true) }
+        button("hide", if (hidden) "Show" else "Hide", if (hidden) "eye" else "eyeoff") { hide(m, !hidden) }
+        Ui.text(Type.small, Ui.fit(Type.small, status, bx - px - 22f), px + 18f, y + h / 2f, if (bad) RED_TEXT else Tok.T2)
+        return y + h + 10f
+    }
+
+    private fun hide(m: Meta, hidden: Boolean) {
+        if (busy != null) return
+        busy = "hide"
+        PublicConfigs.hide(m, hidden) { r ->
+            busy = null
+            r.onSuccess {
+                selected = it
+                say(if (hidden) "Hid \"${m.name}\" from everyone but its author" else "\"${m.name}\" is shown again")
+            }.onFailure { say(PublicConfigs.message(it), true) }
+        }
+    }
+
+    private fun ban(m: Meta, banned: Boolean) {
+        if (banned && !confirmed(m, "ban")) return
+        if (busy != null) return
+        busy = "ban"
+        PublicConfigs.ban(m, banned) { r ->
+            busy = null
+            r.onSuccess {
+                selected = it
+                say(if (banned) "Banned ${m.author.name}: they can't publish, and their configs are hidden" else "Unbanned ${m.author.name}")
             }.onFailure { say(PublicConfigs.message(it), true) }
         }
     }

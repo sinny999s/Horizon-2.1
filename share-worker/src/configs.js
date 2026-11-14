@@ -1,7 +1,8 @@
 /**
  * Public configs: Horizon users publish their module configs and browse, load, like and report each other's.
  *
- * POST /configs/list    {token?, q?, tag?, sort?, page?, mine?}  -> {configs: [meta], more}
+ * POST /configs/list    {token?, q?, tag?, sort?, page?, mine?, reported?} -> {configs: [meta], more, admin}
+ *                       (reported: admins only, the reported and hidden ones first)
  * POST /configs/get     {token?, id}                             -> {config: meta, data}   (counts a download)
  * POST /configs/publish {token, name, description?, tags?, data, author, client?, mc?} -> {config: meta}
  *                       (one of yours with the same name is updated instead, keeping its description and tags
@@ -69,6 +70,9 @@ async function sha(text) {
 
 const admins = (env) => new Set(String(env.ADMIN_UUIDS || "").split(",").map(plain).filter((u) => uuidRe.test(u)));
 
+/** Whether [me] is an admin. Testing locally (DEV_INSECURE=1), ADMIN_UUIDS "*" makes everyone one. */
+const isAdmin = (env, me) => !!me && ((env.DEV_INSECURE === "1" && env.ADMIN_UUIDS === "*") || admins(env).has(me));
+
 /**
  * The config's settings as stored: known shapes only, keybinds and Array List choices left out. Also which modules it
  * turns on and how many settings it has. Refuses what is too big or not a config.
@@ -115,7 +119,7 @@ function meta(r, me, liked, admin) {
     updated: r.updated,
     liked: !!liked,
     mine: me === r.author,
-    ...(admin ? { reports: r.reports, hidden: !!r.hidden } : {}),
+    ...(admin ? { reports: r.reports, hidden: !!r.hidden, authorBanned: !!r.author_banned } : {}),
   };
 }
 
@@ -139,6 +143,10 @@ async function list(body, env, me, admin) {
   } else if (!admin) {
     where.push("c.hidden = 0 AND a.banned = 0");
   }
+  if (body.reported) {
+    if (!admin) refuse(403, "admins only");
+    where.push("(c.reports > 0 OR c.hidden = 1 OR a.banned = 1)");
+  }
   const tag = typeof body.tag === "string" ? body.tag.toLowerCase() : "";
   if (tag) {
     if (!TAGS.includes(tag)) refuse(400, "unknown tag");
@@ -151,7 +159,7 @@ async function list(body, env, me, admin) {
     where.push("(lower(c.name) LIKE ? ESCAPE '\\' OR lower(c.description) LIKE ? ESCAPE '\\' OR lower(a.name) LIKE ? ESCAPE '\\')");
     args.push(like, like, like);
   }
-  const sort = SORTS[body.sort] || SORTS.popular;
+  const sort = body.reported ? "c.hidden DESC, c.reports DESC, c.updated DESC" : SORTS[body.sort] || SORTS.popular;
   const page = Number.isInteger(body.page) && body.page >= 0 && body.page < 1000 ? body.page : 0;
   const sql = `${SELECT}${where.length ? " WHERE " + where.join(" AND ") : ""} ORDER BY ${sort} LIMIT ? OFFSET ?`;
   const rows = (await env.DB.prepare(sql).bind(...args, PAGE + 1, page * PAGE).all()).results || [];
@@ -162,7 +170,7 @@ async function list(body, env, me, admin) {
     const got = await env.DB.prepare(`SELECT id FROM config_likes WHERE uuid = ? AND id IN (${marks})`).bind(me, ...shown.map((r) => r.id)).all();
     liked = new Set((got.results || []).map((r) => r.id));
   }
-  return json({ configs: shown.map((r) => meta(r, me, liked.has(r.id), admin)), more: rows.length > PAGE });
+  return json({ configs: shown.map((r) => meta(r, me, liked.has(r.id), admin)), more: rows.length > PAGE, admin });
 }
 
 async function get(body, env, me, admin, req) {
@@ -177,7 +185,7 @@ async function get(body, env, me, admin, req) {
     r.downloads += 1;
   }
   const liked = me ? await env.DB.prepare("SELECT 1 FROM config_likes WHERE id = ? AND uuid = ?").bind(r.id, me).first() : null;
-  return json({ config: meta(r, me, liked, admin), data: JSON.parse(r.data) });
+  return json({ config: meta(r, me, liked, admin), data: JSON.parse(r.data), admin });
 }
 
 async function publish(body, env, me, admin) {
@@ -287,7 +295,7 @@ export async function configs(path, body, env, req) {
   if (!route) return null;
   try {
     const me = await check(env, body.token);
-    return await route(body, env, me, !!me && admins(env).has(me), req);
+    return await route(body, env, me, isAdmin(env, me), req);
   } catch (e) {
     if (e instanceof Refusal) return json({ error: e.message }, e.status);
     throw e;
