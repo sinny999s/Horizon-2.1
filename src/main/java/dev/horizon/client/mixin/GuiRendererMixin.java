@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.horizon.client.render.Overlay;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
@@ -61,7 +62,8 @@ public abstract class GuiRendererMixin {
 	@Inject(method = "render", at = @At("HEAD"))
 	private void horizon$beforeVanilla(CallbackInfo ci) {
 		horizon$worldDrawn = false;
-		if (horizon$auxiliary || Minecraft.getInstance().gui.screen() == null) return;
+		// Under a screen, and under the loading screen, so that covers it.
+		if (horizon$auxiliary || Minecraft.getInstance().gui.screen() == null && !(Minecraft.getInstance().gui.overlay() instanceof LoadingOverlay)) return;
 		horizon$world();
 		// Vanilla's GUI starts from a clear depth buffer, as it would have.
 		RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(Minecraft.getInstance().gameRenderer.mainRenderTarget().getDepthTexture(), 1.0);

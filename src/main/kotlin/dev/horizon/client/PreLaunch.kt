@@ -1,7 +1,6 @@
 package dev.horizon.client
 
-import com.github.weisj.jsvg.attributes.ViewBox
-import com.github.weisj.jsvg.parser.SVGLoader
+import dev.horizon.client.render.Wordmark
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint
 import java.awt.*
@@ -191,14 +190,13 @@ object Splash {
     const val R = 14f
     const val SHADOW = 18
 
-    // The wordmark's two SVGs share an 834 x 196 box: 200 x 47 keeps its proportions. Its lower horizon line (x 80..906,
-    // y 222..224 of the box) is the progress line.
+    // 200 x 47 keeps the wordmark's proportions (Wordmark.W x H). Its lower horizon line is the progress line.
     private const val LOGO_W = 200
     private const val LOGO_H = 47
     private const val LOGO_X = (W - LOGO_W) / 2
     private const val LOGO_Y = 34
-    private const val BAR_X = LOGO_X + 1f
-    private const val BAR_W = LOGO_W - 2f
+    private const val BAR_X = LOGO_X + LOGO_W * Wordmark.LINE_X0
+    private const val BAR_W = LOGO_W * (Wordmark.LINE_X1 - Wordmark.LINE_X0)
     private const val BAR_Y = LOGO_Y + 45f
     private const val TEXT_Y = BAR_Y + 26f
 
@@ -314,23 +312,12 @@ object Splash {
         return Color(l(a.red, b.red), l(a.green, b.green), l(a.blue, b.blue), (l(a.alpha, b.alpha) * alpha).toInt().coerceIn(0, 255))
     }
 
-    /**
-     * The wordmark rasterised at the screen's [scale]: letters white, the upper line at T2's alpha (the lower one is
-     * drawn as the progress line). Null if it won't load.
-     */
+    /** The wordmark at the screen's [scale]: letters white, the upper line at T2's alpha. Null if it won't load. */
     private fun logo(scale: Double): BufferedImage? {
         if (logoFailed) return null
         if (logo != null && logoScale == scale) return logo
         return try {
-            val pw = ceil(LOGO_W * scale).toInt()
-            val ph = ceil(LOGO_H * scale).toInt()
-            val img = BufferedImage(pw, ph, BufferedImage.TYPE_INT_ARGB)
-            val g = img.createGraphics()
-            g.drawImage(svg("wordmark", pw, ph), 0, 0, null)
-            g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, T2.alpha / 255f)
-            g.clipRect(0, 0, pw, ph / 2)
-            g.drawImage(svg("wordmark-rules", pw, ph), 0, 0, null)
-            g.dispose()
+            val img = Wordmark.raster(ceil(LOGO_W * scale).toInt(), ceil(LOGO_H * scale).toInt(), T2.alpha / 255f)
             logo = img
             logoScale = scale
             img
@@ -338,16 +325,5 @@ object Splash {
             logoFailed = true
             null
         }
-    }
-
-    private fun svg(name: String, pw: Int, ph: Int): BufferedImage {
-        val doc = Splash::class.java.getResourceAsStream("/assets/horizon/vector/$name.svg")!!.use { SVGLoader().load(it) }!!
-        val img = BufferedImage(pw, ph, BufferedImage.TYPE_INT_ARGB)
-        val g = img.createGraphics()
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
-        doc.render(null, g, ViewBox(pw.toFloat(), ph.toFloat()))
-        g.dispose()
-        return img
     }
 }
