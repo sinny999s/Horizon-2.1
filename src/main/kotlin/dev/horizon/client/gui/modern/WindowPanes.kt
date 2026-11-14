@@ -617,6 +617,22 @@ internal object MacrosPane : ListPane<Macro>("macros", "Macros", "macro", 50f, 2
         tx(item.id, summary(item), x + 25f, y, kx - 4.5f - x - 25f, dim = !item.enabled)
     }
 
+    /** The macro's key as a field: click it, then press the key. */
+    private fun keyRow(item: Macro, x: Float, y: Float, w: Float) {
+        val listening = W.listening === item
+        val over = Ui.hit("mkeyrow:" + System.identityHashCode(item), x, y, w, 17f, { b -> if (b == Keys.MOUSE_LEFT) W.listen(item) })
+        if (listening) Ui.box(x - 1.5f, y - 1.5f, w + 3f, 20f, 6.5f, 0, 1.5f, Tok.alpha(Tok.a1, 0.14f))
+        Ui.box(x, y, w, 17f, 5f, if (over && !listening) 0x47000000 else 0x38000000, 0.5f, if (listening) Tok.alpha(Tok.a1, 0.55f) else Tok.LINE2)
+        Ui.text(Type.small, "Key", x + 6.5f, y + 8.5f, Tok.T3)
+        if (listening) {
+            Ui.text(Type.label, "Press a key...", x + 33.5f, y + 8.5f, Tok.T1)
+            return
+        }
+        val none = item.bind.key == -1
+        Ui.keycap(x + 33.5f, y + 4f, if (none) "None" else Keys.name(item.bind), none = none)
+        Ui.textR(Type.small, if (none) "click to set" else "click to change", x + w - 6.5f, y + 8.5f, Tok.T4)
+    }
+
     override fun editor(item: Macro, x: Float, y: Float, w: Float, h: Float) {
         var yy = y
         W.field(field("name", 10, init = { item.id }) { item.id = it }, x, yy, w, "Name", 33f, "")
@@ -653,6 +669,9 @@ internal object MacrosPane : ListPane<Macro>("macros", "Macros", "macro", 50f, 2
                 }
             }
         }
+        // its key, where there is room above the delete button (also set from the keycap in the list)
+        yy += if (item is ChatMacro) 21f else 22f
+        if (yy + 17f <= y + h - 18f - 4f) keyRow(item, x, yy, w)
         W.deleteButton("mc:" + System.identityHashCode(item), x, y + h - 18f, w, "Delete macro") {
             Macros.list.remove(item)
             if (W.listening === item) W.listening = null

@@ -283,6 +283,8 @@ internal object Inspector {
             if (r.s is GroupSetting) lastGroupTop = ry
         }
         Ui.popClip()
+        Ui.fade(ModernGui.inspectorBackdrop, x + 1f, y, w - 2f, 8f, false, sy / 8f)
+        Ui.fade(ModernGui.inspectorBackdrop, x + 1f, y + h, w - 2f, 8f, true, (scrollMax - sy) / 8f)
         if (scrollMax > 0f) ModernGui.scrollbar(x + w - 3.5f, y + 1.5f, h - 3f, sy, scrollMax)
     }
 

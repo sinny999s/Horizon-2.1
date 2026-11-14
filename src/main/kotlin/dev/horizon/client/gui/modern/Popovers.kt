@@ -40,14 +40,20 @@ internal abstract class Popover {
 
     abstract fun draw(): Boolean
 
-    /** Keeps the card in the window (above its anchor when it doesn't fit below) and draws its glass. */
-    protected fun card(ax: Float, ay: Float, cw: Float, ch: Float, anchorTop: Float = ay - 20f) {
+    /**
+     * Keeps the card in the window (above its anchor when it doesn't fit below) and draws its glass. [scrim] dims the
+     * window under it first: for a card big enough to lie across several of the window's parts, whose cut-off text
+     * would crowd its edges.
+     */
+    protected fun card(ax: Float, ay: Float, cw: Float, ch: Float, anchorTop: Float = ay - 20f, scrim: Boolean = false) {
         w = cw
         h = ch
         x = ax.coerceIn(4f, ModernGui.W - 4f - cw)
         y = if (ay + ch > ModernGui.H - 4f) max(4f, anchorTop - ch - 4f) else ay
         val o = Modules.get<ClickGuiModule>().opacity.value
-        Ui.box(x - 1f, y + 3f, w + 2f, h, 7.5f, 0x40000000)
+        if (scrim) Ui.box(0f, 0f, ModernGui.W, ModernGui.H, 11f, 0x57000000)
+        // box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .75)
+        Ui.glow(x + 6f, y + 18f, w - 12f, h - 12f, 6.5f, 17f, 0x7C000000)
         Ui.blur(x, y, w, h, 6.5f)
         Ui.box(x, y, w, h, 6.5f, Colors.withAlpha(0xFF18161F.toInt(), o + 0.12f), 0.5f, Tok.LINE2)
         Ui.block("pop", x, y, w, h)

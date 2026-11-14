@@ -262,6 +262,22 @@ object Canvas {
         vc.at(pose, x + w + 1, y - 1).setUv(1f, 0f).setColor(-1)
     }
 
+    /**
+     * The blurred screen in the plain quad ([x], [y], [w], [h]), [top] of it (0..1) along its top edge and [bottom]
+     * along its bottom: no rounding and no soft edge, so quads side by side leave no seam (see [blurBox]'s shader: with
+     * every corner at the box's middle, all of the quad is inside it).
+     */
+    fun blurQuad(x: Float, y: Float, w: Float, h: Float, top: Float, bottom: Float) {
+        val u = ubo { it.putVec2(8f, 8f).putFloat(0f).putFloat(alpha) }
+        val vc = begin(Pipelines.BLUR_BOX, u, Blur.texture()) ?: return
+        val t = (top.coerceIn(0f, 1f) * 255f + 0.5f).toInt()
+        val b = (bottom.coerceIn(0f, 1f) * 255f + 0.5f).toInt()
+        vc.at(pose, x, y).setUv(0.5f, 0.5f).setColor(255, 255, 255, t)
+        vc.at(pose, x, y + h).setUv(0.5f, 0.5f).setColor(255, 255, 255, b)
+        vc.at(pose, x + w, y + h).setUv(0.5f, 0.5f).setColor(255, 255, 255, b)
+        vc.at(pose, x + w, y).setUv(0.5f, 0.5f).setColor(255, 255, 255, t)
+    }
+
     /** A flat quad, colours bottom-left, bottom-right, top-right, top-left (no anti-aliasing). */
     fun quad(x: Float, y: Float, w: Float, h: Float, c0: Int, c1: Int = c0, c2: Int = c0, c3: Int = c0) {
         val vc = begin(Pipelines.POS_COLOR, null, null) ?: return

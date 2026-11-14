@@ -163,6 +163,16 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         Canvas.alpha = 1f
     }
 
+    /** The window's tint at a height (its glass: [window]). */
+    private fun tintAt(y: Float): Int {
+        val g = ui.opacity.value
+        return Ui.vboxAt(0f, H, Colors.withAlpha(0xFF18151E.toInt(), g), Colors.withAlpha(0xFF0B0A0F.toInt(), g + 0.06f), y)
+    }
+
+    /** The window's background, for fading the ends of its scrolling lists ([Ui.fade]); the inspector's is a shade darker. */
+    private val backdrop = Ui.Backdrop({ Ui.ambient(-90f, -50f) }, { y -> tintAt(y) })
+    internal val inspectorBackdrop = Ui.Backdrop({ Ui.ambient(-90f, -50f) }, { y -> tintAt(y) }, { 0x24000000 })
+
     private fun window() {
         // box-shadow: 0 50px 140px -30px rgba(0, 0, 0, .85), 0 0 0 1px rgba(0, 0, 0, .35)
         Ui.glow(15f, 40f, W - 30f, H - 30f, 11f, 40f, 0x8C000000.toInt())
@@ -304,6 +314,9 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
         Ui.hbox(5.5f, py, 96.5f, 17f, 5f, Tok.alpha(Tok.light(Tok.a1, 0.14f), 0.185f), 0x0BFFFFFF, 0.5f, 0x12FFFFFF)
         rows.forEach { it() }
         Ui.popClip()
+        // the list's ends fade out while there is more that way
+        Ui.fade(backdrop, 1f, top, SIDE - 1f, NAV_FADE, false, sy / NAV_FADE)
+        Ui.fade(backdrop, 1f, bottom, SIDE - 1f, NAV_FADE, true, (navScrollMax - sy) / NAV_FADE)
         profile()
     }
 
@@ -323,6 +336,10 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
     }
 
     private const val PROFILE_Y = H - STATUS - 6f - 27f
+
+    /** How far from their ends the sidebar's list and the module grid fade out ([Ui.fade]). */
+    private const val NAV_FADE = 8f
+    private const val GRID_FADE = 10f
 
     private fun profile() {
         val y = PROFILE_Y
@@ -414,6 +431,8 @@ object ModernGui : Screen(Component.literal("horizon-modern")) {
             card(m, cx + viewDir * 17f * (1f - e), cy + (if (viewDir == 0f) 3f * (1f - e) else 0f), cardW, cardH, e, v !is View.Sub)
         }
         Ui.popClip()
+        Ui.fade(backdrop, x0 + 1f, gy, w - 1f, GRID_FADE, false, sy / GRID_FADE)
+        Ui.fade(backdrop, x0 + 1f, gy + gh, w - 1f, GRID_FADE, true, (gridScrollMax - sy) / GRID_FADE)
         if (gridScrollMax > 0f) scrollbar(x0 + w - 3.5f, gy + 1.5f, gh - 3f, sy, gridScrollMax)
     }
 

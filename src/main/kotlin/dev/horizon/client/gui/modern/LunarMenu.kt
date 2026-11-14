@@ -20,7 +20,7 @@ internal class LunarMenu(private val ax: Float, private val ay: Float) : Popover
     private val mc get() = Minecraft.getInstance()
 
     override fun draw(): Boolean {
-        card(ax - 150f, ay, 444f, 192f)
+        card(ax - 150f, ay, 444f, 192f, scrim = true)
         val col = (w - 24f) / 3f
         val lx = x + 6f
         val rx = x + 12f + col

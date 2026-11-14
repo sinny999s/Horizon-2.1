@@ -28,11 +28,12 @@ import kotlin.math.min
  * auras) and emotes fill the right as a searchable grid, with a filter row over it: everything, what your Lunar account
  * owns or what you've picked; newest first or by name; and a Filters panel of Lunar's colour and style tags
  * ([LockerFilter]). Click a cosmetic to wear it (one of each kind, as in Lunar),
- * again to take it off; hovering one tries it on. Each tile says what it is for you: **Owned** by your Lunar account,
- * (**On Lunar** once it's on your Lunar outfit), or **Client-side**, which only you see ("Not signed in" before Lunar
- * Network has signed in). Owned picks also go on your Lunar outfit ([dev.horizon.client.lunar.LunarAccount], with
- * Lunar Spoof's `locker-account`); client-side ones never leave this client. Emotes play on your own player,
- * client-side.
+ * again to take it off; hovering one tries it on. A tile that is yours says so over the foot of its picture: **Owned**
+ * by your Lunar account (**On Lunar** once it's on your Lunar outfit). The rest are client-side, which only you see
+ * (the status bar says so, once). Owned picks also go on your Lunar outfit
+ * ([dev.horizon.client.lunar.LunarAccount], with Lunar Spoof's `locker-account`); client-side ones never leave this
+ * client. Emotes play on your own player, client-side; an emote's tile shows you in its pose, and plays it while the
+ * mouse is on it ([CosmeticThumbs.drawEmote]).
  */
 object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
     const val W = 560f
@@ -41,8 +42,15 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
     private const val STATUS = 15f
     private const val STAGE = 168f
     private const val TILE_W = 64f
-    private const val TILE_H = 74f
+    private const val TILE_H = 66f
     private const val GAP = 6f
+
+    /** The stage's floor line, where the player stands, and the player's size (units to a block). */
+    private const val FLOOR = H - STATUS - 63f
+    private const val PLAYER = 92f
+
+    /** The window's background, for fading the ends of the grid ([Ui.fade]). */
+    private val backdrop = Ui.Backdrop({ Ui.ambient(-90f, -50f) }, { y -> Ui.vboxAt(0f, H, 0xEB18151E.toInt(), 0xF20B0A0F.toInt(), y) })
 
     private val mc get() = Minecraft.getInstance()
     private var mouseX = 0f
@@ -162,11 +170,15 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             if (kotlin.math.abs(spinV) < 0.05f) spinV = 0f
         }
         spin %= 360f
-        val x0 = (ox + 14f * k).toInt()
-        val y0 = (oy + (BAR + 22f) * k).toInt()
-        val x1 = (ox + (STAGE - 14f) * k).toInt()
-        val y1 = (oy + (H - STATUS - 58f) * k).toInt()
-        player(graphics, p, x0, y0, x1, y1, ((y1 - y0) * 0.36f).toInt())
+        // Its feet on the stage's floor line: vanilla draws the figure about the box's middle, half its height (and a
+        // sixteenth of a block) above its feet. The box reaches as far up as down, across the whole stage.
+        val middle = FLOOR - (p.bbHeight / p.scale / 2f + 0.0625f) * PLAYER
+        val reach = H - STATUS - 40f - middle
+        val x0 = (ox + 2f * k).toInt()
+        val y0 = (oy + (middle - reach) * k).toInt()
+        val x1 = (ox + (STAGE - 2f) * k).toInt()
+        val y1 = (oy + (middle + reach) * k).toInt()
+        player(graphics, p, x0, y0, x1, y1, (PLAYER * k).toInt())
     }
 
     /** As vanilla's `extractEntityInInventoryFollowsMouse`, but facing [spin] and seen from [tilt] above or below. */
@@ -242,8 +254,8 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
     private fun stage() {
         Ui.box(STAGE, BAR, 0.5f, H - BAR - STATUS, 0f, Tok.LINE)
         // A soft floor under the player.
-        Ui.glow(STAGE / 2f - 36f, H - STATUS - 66f, 72f, 8f, 4f, 14f, Tok.alpha(Tok.a1, 0.22f))
-        Ui.box(STAGE / 2f - 40f, H - STATUS - 63f, 80f, 2f, 1f, 0x14FFFFFF)
+        Ui.glow(STAGE / 2f - 36f, FLOOR - 3f, 72f, 8f, 4f, 14f, Tok.alpha(Tok.a1, 0.22f))
+        Ui.box(STAGE / 2f - 40f, FLOOR, 80f, 2f, 1f, 0x14FFFFFF)
         val name = mc.player?.name?.string ?: ""
         Ui.textC(Type.name, name, STAGE / 2f, BAR + 13f, Tok.T1)
         // Drag the player to turn it (and tilt it a little); let go mid-drag and it keeps turning a moment.
@@ -323,7 +335,12 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
         val gy = BAR + 31f + if (filtered) ROW else 0f
         val gw = W - STAGE - 20f
         val gh = H - STATUS - 6f - gy
-        if (filtered) filterRow(gx, BAR + 31f, gw)
+        val cols = max(1, ((gw + GAP) / (TILE_W + GAP)).toInt())
+        val used = cols * TILE_W + (cols - 1) * GAP
+        val left = gx + (gw - used) / 2f
+        // The filter row lines up with the tiles under it.
+        if (filtered) filterRow(left, BAR + 31f, used)
+        CosmeticThumbs.frame()
         if (outfitsTab) {
             LunarProfilePanes.outfits(gx, gy, gw, gh, search, pickedOutfit) { pickedOutfit = it }
             return
@@ -333,9 +350,6 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             return
         }
         val list = tiles()
-        val cols = max(1, ((gw + GAP) / (TILE_W + GAP)).toInt())
-        val used = cols * TILE_W + (cols - 1) * GAP
-        val left = gx + (gw - used) / 2f
         val rows = ceil(list.size / cols.toFloat()).toInt()
         scrollMax = max(0f, rows * (TILE_H + GAP) - GAP - gh)
         scroll = scroll.coerceIn(0f, scrollMax)
@@ -367,6 +381,8 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             if (tile(list[i], x, y, gy, gy + gh)) hovered = list[i].id
         }
         Ui.popClip()
+        Ui.fade(backdrop, gx - 4f, gy, gw + 8f, 9f, false, sy / 9f)
+        Ui.fade(backdrop, gx - 4f, gy + gh, gw + 8f, 9f, true, (scrollMax - sy) / 9f)
         LunarLocker.preview = if (emotesTab || panel) null else hovered
         if (hovered == null) hoverTile = -1
         // A thin scroll bar.
@@ -544,6 +560,8 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             val cw = ch * 10f / 16f
             val tex = Skins.texture(cloak)
             Canvas.texture(tex, px + (pw - cw) / 2f, py + 3f, cw, ch, -1, -1, -1, -1, 1f / 64f, 1f / 32f, 11f / 64f, 17f / 32f)
+        } else if (t.type == "emote" && emotePicture(t.id, px, py, pw, ph, over)) {
+            // You, in the emote's pose.
         } else if (t.type != "emote" && t.type != "cloak" && CosmeticThumbs.draw(t.id, t.type, px + 2f, py + 2f, pw - 4f, ph - 4f, turn)) {
             // The model itself.
         } else {
@@ -554,24 +572,38 @@ object LunarLockerScreen : Screen(Component.literal("horizon-lunar-locker")) {
             Ui.dbox(x + TILE_W - 15f, y + 3f, 12f, 12f, 6f, Tok.a1, Tok.a2)
             Ui.icon("check", x + TILE_W - 13f, y + 5f, 8f, Tok.WHITE)
         }
-        Ui.textC(Type.small, Ui.fit(Type.small, t.name, TILE_W - 6f), x + TILE_W / 2f, y + 53f, if (over || on) Tok.T1 else Tok.T2)
-        // What it is for you.
-        val wheelSlot = if (t.type == "emote") dev.horizon.client.lunar.LunarProfileEdits.wheel.entries.firstOrNull { it.value == t.id }?.key else null
-        val (label, color) = if (t.type == "emote") {
+        Ui.textC(Type.small, Ui.fit(Type.small, t.name, TILE_W - 6f), x + TILE_W / 2f, y + 55.5f, if (over || on) Tok.T1 else Tok.T2)
+        // What is yours says so, over the foot of its picture. The rest is client-side, which the status bar explains
+        // once: said on every tile it was the same word a few hundred times.
+        val label = if (t.type == "emote") {
             val social = dev.horizon.client.lunar.LunarSocial
-            if (wheelSlot != null) "Wheel ${wheelSlot + 1}" to Tok.light(Tok.a1, 0.35f)
-            else if (!social.emotesKnown) "Client-side" to Tok.T3
-            else if (social.ownsEmote(t.id)) "Owned" to Tok.light(Tok.a1, 0.35f) else "Client-side" to Tok.T3
+            val wheelSlot = dev.horizon.client.lunar.LunarProfileEdits.wheel.entries.firstOrNull { it.value == t.id }?.key
+            if (wheelSlot != null) "Wheel ${wheelSlot + 1}" else if (social.emotesKnown && social.ownsEmote(t.id)) "Owned" else null
         } else when (LunarLocker.kind(t.id)) {
-            LunarLocker.Kind.OWNED -> (if (dev.horizon.client.lunar.LunarAccount.onAccount(t.id)) "On Lunar" else "Owned") to Tok.light(Tok.a1, 0.35f)
-            LunarLocker.Kind.CLIENT_SIDE -> "Client-side" to Tok.T3
-            LunarLocker.Kind.UNKNOWN -> "Not signed in" to Tok.T4
+            LunarLocker.Kind.OWNED -> if (dev.horizon.client.lunar.LunarAccount.onAccount(t.id)) "On Lunar" else "Owned"
+            else -> null
         }
-        val cw = Type.chip.width(label) + 8f
-        val owned = label == "Owned" || label == "On Lunar" || wheelSlot != null
-        Ui.box(x + (TILE_W - cw) / 2f, y + 60f, cw, 9f, 3.5f, if (owned) Tok.alpha(Tok.a1, 0.18f) else Tok.FILL)
-        Ui.textC(Type.chip, label, x + TILE_W / 2f, y + 64.5f, color)
+        if (label != null) {
+            val cw = Type.chip.width(label) + 8f
+            val cx = x + (TILE_W - cw) / 2f
+            val cy = py + ph - 11f
+            Ui.box(cx, cy, cw, 9f, 3.5f, 0xD9141219.toInt())
+            Ui.box(cx, cy, cw, 9f, 3.5f, Tok.alpha(Tok.a1, 0.22f), 0.5f, Tok.alpha(Tok.a1, 0.4f))
+            Ui.textC(Type.chip, label, x + TILE_W / 2f, cy + 4.5f, Tok.light(Tok.a1, 0.35f))
+        }
         return over
+    }
+
+    /**
+     * An emote's picture: you in its pose, playing it while the mouse is on the tile. Cut to the picture: playing, a
+     * pose can reach past where the still one fitted.
+     */
+    private fun emotePicture(id: Int, px: Float, py: Float, pw: Float, ph: Float, over: Boolean): Boolean {
+        val tick = if (over) (System.nanoTime() - hoverSince) / 5e7f else null
+        Ui.pushClip(px, py, pw, ph)
+        val drawn = CosmeticThumbs.drawEmote(id, px + 1f, py + 1f, pw - 2f, ph - 2f, tick)
+        Ui.popClip()
+        return drawn
     }
 
     // ---- status bar ----

@@ -14,6 +14,7 @@ layout(std140) uniform UBO {
 
 layout(location = 0) in vec2 FragCoord;
 layout(location = 1) in vec2 TexCoord;
+layout(location = 2) in float Fade;
 
 layout(location = 0) out vec4 color;
 
@@ -27,5 +28,5 @@ void main() {
     float dist = roundedDistance(pos, uSize * 0.5 - 1.0, uRadius);
     // One screen pixel, in GUI units: the edge fades over it.
     float px = max(fwidth(dist), 0.0001);
-    color = vec4(texture(Sampler0, TexCoord).rgb, clamp(0.5 - dist / px, 0.0, 1.0) * uAlpha);
+    color = vec4(texture(Sampler0, TexCoord).rgb, clamp(0.5 - dist / px, 0.0, 1.0) * uAlpha * Fade);
 }

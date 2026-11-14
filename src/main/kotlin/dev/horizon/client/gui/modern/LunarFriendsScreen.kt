@@ -10,6 +10,7 @@ import dev.horizon.client.lunar.LunarFriends
 import dev.horizon.client.lunar.LunarImages
 import dev.horizon.client.lunar.LunarNameTag
 import dev.horizon.client.lunar.LunarSettings
+import dev.horizon.client.gui.UrlTextures
 import dev.horizon.client.render.Canvas
 import dev.horizon.client.render.Colors
 import dev.horizon.client.render.Easing
@@ -29,7 +30,8 @@ import kotlin.math.min
 /**
  * Lunar Client's friends list and chats in the new GUI's style ([LunarFriends]). On the left,
  * friend requests (accept or deny; ones you sent can be cancelled), your group chats (+ makes one from friends you
- * pick), then your friends: pinned first, online with where they are and their Lunar logo and badge, offline ones with
+ * pick), then your friends: pinned first, each with their head (their Lunar logo until it is in, beside their name
+ * after) and their badge, online with where they are, offline ones with
  * when they were last seen (hover a friend to pin them). Pick a friend or group to see your messages on the right and
  * write to them, send stickers, and pin messages (hover one); Pins shows the pinned ones. A group can be renamed or
  * left. The top bar adds a friend by name, sets your status (online, away, busy, invisible) and whether players can
@@ -319,6 +321,8 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
             y += h
         }
         Ui.popClip()
+        Ui.fade(backdrop, gx - 2f, gy, gw + 4f, 8f, false, sy / 8f)
+        Ui.fade(backdrop, gx - 2f, gy + gh, gw + 4f, 8f, true, (scrollMax - sy) / 8f)
         if (LunarFriends.friends.isEmpty() && LunarFriends.requests.isEmpty() && LunarFriends.groups.isEmpty()) {
             Ui.textC(Type.label, "No Lunar friends yet: add one above", LIST / 2f, gy + gh / 2f + 10f, Tok.T3)
         }
@@ -338,10 +342,32 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
         }
     }
 
-    private fun icon(logo: Int, plus: Int, badge: Int, x: Float, y: Float, online: Boolean) {
-        LunarNameTag.canvasLogo(x, y, 14f, if (online) logo else Colors.withAlpha(logo, 0.35f), if (online) plus else 0)
+    /**
+     * A friend's picture: their head (from minotar by name, as the Homies window's) once it is in, their Lunar logo
+     * until then. Returns whether it was the head: the logo then goes beside their name ([logoBeside]).
+     */
+    private fun avatar(name: String, logo: Int, plus: Int, badge: Int, x: Float, y: Float, online: Boolean): Boolean {
+        val head = if (NAME.matches(name)) UrlTextures.find("https://minotar.net/helm/$name/32.png") else null
+        if (head != null) {
+            Canvas.texturedRect(head, x, y, 14f, 14f, 3.5f, 0f, 0f, (if (online) 1f else 0.45f) * Canvas.alpha, -1, -1)
+            Ui.box(x, y, 14f, 14f, 3.5f, 0, 0.5f, 0x1FFFFFFF)
+        } else {
+            LunarNameTag.canvasLogo(x, y, 14f, if (online) logo else Colors.withAlpha(logo, 0.35f), if (online) plus else 0)
+        }
         if (badge != 0) LunarNameTag.canvasBadge(badge, x + 8f, y + 8f, 8f)
+        return head != null
     }
+
+    /** The friend's Lunar logo, small, after their name at [x]; returns the width it took. */
+    private fun logoBeside(f: Friend, x: Float, cy: Float, size: Float): Float {
+        LunarNameTag.canvasLogo(x, cy - size / 2f, size, if (f.online) f.logo else Colors.withAlpha(f.logo, 0.35f), if (f.online) f.plus else 0)
+        return size + 2.5f
+    }
+
+    private val NAME = Regex("[A-Za-z0-9_]{1,16}")
+
+    /** The window's background, for fading the ends of the friends list ([Ui.fade]). */
+    private val backdrop = Ui.Backdrop({ Ui.ambient(-90f, -50f) }, { y -> Ui.vboxAt(0f, H, 0xEB18151E.toInt(), 0xF20B0A0F.toInt(), y) })
 
     private fun friend(f: Friend, x: Float, y: Float, w: Float, top: Float, bottom: Float) {
         val y0 = max(y, top)
@@ -354,13 +380,16 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
         })
         val on = if (p != null) f.uuid in p else selected == f.uuid
         if (on || over) Ui.box(x, y, w, ROW - 2f, 6f, if (on) Tok.FILL2 else Tok.FILL, 0.5f, if (on) Tok.alpha(Tok.a1, 0.6f) else Tok.LINE)
-        icon(f.logo, f.plus, f.badge, x + 6f, y + 6f, f.online)
+        val head = avatar(f.name, f.logo, f.plus, f.badge, x + 6f, y + 6f, f.online)
         if (f.online) Ui.box(x + 16.5f, y + 4.5f, 5f, 5f, 2.5f, statusColor(f.status), 1f, 0xFF15121A.toInt())
         val tx = x + 27f
         val pinned = LunarFriends.isPinned(f.uuid)
-        val nameW = Type.semi.width(f.name)
-        Ui.text(Type.semi, Ui.fit(Type.semi, f.name, w - 50f), tx, y + 9.5f, if (f.online) Tok.T1 else Tok.T2)
-        if (pinned) Ui.icon("pin", tx + min(nameW, w - 50f) + 3f, y + 6f, 6f, Tok.light(Tok.a1, 0.3f))
+        val room = w - 50f - (if (head) 10f else 0f)
+        val nameW = min(Type.semi.width(f.name), room)
+        Ui.text(Type.semi, Ui.fit(Type.semi, f.name, room), tx, y + 9.5f, if (f.online) Tok.T1 else Tok.T2)
+        var after = tx + nameW + 3f
+        if (head) after += logoBeside(f, after, y + 9.5f, 7f)
+        if (pinned) Ui.icon("pin", after, y + 6f, 6f, Tok.light(Tok.a1, 0.3f))
         Ui.text(Type.small, Ui.fit(Type.small, where(f), w - 33f), tx, y + 18.5f, Tok.T3)
         if (p != null) {
             Ui.box(x + w - 16f, y + 8f, 10f, 10f, 3f, if (on) Tok.a1 else Tok.FILL, 0.5f, Tok.LINE2)
@@ -445,8 +474,9 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
         // Header: who and where (or the group's members).
         val hy = BAR
         if (f != null) {
-            icon(f.logo, f.plus, f.badge, x0 + 12f, hy + 9f, f.online)
+            val head = avatar(f.name, f.logo, f.plus, f.badge, x0 + 12f, hy + 9f, f.online)
             Ui.text(Type.name, f.name, x0 + 34f, hy + 12f, Tok.T1)
+            if (head) logoBeside(f, x0 + 34f + Type.name.width(f.name) + 4f, hy + 12f, 8f)
             Ui.text(Type.small, Ui.fit(Type.small, where(f), cw - 200f), x0 + 34f, hy + 22f, Tok.T3)
         } else if (g != null) {
             Ui.box(x0 + 10f, hy + 8f, 17f, 17f, 5f, Tok.alpha(Tok.a1, 0.2f))
@@ -457,7 +487,8 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
         // Header buttons, right to left.
         var bx = W - 10f
         fun headerButton(id: String, label: String, icon: String, active: Boolean = false, click: () -> Unit) {
-            val w = Type.small.width(label) + 16f
+            // as wide as Ui.button draws it: the label, its icon, and the padding
+            val w = Type.small.width(label) + 19f
             bx -= w
             Ui.button(id, bx, hy + 9f, 15f, label, icon, active = active, click = click)
             bx -= 4f

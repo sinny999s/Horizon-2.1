@@ -249,6 +249,81 @@ internal object Ui {
     fun blur(x: Float, y: Float, w: Float, h: Float, r: Float) = Canvas.blurBox(x, y, w, h, r)
 
     /**
+     * A window's background, for [fade]: the blurred world, then [ambient] (its faint lights, painted as the window
+     * paints them), then its [tints] from the bottom one up, each the colour it has at a height.
+     */
+    class Backdrop(val ambient: (() -> Unit)?, vararg val tints: (Float) -> Int)
+
+    /** The colour of a [vbox] `h` tall from `y` (drawn a unit beyond each side) at height [at]. */
+    fun vboxAt(y: Float, h: Float, top: Int, bottom: Int, at: Float) = Colors.lerp(top, bottom, (at - y + 1f) / (h + 2f))
+
+    /**
+     * Fades what a scroll area drew into the window behind it, over the [len] units inside one of its edges, in place
+     * of a hard cut: the strip below [y] (above it, with [bottom]) from [x], [w] wide. The window's own background
+     * [back] is painted back over the content: none of it at the strip's inner side, all of it at the edge.
+     *
+     * A background is layers (the blur, tints over it), and painting each at the strip's strength wouldn't do: the
+     * blur would show through a half-painted tint as a light band. For the result to be `a` of the finished background
+     * over the content, a layer goes on at `a` times what the layers above it let through of it when finished, over
+     * what they let through as painted here. That is worked out at [FADE_BANDS] + 1 heights, with straight lines in
+     * between. [strength] (0..1) is how much there is to fade: none when the content ends at that edge.
+     */
+    fun fade(back: Backdrop, x: Float, y: Float, w: Float, len: Float, bottom: Boolean, strength: Float = 1f) {
+        if (strength <= 0.01f || len <= 0f || w <= 0f) return
+        val n = FADE_BANDS
+        val tints = back.tints
+        // At each height (0: the strip's inner side, n: the edge): every layer's colour and share.
+        val ys = FloatArray(n + 1)
+        val blur = FloatArray(n + 1)
+        val cols = Array(tints.size) { IntArray(n + 1) }
+        for (i in 0..n) {
+            val t = i / n.toFloat()
+            val a = strength.coerceAtMost(1f) * t * t * (3f - 2f * t)
+            ys[i] = if (bottom) y - len + len * t else y + len - len * t
+            var through = 1f
+            var painted = 1f
+            for (j in tints.indices.reversed()) {
+                val c = tints[j](ys[i])
+                val b = Colors.alphaF(c)
+                val m = if (painted < 1e-4f) 0f else (a * through / painted).coerceIn(0f, 1f)
+                cols[j][i] = Colors.withAlpha(c, b * m)
+                through *= 1f - b
+                painted *= 1f - b * m
+            }
+            blur[i] = if (painted < 1e-4f) 0f else (a * through / painted).coerceIn(0f, 1f)
+        }
+        // The band between heights i and i + 1: which of the two is its top.
+        fun band(i: Int, draw: (top: Int, bottom: Int, y0: Float, h: Float) -> Unit) {
+            val up = if (ys[i] < ys[i + 1]) i else i + 1
+            val down = if (up == i) i + 1 else i
+            draw(up, down, ys[up], ys[down] - ys[up])
+        }
+        for (i in 0 until n) band(i) { t, b, y0, h -> Canvas.blurQuad(x, y0, w, h, blur[t], blur[b]) }
+        // The ambient light is faint under the tints: a unit at a time is fine enough.
+        back.ambient?.let { paint ->
+            val pa = Canvas.alpha
+            val top = if (bottom) y - len else y
+            var s = top
+            while (s < top + len - 0.01f) {
+                val along = ((s + 0.5f - top) / len).coerceIn(0f, 1f)
+                val f = (if (bottom) along else 1f - along) * n
+                val i = f.toInt().coerceIn(0, n - 1)
+                Canvas.alpha = pa * (blur[i] + (blur[i + 1] - blur[i]) * (f - i))
+                pushClip(x, s, w, 1f)
+                paint()
+                popClip()
+                s += 1f
+            }
+            Canvas.alpha = pa
+        }
+        for (j in tints.indices) for (i in 0 until n) band(i) { t, b, y0, h ->
+            Canvas.quad(x, y0, w, h, cols[j][b], cols[j][b], cols[j][t], cols[j][t])
+        }
+    }
+
+    private const val FADE_BANDS = 6
+
+    /**
      * CSS box-shadow: inset 0 1px 0 on a box with a 1px border: a line under the top border that follows the corners
      * round, thinning out as they turn down.
      */
@@ -273,7 +348,8 @@ internal object Ui {
         if (font.width(s) <= w) return s
         var t = s
         while (t.isNotEmpty() && font.width("$t...") > w) t = t.dropLast(1)
-        return t.trimEnd() + "..."
+        // no "203.0.113....": the cut never ends on a dot or a space
+        return t.trimEnd { it == '.' || it.isWhitespace() } + "..."
     }
 
     /** [s] wrapped to [w], at most [lines] lines, the last cut with an ellipsis. */

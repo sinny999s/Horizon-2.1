@@ -239,6 +239,72 @@ object LunarEmotes {
     private val world = Array(64) { Matrix4f() }
     private val skin = Array(64) { Matrix4f() }
 
+    /** Each emote's most telling tick ([telling]). */
+    private val tellingTicks = HashMap<Int, Float>()
+
+    /** How long emote [id]'s animation is, in ticks (0 until the emotes are in). */
+    fun ticks(id: Int): Float {
+        val d = data ?: return 0f
+        val e = d.emotes[id] ?: return 0f
+        return maxOf(1f, d.actions["emote_" + e.name]?.length ?: e.duration.toFloat())
+    }
+
+    /**
+     * For the locker's emote pictures: the player mesh (the [slim] one for a slim skin) posed as emote [id] at [tick],
+     * as quads ([GeoModel.QUAD_FLOATS] each, as [Bobj.skin] writes them: y up from the feet); null while the emotes
+     * are still loading, or for an emote without an animation. [tick] null is the emote's most telling moment
+     * ([telling]). On the render thread only (it poses with the arrays [submit] uses).
+     */
+    fun posed(id: Int, slim: Boolean, tick: Float?): FloatArray? {
+        val d = data ?: return null
+        val e = d.emotes[id] ?: return null
+        val body = if (slim) d.slim ?: d.wide else d.wide
+        val action = d.actions["emote_" + e.name] ?: return null
+        if (body.bones.size > world.size) return null
+        val mesh = body.meshes.firstOrNull { it.name == "body" } ?: return null
+        val at = tick ?: tellingTicks.getOrPut(id) { telling(body, action) }
+        Bobj.pose(body.bones, action, at, world, skin)
+        val out = FloatArray(Bobj.size(mesh))
+        val n = Bobj.skin(mesh, skin, out)
+        return if (n == out.size) out else out.copyOf(n)
+    }
+
+    /**
+     * The tick of [action], of [TELLING_SAMPLES] along it, at which the body is furthest from standing still: the
+     * pose that says most about the emote (its first and last ticks are close to standing). Measured a little way
+     * along every bone, so a bone turning counts as well as one moving.
+     */
+    private fun telling(body: Bobj.File, action: Bobj.Action): Float {
+        val n = body.bones.size
+        val v = Vector3f()
+        val rest = FloatArray(n * 3)
+        Bobj.pose(body.bones, null, 0f, world, skin)
+        for (i in 0 until n) {
+            world[i].transformPosition(v.set(0f, 0.25f, 0f))
+            rest[i * 3] = v.x; rest[i * 3 + 1] = v.y; rest[i * 3 + 2] = v.z
+        }
+        val length = maxOf(1f, action.length)
+        var best = length / 2f
+        var bestD = -1f
+        for (k in 1..TELLING_SAMPLES) {
+            val at = length * k / (TELLING_SAMPLES + 1)
+            Bobj.pose(body.bones, action, at, world, skin)
+            var d = 0f
+            for (i in 0 until n) {
+                world[i].transformPosition(v.set(0f, 0.25f, 0f))
+                val dx = v.x - rest[i * 3]; val dy = v.y - rest[i * 3 + 1]; val dz = v.z - rest[i * 3 + 2]
+                d += dx * dx + dy * dy + dz * dz
+            }
+            if (d > bestD) {
+                bestD = d
+                best = at
+            }
+        }
+        return best
+    }
+
+    private const val TELLING_SAMPLES = 11
+
     /**
      * Draws the emoting player as [state], instead of their model: [poseStack] is as vanilla has it for the model (body
      * turned, flipped, 1.501 down); [light] and [overlay] as for the model.
@@ -257,9 +323,11 @@ object LunarEmotes {
         if (body.bones.size > world.size) return
         Bobj.pose(body.bones, action, frame, world, skin)
         poseStack.pushPose()
-        // Back to y up from the feet (the body's turn and the player scale stay), as the emote meshes are made.
+        // Back to y up from the feet (the body's turn and the player scale stay), as the emote meshes are made. The
+        // meshes face +z and vanilla's model faces -z, so it is half a turn about x (y and z flip), not about z: that
+        // one left the emoting player facing backwards.
         poseStack.translate(0f, 1.501f, 0f)
-        poseStack.scale(-1f, -1f, 1f)
+        poseStack.scale(1f, -1f, -1f)
         val skinTexture = state.skin?.body()?.texturePath()
         body.meshes.firstOrNull { it.name == "body" }?.let { m ->
             if (skinTexture != null) draw(m, poseStack, collector, RenderTypes.entityTranslucent(skinTexture), light, overlay)
@@ -287,7 +355,8 @@ object LunarEmotes {
             val local = Vector3f(0f, 1.2f, 0f)
             if (bone >= 0) world[bone].getTranslation(local)
             m.translate?.let { local.add(it[0], it[1], it[2]) }
-            local.mul(0.9375f).rotateY(Math.toRadians((180 - state.bodyRot).toDouble()).toFloat())
+            // The mesh faces +z: the body's turn alone takes it to the world (see submit).
+            local.mul(0.9375f).rotateY(Math.toRadians((-state.bodyRot).toDouble()).toFloat())
             LunarParticles.place(p.uuid, key, net.minecraft.world.phys.Vec3(state.x + local.x, state.y + local.y, state.z + local.z))
         }
     }
@@ -314,8 +383,8 @@ object LunarEmotes {
         val bone = LunarParticles.bone(effect)?.let { b -> body.bones.indexOfFirst { it.name == b } } ?: -1
         val local = Vector3f(0f, 1.2f, 0f)
         if (bone >= 0) world[bone].getTranslation(local)
-        // The body's turn (as vanilla's setupRotations) and the player scale.
-        local.mul(0.9375f).rotateY(Math.toRadians((180 - state.bodyRot).toDouble()).toFloat())
+        // The body's turn (the mesh faces +z, see submit) and the player scale.
+        local.mul(0.9375f).rotateY(Math.toRadians((-state.bodyRot).toDouble()).toFloat())
         LunarParticles.place(p.uuid, "emote", net.minecraft.world.phys.Vec3(state.x + local.x, state.y + local.y, state.z + local.z))
     }
 

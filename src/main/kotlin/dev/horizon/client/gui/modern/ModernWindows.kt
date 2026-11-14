@@ -559,10 +559,10 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
         if (text.isEmpty()) {
             if (placeholder.isNotEmpty()) Ui.text(Type.label, Ui.fit(Type.label, placeholder, tw), tx, cy, Tok.T4)
         } else {
-            // a browser's input: its start when idle, its end (the caret) while typing
+            // a browser's input: its start when idle (text-overflow: ellipsis), its end (the caret) while typing
             var shown = text
             if (focusedNow) while (shown.isNotEmpty() && Type.label.width(shown) > tw - 2f) shown = shown.drop(1)
-            else while (shown.isNotEmpty() && Type.label.width(shown) > tw) shown = shown.dropLast(1)
+            else shown = Ui.fit(Type.label, shown, tw)
             Ui.pushClip(tx, y, max(0f, tw), 17f)
             Ui.text(Type.label, shown, tx, cy, Tok.T1)
             Ui.popClip()
