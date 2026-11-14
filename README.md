@@ -61,6 +61,12 @@
 
 ## 📦 Installation
 
+**Easiest (Windows):** the **[Horizon Launcher](https://github.com/sinny999s/Horizon-Launcher)** installs Minecraft 26.3
+with Fabric, puts Horizon, Fabric API and Fabric Language Kotlin in every instance, and updates Horizon to the newest
+release before every launch. Get it from its [latest release](https://github.com/sinny999s/Horizon-Launcher/releases/latest).
+
+**By hand:**
+
 1. Install **[Fabric Loader](https://fabricmc.net/) 0.20+** for **Minecraft 26.3**.
 2. Download and install **[Fabric API](https://modrinth.com/mod/fabric-api)**.
 3. Drop `horizon-26.3-2.0.0.jar` into your `.minecraft/mods` folder.
