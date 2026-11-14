@@ -1,22 +1,26 @@
 package dev.horizon.client
 
+import com.github.weisj.jsvg.attributes.ViewBox
+import com.github.weisj.jsvg.parser.SVGLoader
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
+import java.awt.geom.Line2D
 import java.awt.geom.RoundRectangle2D
+import java.awt.image.BufferedImage
 import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.Timer
-import kotlin.math.sin
+import kotlin.math.ceil
 
 /**
- * Pre-launch splash: a dark rounded card with a minimal horizon mark, version badges, a greeting and a progress bar that follows
- * the client's real start-up stages ([stage]). It fades in when the game starts loading and fades out once the client
- * has initialised ([hide]).
+ * Pre-launch splash: a small dark card with the wordmark, whose horizon line fills up with the client's real start-up
+ * stages ([stage]), what it is doing and the version. Grey only, like the title screen. It fades in when the game
+ * starts loading and fades out once the client has initialised ([hide]).
  */
 object PreLaunch : PreLaunchEntrypoint {
     private var frame: JFrame? = null
@@ -35,28 +39,39 @@ object PreLaunch : PreLaunchEntrypoint {
         f.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
         f.isUndecorated = true
         f.isResizable = false
+
+        // A see-through window gets a soft shadow around the card and smooth corners; otherwise the window is cut to
+        // the card's shape (hard corners, no shadow).
+        val translucent = try {
+            GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice
+                .isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.PERPIXEL_TRANSLUCENT)
+        } catch (ignored: Exception) { false }
+        if (translucent) {
+            try { f.background = Color(0, 0, 0, 0) } catch (ignored: Exception) { LoadingPanel.margin = 0 }
+        } else LoadingPanel.margin = 0
+        LoadingPanel.preferredSize = Dimension(Splash.W + 2 * LoadingPanel.margin, Splash.H + 2 * LoadingPanel.margin)
         f.contentPane.add(LoadingPanel)
         f.pack()
         f.setLocationRelativeTo(null)
+        if (LoadingPanel.margin == 0) {
+            try { f.shape = RoundRectangle2D.Float(0f, 0f, Splash.W.toFloat(), Splash.H.toFloat(), Splash.R * 2, Splash.R * 2) } catch (ignored: Exception) {}
+        }
 
         // drag the card anywhere
         var dragPoint: Point? = null
-        f.addMouseListener(object : MouseAdapter() {
+        LoadingPanel.addMouseListener(object : MouseAdapter() {
             override fun mousePressed(e: MouseEvent) {
                 dragPoint = e.point
             }
         })
-        f.addMouseMotionListener(object : MouseMotionAdapter() {
+        LoadingPanel.addMouseMotionListener(object : MouseMotionAdapter() {
             override fun mouseDragged(e: MouseEvent) {
                 val p = dragPoint ?: return
                 f.setLocation(e.xOnScreen - p.x, e.yOnScreen - p.y)
             }
         })
 
-        try { f.background = Color(0, 0, 0, 0) } catch (ignored: Exception) {}
-        try { f.shape = RoundRectangle2D.Double(0.0, 0.0, LoadingPanel.W.toDouble(), LoadingPanel.H.toDouble(), 18.0, 18.0) } catch (ignored: Exception) {}
         try { f.opacity = 0f } catch (ignored: Exception) {}
-
         f.isVisible = true
         frame = f
 
@@ -87,47 +102,46 @@ object PreLaunch : PreLaunchEntrypoint {
     }
 }
 
-/** The splash card. */
+/** The splash window's content: start-up state, hover and fades; [Splash] draws it. */
 object LoadingPanel : JPanel() {
-    const val W = 460
-    const val H = 170
-
     private fun readResolve(): Any = LoadingPanel
 
+    /** Room for the shadow around the card, 0 when the window can't be see-through. */
+    var margin = Splash.SHADOW
+
     private val version = FabricLoader.getInstance().getModContainer("horizon")
-        .map { it.metadata.version.friendlyString }.orElse("2.0.3")
-    private val mcVersion = FabricLoader.getInstance().getModContainer("minecraft")
-        .map { it.metadata.version.friendlyString }.orElse("26.3")
-    private val userName = System.getProperty("user.name", "Player")
+        .map { it.metadata.version.friendlyString }.orElse("")
 
     private var ticks = 0
     private var closing = -1
-    private var closeHovered = false
+    private var mouseX = -1
+    private var mouseY = -1
+    private var cardHover = 0f
+    private var closeHover = 0f
 
     @Volatile private var status = "Starting up"
     @Volatile private var target = 0.04f
     private var shown = 0f
 
     init {
-        preferredSize = Dimension(W, H)
         isOpaque = false
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (inClose(e.x, e.y)) PreLaunch.hide()
+                if (Splash.inClose(e.x - margin, e.y - margin)) PreLaunch.hide()
+            }
+
+            override fun mouseExited(e: MouseEvent) {
+                mouseX = -1
+                mouseY = -1
             }
         })
         addMouseMotionListener(object : MouseMotionAdapter() {
             override fun mouseMoved(e: MouseEvent) {
-                val h = inClose(e.x, e.y)
-                if (h != closeHovered) {
-                    closeHovered = h
-                    repaint()
-                }
+                mouseX = e.x - margin
+                mouseY = e.y - margin
             }
         })
     }
-
-    private fun inClose(x: Int, y: Int) = x in (W - 36)..(W - 12) && y in 10..34
 
     fun setStage(text: String, progress: Float) {
         status = text
@@ -137,6 +151,9 @@ object LoadingPanel : JPanel() {
     fun tick() {
         ticks++
         shown += (target - shown) * 0.12f
+        val onCard = mouseX in 0 until Splash.W && mouseY in 0 until Splash.H
+        cardHover += ((if (onCard) 1f else 0f) - cardHover) * 0.2f
+        closeHover += ((if (Splash.inClose(mouseX, mouseY)) 1f else 0f) - closeHover) * 0.3f
         if (closing >= 0) closing++
     }
 
@@ -154,135 +171,183 @@ object LoadingPanel : JPanel() {
 
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
-        val g2 = g as Graphics2D
-        val w = width.toFloat()
-        val h = height.toFloat()
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
-
-        val card = RoundRectangle2D.Float(1f, 1f, w - 2f, h - 2f, 18f, 18f)
-
-        // card
-        g2.paint = GradientPaint(0f, 0f, Color(20, 18, 27), 0f, h, Color(11, 10, 15))
-        g2.fill(card)
-
-        // soft accent glow in the top-left corner, clipped to the card
-        val oldClip = g2.clip
-        g2.clip = card
-        g2.paint = RadialGradientPaint(
-            Point2D(70f, 10f), 190f, floatArrayOf(0f, 1f),
-            arrayOf(Color(255, 42, 74, 22), Color(255, 42, 74, 0)),
-        )
-        g2.fillRect(0, 0, W, H)
-        g2.clip = oldClip
-
-        // border and the accent edge on top
-        g2.color = Color(46, 42, 58)
-        g2.stroke = BasicStroke(1.1f)
-        g2.draw(card)
-        g2.paint = LinearGradientPaint(
-            0f, 0f, w, 0f, floatArrayOf(0f, 0.3f, 0.5f, 0.7f, 1f),
-            arrayOf(Color(255, 42, 74, 0), Color(255, 42, 74, 170), Color(255, 80, 108, 245), Color(255, 42, 74, 170), Color(255, 42, 74, 0)),
-        )
-        g2.stroke = BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-        g2.drawLine(24, 2, (w - 24).toInt(), 2)
-
-        // logo mark: a thin sun arc resting on a horizon line, no tile
-        val hy = 41f
-        g2.stroke = BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-        g2.color = Color(255, 64, 92)
-        g2.draw(java.awt.geom.Arc2D.Float(29f, hy - 8f, 16f, 16f, 0f, 180f, java.awt.geom.Arc2D.OPEN))
-        g2.paint = LinearGradientPaint(24f, 0f, 50f, 0f, floatArrayOf(0f, 0.5f, 1f),
-            arrayOf(Color(255, 64, 92, 60), Color(255, 64, 92), Color(255, 64, 92, 60)))
-        g2.drawLine(24, hy.toInt(), 50, hy.toInt())
-
-        // title and badges
-        g2.font = Font("Segoe UI", Font.BOLD, 22)
-        g2.color = Color(245, 245, 247)
-        g2.drawString("Horizon", 60, 42)
-        val titleW = g2.fontMetrics.stringWidth("Horizon")
-        var bx = 60f + titleW + 10f
-        bx += pill(g2, bx, 26f, "v$version", Color(255, 95, 120), Color(255, 42, 74, 34), Color(255, 42, 74, 100)) + 6f
-        pill(g2, bx, 26f, "$mcVersion  FABRIC", Color(165, 163, 178), Color(255, 255, 255, 12), Color(255, 255, 255, 24))
-
-        // greeting with a pulsing online dot
-        val pulse = 0.5f + 0.5f * sin(ticks * 0.08).toFloat()
-        g2.color = Color(52, 215, 123, (50 + 70 * pulse).toInt())
-        g2.fillOval(59, 55, 11, 11)
-        g2.color = Color(52, 215, 123)
-        g2.fillOval(61, 57, 7, 7)
-        g2.font = Font("Segoe UI", Font.PLAIN, 13)
-        g2.color = Color(160, 158, 172)
-        g2.drawString("Welcome back,", 76, 66)
-        val wl = g2.fontMetrics.stringWidth("Welcome back, ")
-        g2.font = Font("Segoe UI", Font.BOLD, 13)
-        g2.color = Color(245, 245, 247)
-        g2.drawString("$userName!", 76 + wl, 66)
-
-        // close button
-        g2.color = if (closeHovered) Color(255, 255, 255, 22) else Color(255, 255, 255, 0)
-        g2.fillOval(W - 36, 10, 24, 24)
-        g2.color = if (closeHovered) Color(245, 245, 247) else Color(110, 108, 122)
-        g2.stroke = BasicStroke(1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-        g2.drawLine(W - 28, 18, W - 20, 26)
-        g2.drawLine(W - 20, 18, W - 28, 26)
-
-        // status line and percent
-        val pct = (shown * 100).toInt().coerceIn(0, 100)
-        g2.font = Font("Segoe UI", Font.PLAIN, 11)
-        g2.color = Color(150, 148, 163)
-        g2.drawString(status + "...", 24, 108)
-        g2.font = Font("Segoe UI", Font.BOLD, 11)
-        g2.color = Color(245, 245, 247)
-        val ps = "$pct%"
-        g2.drawString(ps, w.toInt() - 24 - g2.fontMetrics.stringWidth(ps), 108)
-
-        // progress bar: real progress with a moving shimmer on the filled part
-        val tx = 24f
-        val ty = 118f
-        val tw = w - 48f
-        val th = 6f
-        g2.color = Color(26, 24, 35)
-        g2.fill(RoundRectangle2D.Float(tx, ty, tw, th, 6f, 6f))
-        val fw = (tw * shown).coerceAtLeast(th)
-        val fill = RoundRectangle2D.Float(tx, ty, fw, th, 6f, 6f)
-        g2.paint = GradientPaint(tx, 0f, Color(153, 20, 46), tx + fw, 0f, Color(255, 64, 92))
-        g2.fill(fill)
-        val clip2 = g2.clip
-        g2.clip = fill
-        val sx = tx - 70f + ((ticks * 3.2f) % (fw + 140f))
-        g2.paint = LinearGradientPaint(sx, 0f, sx + 70f, 0f, floatArrayOf(0f, 0.5f, 1f),
-            arrayOf(Color(255, 255, 255, 0), Color(255, 255, 255, 120), Color(255, 255, 255, 0)))
-        g2.fillRect(tx.toInt(), ty.toInt(), fw.toInt() + 1, th.toInt())
-        g2.clip = clip2
-
-        // footer
-        g2.font = Font("Segoe UI", Font.PLAIN, 10)
-        g2.color = Color(92, 89, 106)
-        g2.drawString("Anarchy client for Minecraft $mcVersion", 24, 152)
-        val right = "Fabric Loader " + FabricLoader.getInstance().getModContainer("fabricloader")
-            .map { it.metadata.version.friendlyString }.orElse("")
-        g2.drawString(right, w.toInt() - 24 - g2.fontMetrics.stringWidth(right), 152)
-    }
-
-    /** A rounded badge; returns its width. */
-    private fun pill(g2: Graphics2D, x: Float, y: Float, text: String, fg: Color, bg: Color, line: Color): Float {
-        g2.font = Font("Segoe UI", Font.BOLD, 10)
-        val w = g2.fontMetrics.stringWidth(text) + 16f
-        val shape = RoundRectangle2D.Float(x, y, w, 18f, 9f, 9f)
-        g2.color = bg
-        g2.fill(shape)
-        g2.color = line
-        g2.stroke = BasicStroke(1f)
-        g2.draw(shape)
-        g2.color = fg
-        g2.drawString(text, x + 8f, y + 12.5f)
-        return w
+        val g2 = g.create() as Graphics2D
+        try {
+            g2.translate(margin, margin)
+            Splash.paint(g2, Splash.State(status, shown, version, cardHover, closeHover, margin > 0))
+        } finally {
+            g2.dispose()
+        }
     }
 }
 
-/** java.awt.geom.Point2D.Float shorthand for the gradient centres. */
-@Suppress("FunctionName")
-private fun Point2D(x: Float, y: Float) = java.awt.geom.Point2D.Float(x, y)
+/**
+ * Draws the splash card at (0, 0) of a [Graphics2D] in its own units ([W] x [H]), the shadow (if any) around it.
+ * It reads no game or window state, so it can be drawn into an image off screen.
+ */
+object Splash {
+    const val W = 360
+    const val H = 142
+    const val R = 14f
+    const val SHADOW = 18
+
+    // The wordmark's two SVGs share an 834 x 196 box: 200 x 47 keeps its proportions. Its lower horizon line (x 80..906,
+    // y 222..224 of the box) is the progress line.
+    private const val LOGO_W = 200
+    private const val LOGO_H = 47
+    private const val LOGO_X = (W - LOGO_W) / 2
+    private const val LOGO_Y = 34
+    private const val BAR_X = LOGO_X + 1f
+    private const val BAR_W = LOGO_W - 2f
+    private const val BAR_Y = LOGO_Y + 45f
+    private const val TEXT_Y = BAR_Y + 26f
+
+    // The ClickGUI's text tokens (Ui.Tok T1..T4) over the card.
+    private val T1 = Color(0xF5, 0xF5, 0xF7)
+    private val T2 = Color(0xEB, 0xEB, 0xF5, 0xA3)
+    private val T3 = Color(0xEB, 0xEB, 0xF5, 0x61)
+    private val T4 = Color(0xEB, 0xEB, 0xF5, 0x38)
+
+    /** What one frame shows; [cardHover] and [closeHover] are eased 0..1. */
+    data class State(
+        val status: String,
+        val progress: Float,
+        val version: String,
+        val cardHover: Float = 0f,
+        val closeHover: Float = 0f,
+        val shadow: Boolean = true,
+    )
+
+    private var logo: BufferedImage? = null
+    private var logoScale = 0.0
+    private var logoFailed = false
+
+    /** The close button's spot, top right, in card units. */
+    fun inClose(x: Int, y: Int) = x in (W - 34)..(W - 10) && y in 10..34
+
+    fun paint(g: Graphics2D, s: State) {
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
+        g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON)
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+
+        if (s.shadow) shadow(g)
+
+        // The card: near black, a hairline border and a faint highlight along the top edge.
+        val card = RoundRectangle2D.Float(0f, 0f, W.toFloat(), H.toFloat(), R * 2, R * 2)
+        g.paint = GradientPaint(0f, 0f, Color(0x16, 0x16, 0x18), 0f, H.toFloat(), Color(0x0F, 0x0F, 0x11))
+        g.fill(card)
+        g.stroke = BasicStroke(1f)
+        g.color = Color(255, 255, 255, 0x14)
+        g.draw(RoundRectangle2D.Float(0.5f, 0.5f, W - 1f, H - 1f, R * 2 - 1f, R * 2 - 1f))
+        g.color = Color(255, 255, 255, 0x0D)
+        g.draw(Line2D.Float(R, 1.5f, W - R, 1.5f))
+
+        // The wordmark, its letters in white and its lines softer, as on the title screen.
+        val img = logo(g.transform.scaleX)
+        if (img != null) g.drawImage(img, LOGO_X, LOGO_Y, LOGO_W, LOGO_H, null)
+        else {
+            g.font = Font("Segoe UI Semibold", Font.PLAIN, 30)
+            g.color = T1
+            val w = g.fontMetrics.stringWidth("Horizon")
+            g.drawString("Horizon", (W - w) / 2f, LOGO_Y + 36f)
+        }
+
+        // Progress: the wordmark's horizon line fills up from the left.
+        val x = BAR_X
+        val bw = BAR_W
+        g.color = Color(255, 255, 255, 0x14)
+        g.fill(RoundRectangle2D.Float(x, BAR_Y, bw, 2f, 2f, 2f))
+        val fw = bw * s.progress.coerceIn(0f, 1f)
+        if (fw > 0.5f) {
+            g.color = T1
+            g.fill(RoundRectangle2D.Float(x, BAR_Y, fw, 2f, 2f, 2f))
+        }
+
+        // What it is doing on the left, the version on the right.
+        g.font = Font("Segoe UI", Font.PLAIN, 11)
+        val fm = g.fontMetrics
+        val ver = if (s.version.isEmpty()) "" else "v" + s.version
+        val vw = fm.stringWidth(ver)
+        g.color = T3
+        g.drawString(ver, x + bw - vw, TEXT_Y)
+        g.color = T2
+        g.drawString(fit(fm, s.status, bw - vw - 12f), x, TEXT_Y)
+
+        // Close: only while the mouse is on the card.
+        if (s.cardHover > 0.01f) {
+            val cx = W - 22f
+            val cy = 22f
+            if (s.closeHover > 0.01f) {
+                g.color = Color(255, 255, 255, (0x14 * s.closeHover).toInt())
+                g.fill(java.awt.geom.Ellipse2D.Float(cx - 11f, cy - 11f, 22f, 22f))
+            }
+            g.color = mix(T4, T1, s.closeHover, s.cardHover)
+            g.stroke = BasicStroke(1.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            g.draw(Line2D.Float(cx - 4f, cy - 4f, cx + 4f, cy + 4f))
+            g.draw(Line2D.Float(cx + 4f, cy - 4f, cx - 4f, cy + 4f))
+        }
+    }
+
+    /** A soft shadow, a little below the card: rings of black that fade out over [SHADOW] units. */
+    private fun shadow(g: Graphics2D) {
+        for (k in SHADOW downTo 1) {
+            val t = 1f - (k - 1f) / SHADOW
+            g.color = Color(0, 0, 0, (t * t * 9f).toInt().coerceIn(0, 255))
+            val d = k.toFloat()
+            g.fill(RoundRectangle2D.Float(-d, -d + 4f, W + 2 * d, H + 2 * d, (R + d) * 2, (R + d) * 2))
+        }
+    }
+
+    /** [text] cut to [width] with an ellipsis. */
+    private fun fit(fm: FontMetrics, text: String, width: Float): String {
+        if (fm.stringWidth(text) <= width) return text
+        var t = text
+        while (t.isNotEmpty() && fm.stringWidth(t.trimEnd(' ', '.') + "...") > width) t = t.dropLast(1)
+        return t.trimEnd(' ', '.') + "..."
+    }
+
+    private fun mix(a: Color, b: Color, k: Float, alpha: Float): Color {
+        fun l(x: Int, y: Int) = (x + (y - x) * k).toInt().coerceIn(0, 255)
+        return Color(l(a.red, b.red), l(a.green, b.green), l(a.blue, b.blue), (l(a.alpha, b.alpha) * alpha).toInt().coerceIn(0, 255))
+    }
+
+    /**
+     * The wordmark rasterised at the screen's [scale]: letters white, the upper line at T2's alpha (the lower one is
+     * drawn as the progress line). Null if it won't load.
+     */
+    private fun logo(scale: Double): BufferedImage? {
+        if (logoFailed) return null
+        if (logo != null && logoScale == scale) return logo
+        return try {
+            val pw = ceil(LOGO_W * scale).toInt()
+            val ph = ceil(LOGO_H * scale).toInt()
+            val img = BufferedImage(pw, ph, BufferedImage.TYPE_INT_ARGB)
+            val g = img.createGraphics()
+            g.drawImage(svg("wordmark", pw, ph), 0, 0, null)
+            g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, T2.alpha / 255f)
+            g.clipRect(0, 0, pw, ph / 2)
+            g.drawImage(svg("wordmark-rules", pw, ph), 0, 0, null)
+            g.dispose()
+            logo = img
+            logoScale = scale
+            img
+        } catch (t: Throwable) {
+            logoFailed = true
+            null
+        }
+    }
+
+    private fun svg(name: String, pw: Int, ph: Int): BufferedImage {
+        val doc = Splash::class.java.getResourceAsStream("/assets/horizon/vector/$name.svg")!!.use { SVGLoader().load(it) }!!
+        val img = BufferedImage(pw, ph, BufferedImage.TYPE_INT_ARGB)
+        val g = img.createGraphics()
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+        doc.render(null, g, ViewBox(pw.toFloat(), ph.toFloat()))
+        g.dispose()
+        return img
+    }
+}
