@@ -27,9 +27,15 @@ import java.util.Optional
 import java.util.OptionalDouble
 
 /**
- * Immediate 2D renderer, in GUI units: every shape is drawn in call order. Draws are recorded during the frame and
- * executed by [flush] in one pass on the main target, keeping the order.
+ * Immediate 2D renderer, in GUI units: every shape comes out as if drawn in call order. Draws are recorded during the
+ * frame and executed by [flush] in one pass on the main target.
  * Each primitive's vertex order and -1/+2 quad padding decide where edges and corners land.
+ *
+ * Batching: a shape joins an earlier draw of the same kind (pipeline, texture, scissor) when nothing recorded since
+ * overlaps it, so it lands on exactly the same pixels in the same order as drawn one at a time. The rounded shapes keep
+ * their parameters in an array per draw ([Cmd.params], `Shapes` in rect/box/glow/blur_box.fsh), each vertex saying
+ * which shape it is by 2 per shape added to its U ([shapeIndex]). A HUD of a hundred plates, boxes and labels becomes a
+ * handful of draws.
  */
 object Canvas {
     private val ownPose = Matrix3x2fStack(32)
@@ -55,6 +61,22 @@ object Canvas {
 
     private val vertices = StagedVertexBuffer({ "HorizonClient canvas" }, 1 shl 16)
     private val uniforms = DynamicGpuDataStorageMapped<Ubo>("HorizonClient UBO", 112, 128, 256)
+
+    /** A batch's shape parameters: [SHAPE_VEC4S] vec4s (the `Shapes` array in the shape shaders). */
+    private const val SHAPE_VEC4S = 256
+    private val shapeData = DynamicGpuDataStorageMapped<ShapeBlock>("HorizonClient shapes", SHAPE_VEC4S * 16, 128, 16)
+
+    /** How many draws back a shape looks for one to join. */
+    private const val MERGE_DEPTH = 48
+
+    /** Off, every shape is its own draw, in call order (for comparing against batching, [testBatching]). */
+    private var batching = true
+
+    /** For ShotBot: batching "on" or "off", to screenshot the same frame both ways. */
+    @JvmStatic
+    fun testBatching(on: String) {
+        batching = on != "off"
+    }
     private val projection = Projection()
     private val projectionBuffer = ProjectionMatrixBuffer("horizon")
     private val cmds = ArrayList<Cmd>()
@@ -64,13 +86,109 @@ object Canvas {
     /** NEAREST + clamp, used for every texture. */
     fun sampler(): GpuSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
 
+    /**
+     * One draw. [stride] says how it batches: -1 never (it has its own [ubo]); 0 with any later shape of the same
+     * pipeline, texture and scissor; above 0 likewise, each shape adding [stride] vec4s to [params] (written at [flush]).
+     * [rects] are its shapes' boxes in GUI units after the pose (a line's glyphs side by side as one), and [x0]..[y1] bound
+     * them all.
+     */
     private class Cmd(
         val draw: StagedVertexBuffer.Draw,
         val pipeline: RenderPipeline,
         val ubo: GpuBufferSlice?,
         val texture: GpuTextureView?,
         val scissor: IntArray?,
-    )
+        val stride: Int,
+    ) {
+        var x0 = Float.MAX_VALUE
+        var y0 = Float.MAX_VALUE
+        var x1 = -Float.MAX_VALUE
+        var y1 = -Float.MAX_VALUE
+        var params: FloatArray = if (stride > 0) FloatArray(stride * 4 * 8) else EMPTY
+        var shapes = 0
+        private var rects = FloatArray(32)
+        private var rectCount = 0
+
+        fun overlaps(ax0: Float, ay0: Float, ax1: Float, ay1: Float): Boolean {
+            if (!(ax0 < x1 && ax1 > x0 && ay0 < y1 && ay1 > y0)) return false
+            var i = 0
+            val n = rectCount * 4
+            while (i < n) {
+                if (ax0 < rects[i + 2] && ax1 > rects[i] && ay0 < rects[i + 3] && ay1 > rects[i + 1]) return true
+                i += 4
+            }
+            return false
+        }
+
+        fun include(ax0: Float, ay0: Float, ax1: Float, ay1: Float) {
+            if (ax0 < x0) x0 = ax0
+            if (ay0 < y0) y0 = ay0
+            if (ax1 > x1) x1 = ax1
+            if (ay1 > y1) y1 = ay1
+            // The next glyph of a line, touching the last box and level with it, widens that box.
+            if (rectCount > 0) {
+                val j = (rectCount - 1) * 4
+                if (ax0 <= rects[j + 2] + 1f && ax1 >= rects[j] && ay0 < rects[j + 3] && ay1 > rects[j + 1]) {
+                    rects[j] = minOf(rects[j], ax0)
+                    rects[j + 1] = minOf(rects[j + 1], ay0)
+                    rects[j + 2] = maxOf(rects[j + 2], ax1)
+                    rects[j + 3] = maxOf(rects[j + 3], ay1)
+                    return
+                }
+            }
+            if (rects.size < (rectCount + 1) * 4) rects = rects.copyOf(rects.size * 2)
+            val j = rectCount * 4
+            rects[j] = ax0
+            rects[j + 1] = ay0
+            rects[j + 2] = ax1
+            rects[j + 3] = ay1
+            rectCount++
+        }
+
+        fun addShape(src: FloatArray) {
+            val n = stride * 4
+            if (params.size < (shapes + 1) * n) params = params.copyOf(maxOf(params.size * 2, (shapes + 1) * n))
+            System.arraycopy(src, 0, params, shapes * n, n)
+            shapes++
+        }
+
+        companion object {
+            val EMPTY = FloatArray(0)
+        }
+    }
+
+    /** The next draw's bounds ([area]) and, for a batched shape, its index in its draw ([begin]). */
+    private var ax0 = 0f
+    private var ay0 = 0f
+    private var ax1 = 0f
+    private var ay1 = 0f
+    private var shapeIndex = 0
+
+    /** The next batched shape's parameters, [Cmd.stride] vec4s. */
+    private val shapeParams = FloatArray(12)
+
+    private fun params(vararg v: Float) {
+        for (i in v.indices) shapeParams[i] = v[i]
+    }
+
+    /** The next draw covers the quad ([x0], [y0])-([x1], [y1]) under [m]. */
+    private fun area(m: Matrix3x2f, x0: Float, y0: Float, x1: Float, y1: Float) {
+        var minX = Float.MAX_VALUE
+        var minY = Float.MAX_VALUE
+        var maxX = -Float.MAX_VALUE
+        var maxY = -Float.MAX_VALUE
+        for (k in 0 until 4) {
+            m.transformPosition(if (k == 0 || k == 3) x0 else x1, if (k < 2) y0 else y1, tmp)
+            if (tmp.x < minX) minX = tmp.x
+            if (tmp.x > maxX) maxX = tmp.x
+            if (tmp.y < minY) minY = tmp.y
+            if (tmp.y > maxY) maxY = tmp.y
+        }
+        ax0 = minX
+        ay0 = minY
+        ax1 = maxX
+        ay1 = maxY
+    }
 
     /** One draw's "UBO" block, written in std140 layout. */
     private class Ubo(val writer: (Std140Builder) -> Unit) : DynamicGpuDataStorage.DynamicGpuData {
@@ -113,18 +231,38 @@ object Canvas {
 
     // ---- recording ----
 
-    /** Starts a draw; null when the current scissor is empty (those draws are skipped). */
+    /**
+     * Starts a draw covering the [area] set just before; null when the current scissor is empty (those draws are
+     * skipped). It joins an earlier draw it can batch with ([Cmd.stride]) when nothing since overlaps it; a batched shape
+     * ([stride] above 0, parameters in [shapeParams]) gets its index in [shapeIndex].
+     */
     private fun begin(pipeline: RenderPipeline, ubo: GpuBufferSlice?, texture: GpuTextureView?, scissor: IntArray? = currentScissor(),
-                      merge: Boolean = false): VertexConsumer? {
+                      stride: Int = if (ubo == null) 0 else -1): VertexConsumer? {
         if (scissor != null && (scissor[2] == 0 || scissor[3] == 0)) return null
-        val last = cmds.lastOrNull()
-        if (merge && ubo == null && last != null && last.ubo == null && last.pipeline === pipeline && last.texture === texture &&
-            last.scissor.contentEquals(scissor)) {
-            return vertices.getVertexBuilder(last.draw)
+        var target: Cmd? = null
+        if (stride >= 0 && batching) {
+            val cap = if (stride > 0) SHAPE_VEC4S / stride else Int.MAX_VALUE
+            var i = cmds.size - 1
+            var steps = 0
+            while (i >= 0 && steps++ < MERGE_DEPTH) {
+                val c = cmds[i]
+                if (c.stride == stride && c.pipeline === pipeline && c.texture === texture && c.shapes < cap &&
+                    c.scissor.contentEquals(scissor)) {
+                    target = c
+                    break
+                }
+                if (c.overlaps(ax0, ay0, ax1, ay1)) break
+                i--
+            }
         }
-        val draw = vertices.appendDraw(pipeline.getVertexFormatBinding(0)!!, pipeline.primitiveTopology)
-        cmds += Cmd(draw, pipeline, ubo, texture, scissor)
-        return vertices.getVertexBuilder(draw)
+        val c = target ?: Cmd(vertices.appendDraw(pipeline.getVertexFormatBinding(0)!!, pipeline.primitiveTopology), pipeline, ubo,
+            texture, scissor, stride).also { cmds += it }
+        c.include(ax0, ay0, ax1, ay1)
+        if (stride > 0) {
+            shapeIndex = c.shapes
+            c.addShape(shapeParams)
+        }
+        return vertices.getVertexBuilder(c.draw)
     }
 
     private fun VertexConsumer.at(m: Matrix3x2f, x: Float, y: Float, z: Float = 0f): VertexConsumer {
@@ -145,15 +283,14 @@ object Canvas {
      */
     fun rect(x: Float, y: Float, w: Float, h: Float, radius: Float, bl: Int, tl: Int, br: Int, tr: Int,
              borderWidth: Float = 0f, outline: Int = -1) {
-        val u = ubo {
-            it.putVec2(w, h).putFloat(radius).putFloat(borderWidth / 2f)
-                .putVec4(r(outline), g(outline), b(outline), a(outline))
-        }
-        val vc = begin(Pipelines.RECT, u, null) ?: return
-        vc.at(pose, x - 1, y - 1).setUv(0f, 0f).color(tl)
-        vc.at(pose, x - 1, y + h + 2).setUv(0f, 1f).color(bl)
-        vc.at(pose, x + w + 2, y + h + 2).setUv(1f, 1f).color(br)
-        vc.at(pose, x + w + 2, y - 1).setUv(1f, 0f).color(tr)
+        params(w, h, radius, borderWidth / 2f, r(outline), g(outline), b(outline), a(outline))
+        area(pose, x - 1, y - 1, x + w + 2, y + h + 2)
+        val vc = begin(Pipelines.RECT, null, null, stride = 2) ?: return
+        val k = 2f * shapeIndex
+        vc.at(pose, x - 1, y - 1).setUv(k, 0f).color(tl)
+        vc.at(pose, x - 1, y + h + 2).setUv(k, 1f).color(bl)
+        vc.at(pose, x + w + 2, y + h + 2).setUv(k + 1f, 1f).color(br)
+        vc.at(pose, x + w + 2, y - 1).setUv(k + 1f, 0f).color(tr)
     }
 
     /**
@@ -162,28 +299,26 @@ object Canvas {
      * and the border, [borderWidth] wide (not halved), lies inside the box.
      */
     fun box(x: Float, y: Float, w: Float, h: Float, radius: Float, color: Int, borderWidth: Float = 0f, outline: Int = 0) {
-        val u = ubo {
-            it.putVec2(w + 2f, h + 2f).putFloat(minOf(radius, w / 2f, h / 2f)).putFloat(borderWidth)
-                .putVec4(r(outline), g(outline), b(outline), a(outline) * alpha)
-        }
-        val vc = begin(Pipelines.BOX, u, null) ?: return
-        vc.at(pose, x - 1, y - 1).setUv(0f, 0f).color(color)
-        vc.at(pose, x - 1, y + h + 1).setUv(0f, 1f).color(color)
-        vc.at(pose, x + w + 1, y + h + 1).setUv(1f, 1f).color(color)
-        vc.at(pose, x + w + 1, y - 1).setUv(1f, 0f).color(color)
+        params(w + 2f, h + 2f, minOf(radius, w / 2f, h / 2f), borderWidth, r(outline), g(outline), b(outline), a(outline) * alpha)
+        area(pose, x - 1, y - 1, x + w + 1, y + h + 1)
+        val vc = begin(Pipelines.BOX, null, null, stride = 2) ?: return
+        val k = 2f * shapeIndex
+        vc.at(pose, x - 1, y - 1).setUv(k, 0f).color(color)
+        vc.at(pose, x - 1, y + h + 1).setUv(k, 1f).color(color)
+        vc.at(pose, x + w + 1, y + h + 1).setUv(k + 1f, 1f).color(color)
+        vc.at(pose, x + w + 1, y - 1).setUv(k + 1f, 0f).color(color)
     }
 
     /** [box] with a colour per corner (a CSS linear-gradient along an edge or the diagonal), dithered. */
     fun box(x: Float, y: Float, w: Float, h: Float, radius: Float, tl: Int, tr: Int, br: Int, bl: Int, borderWidth: Float = 0f, outline: Int = 0) {
-        val u = ubo {
-            it.putVec2(w + 2f, h + 2f).putFloat(minOf(radius, w / 2f, h / 2f)).putFloat(borderWidth)
-                .putVec4(r(outline), g(outline), b(outline), a(outline) * alpha)
-        }
-        val vc = begin(Pipelines.BOX_DITHER, u, null) ?: return
-        vc.at(pose, x - 1, y - 1).setUv(0f, 0f).color(tl)
-        vc.at(pose, x - 1, y + h + 1).setUv(0f, 1f).color(bl)
-        vc.at(pose, x + w + 1, y + h + 1).setUv(1f, 1f).color(br)
-        vc.at(pose, x + w + 1, y - 1).setUv(1f, 0f).color(tr)
+        params(w + 2f, h + 2f, minOf(radius, w / 2f, h / 2f), borderWidth, r(outline), g(outline), b(outline), a(outline) * alpha)
+        area(pose, x - 1, y - 1, x + w + 1, y + h + 1)
+        val vc = begin(Pipelines.BOX_DITHER, null, null, stride = 2) ?: return
+        val k = 2f * shapeIndex
+        vc.at(pose, x - 1, y - 1).setUv(k, 0f).color(tl)
+        vc.at(pose, x - 1, y + h + 1).setUv(k, 1f).color(bl)
+        vc.at(pose, x + w + 1, y + h + 1).setUv(k + 1f, 1f).color(br)
+        vc.at(pose, x + w + 1, y - 1).setUv(k + 1f, 0f).color(tr)
     }
 
     fun rect(x: Float, y: Float, w: Float, h: Float, radius: Float, color: Int, borderWidth: Float = 0f, outline: Int = -1) =
@@ -207,6 +342,7 @@ object Canvas {
                 .putVec2(w, h)
                 .putFloat(vertexAlpha)
         }
+        area(pose, x - 1, y - 1, x + w + 2, y + h + 2)
         val vc = begin(Pipelines.BLURRED_RECT, u, Blur.texture()) ?: return
         vc.at(pose, x - 1, y + h + 2).setUv(0f, 0f).setColor(-1)
         vc.at(pose, x - 1, y - 1).setUv(0f, 1f).setColor(-1)
@@ -221,13 +357,11 @@ object Canvas {
     fun glow(x: Float, y: Float, w: Float, h: Float, radius: Float, inner: Float, outer: Float, color: Int, mask: FloatArray? = null) {
         val qw = w + 2f * outer
         val qh = h + 2f * outer
-        val u = ubo {
-            it.putVec2(qw, qh).putFloat(minOf(radius, w / 2f, h / 2f)).putFloat(inner).putFloat(outer)
-                .putFloat(if (mask != null) minOf(mask[4], mask[2] / 2f, mask[3] / 2f) else -1f)
-                .putVec2(if (mask != null) mask[0] + mask[2] / 2f - x - w / 2f else 0f, if (mask != null) mask[1] + mask[3] / 2f - y - h / 2f else 0f)
-                .putVec2(mask?.get(2) ?: 0f, mask?.get(3) ?: 0f)
-        }
-        glowQuad(u, x - outer, y - outer, qw, qh, color)
+        params(qw, qh, minOf(radius, w / 2f, h / 2f), inner,
+            outer, if (mask != null) minOf(mask[4], mask[2] / 2f, mask[3] / 2f) else -1f,
+            if (mask != null) mask[0] + mask[2] / 2f - x - w / 2f else 0f, if (mask != null) mask[1] + mask[3] / 2f - y - h / 2f else 0f,
+            mask?.get(2) ?: 0f, mask?.get(3) ?: 0f, 0f, 0f)
+        glowQuad(x - outer, y - outer, qw, qh, color)
     }
 
     /**
@@ -235,31 +369,34 @@ object Canvas {
      * optionally cut to the rounded box [mask] (x, y, w, h, radius).
      */
     fun radial(cx: Float, cy: Float, rx: Float, ry: Float, color: Int, mask: FloatArray? = null) {
-        val u = ubo {
-            it.putVec2(2f * rx, 2f * ry).putFloat(-1f).putFloat(0f).putFloat(0f)
-                .putFloat(if (mask != null) minOf(mask[4], mask[2] / 2f, mask[3] / 2f) else -1f)
-                .putVec2(if (mask != null) mask[0] + mask[2] / 2f - cx else 0f, if (mask != null) mask[1] + mask[3] / 2f - cy else 0f)
-                .putVec2(mask?.get(2) ?: 0f, mask?.get(3) ?: 0f)
-        }
-        glowQuad(u, cx - rx, cy - ry, 2f * rx, 2f * ry, color)
+        params(2f * rx, 2f * ry, -1f, 0f,
+            0f, if (mask != null) minOf(mask[4], mask[2] / 2f, mask[3] / 2f) else -1f,
+            if (mask != null) mask[0] + mask[2] / 2f - cx else 0f, if (mask != null) mask[1] + mask[3] / 2f - cy else 0f,
+            mask?.get(2) ?: 0f, mask?.get(3) ?: 0f, 0f, 0f)
+        glowQuad(cx - rx, cy - ry, 2f * rx, 2f * ry, color)
     }
 
-    private fun glowQuad(u: GpuBufferSlice, x: Float, y: Float, w: Float, h: Float, color: Int) {
-        val vc = begin(Pipelines.GLOW, u, null) ?: return
-        vc.at(pose, x, y).setUv(0f, 0f).color(color)
-        vc.at(pose, x, y + h).setUv(0f, 1f).color(color)
-        vc.at(pose, x + w, y + h).setUv(1f, 1f).color(color)
-        vc.at(pose, x + w, y).setUv(1f, 0f).color(color)
+    /** A glow quad, its parameters already in [shapeParams]. */
+    private fun glowQuad(x: Float, y: Float, w: Float, h: Float, color: Int) {
+        area(pose, x, y, x + w, y + h)
+        val vc = begin(Pipelines.GLOW, null, null, stride = 3) ?: return
+        val k = 2f * shapeIndex
+        vc.at(pose, x, y).setUv(k, 0f).color(color)
+        vc.at(pose, x, y + h).setUv(k, 1f).color(color)
+        vc.at(pose, x + w, y + h).setUv(k + 1f, 1f).color(color)
+        vc.at(pose, x + w, y).setUv(k + 1f, 0f).color(color)
     }
 
     /** The blurred screen in exactly the shape [box] draws for the same arguments (see blur_box.fsh). */
     fun blurBox(x: Float, y: Float, w: Float, h: Float, radius: Float) {
-        val u = ubo { it.putVec2(w + 2f, h + 2f).putFloat(minOf(radius, w / 2f, h / 2f)).putFloat(alpha) }
-        val vc = begin(Pipelines.BLUR_BOX, u, Blur.texture()) ?: return
-        vc.at(pose, x - 1, y - 1).setUv(0f, 0f).setColor(-1)
-        vc.at(pose, x - 1, y + h + 1).setUv(0f, 1f).setColor(-1)
-        vc.at(pose, x + w + 1, y + h + 1).setUv(1f, 1f).setColor(-1)
-        vc.at(pose, x + w + 1, y - 1).setUv(1f, 0f).setColor(-1)
+        params(w + 2f, h + 2f, minOf(radius, w / 2f, h / 2f), alpha)
+        area(pose, x - 1, y - 1, x + w + 1, y + h + 1)
+        val vc = begin(Pipelines.BLUR_BOX, null, Blur.texture(), stride = 1) ?: return
+        val k = 2f * shapeIndex
+        vc.at(pose, x - 1, y - 1).setUv(k, 0f).setColor(-1)
+        vc.at(pose, x - 1, y + h + 1).setUv(k, 1f).setColor(-1)
+        vc.at(pose, x + w + 1, y + h + 1).setUv(k + 1f, 1f).setColor(-1)
+        vc.at(pose, x + w + 1, y - 1).setUv(k + 1f, 0f).setColor(-1)
     }
 
     /**
@@ -268,18 +405,21 @@ object Canvas {
      * every corner at the box's middle, all of the quad is inside it).
      */
     fun blurQuad(x: Float, y: Float, w: Float, h: Float, top: Float, bottom: Float) {
-        val u = ubo { it.putVec2(8f, 8f).putFloat(0f).putFloat(alpha) }
-        val vc = begin(Pipelines.BLUR_BOX, u, Blur.texture()) ?: return
+        params(8f, 8f, 0f, alpha)
+        area(pose, x, y, x + w, y + h)
+        val vc = begin(Pipelines.BLUR_BOX, null, Blur.texture(), stride = 1) ?: return
+        val u = 2f * shapeIndex + 0.5f
         val t = (top.coerceIn(0f, 1f) * 255f + 0.5f).toInt()
         val b = (bottom.coerceIn(0f, 1f) * 255f + 0.5f).toInt()
-        vc.at(pose, x, y).setUv(0.5f, 0.5f).setColor(255, 255, 255, t)
-        vc.at(pose, x, y + h).setUv(0.5f, 0.5f).setColor(255, 255, 255, b)
-        vc.at(pose, x + w, y + h).setUv(0.5f, 0.5f).setColor(255, 255, 255, b)
-        vc.at(pose, x + w, y).setUv(0.5f, 0.5f).setColor(255, 255, 255, t)
+        vc.at(pose, x, y).setUv(u, 0.5f).setColor(255, 255, 255, t)
+        vc.at(pose, x, y + h).setUv(u, 0.5f).setColor(255, 255, 255, b)
+        vc.at(pose, x + w, y + h).setUv(u, 0.5f).setColor(255, 255, 255, b)
+        vc.at(pose, x + w, y).setUv(u, 0.5f).setColor(255, 255, 255, t)
     }
 
     /** A flat quad, colours bottom-left, bottom-right, top-right, top-left (no anti-aliasing). */
     fun quad(x: Float, y: Float, w: Float, h: Float, c0: Int, c1: Int = c0, c2: Int = c0, c3: Int = c0) {
+        area(pose, x, y, x + w, y + h)
         val vc = begin(Pipelines.POS_COLOR, null, null) ?: return
         vc.at(pose, x, y + h).color(c0)
         vc.at(pose, x + w, y + h).color(c1)
@@ -300,6 +440,7 @@ object Canvas {
                 .putVec4(r(outline), g(outline), b(outline), a(outline))
                 .putFloat(mix)
         }
+        area(pose, x - 1, y - 1, x + w + 2, y + h + 2)
         val vc = begin(Pipelines.TEXTURED_RECT, u, texture) ?: return
         vc.at(pose, x - 1, y - 1).setUv(0f, 0f).setColor(-1)
         vc.at(pose, x - 1, y + h + 2).setUv(0f, 1f).setColor(-1)
@@ -309,6 +450,7 @@ object Canvas {
 
     /** A 1-pixel outline rectangle (GL lines, no anti-aliasing). */
     fun outline(x: Float, y: Float, w: Float, h: Float, color: Int) {
+        area(pose, x - 1, y - 1, x + w + 1, y + h + 1)
         val vc = begin(Pipelines.LINES, null, null) ?: return
         vc.at(pose, x, y).color(color)
         vc.at(pose, x, y + h).color(color)
@@ -322,6 +464,7 @@ object Canvas {
 
     /** A 1-pixel line. */
     fun line(x1: Float, y1: Float, x2: Float, y2: Float, color: Int) {
+        area(pose, minOf(x1, x2) - 1, minOf(y1, y2) - 1, maxOf(x1, x2) + 1, maxOf(y1, y2) + 1)
         val vc = begin(Pipelines.LINES, null, null) ?: return
         vc.at(pose, x1, y1).color(color)
         vc.at(pose, x2, y2).color(color)
@@ -333,6 +476,7 @@ object Canvas {
      */
     fun texture(texture: GpuTextureView, x: Float, y: Float, w: Float, h: Float, c1: Int, c2: Int, c3: Int, c4: Int,
                 u0: Float = 0f, v0: Float = 0f, u1: Float = 1f, v1: Float = 1f, additive: Boolean = false) {
+        area(pose, x, y, x + w, y + h)
         val vc = begin(if (additive) Pipelines.COLORED_TEXTURE_ADDITIVE else Pipelines.COLORED_TEXTURE, null, texture) ?: return
         vc.at(pose, x, y + h).setUv(u0, v1).color(c1)
         vc.at(pose, x + w, y + h).setUv(u1, v1).color(c2)
@@ -346,6 +490,17 @@ object Canvas {
      */
     fun texturedQuads(texture: GpuTextureView, xy: FloatArray, uv: FloatArray, tints: IntArray, count: Int) {
         if (count == 0) return
+        var minX = Float.MAX_VALUE
+        var minY = Float.MAX_VALUE
+        var maxX = -Float.MAX_VALUE
+        var maxY = -Float.MAX_VALUE
+        for (q in 0 until count * 4) {
+            minX = minOf(minX, xy[q * 2])
+            maxX = maxOf(maxX, xy[q * 2])
+            minY = minOf(minY, xy[q * 2 + 1])
+            maxY = maxOf(maxY, xy[q * 2 + 1])
+        }
+        area(pose, minX, minY, maxX, maxY)
         val vc = begin(Pipelines.COLORED_TEXTURE, null, texture) ?: return
         for (q in 0 until count) {
             val c = tints[q]
@@ -357,12 +512,13 @@ object Canvas {
     }
 
     /**
-     * One glyph quad in the text's scaled pose [m] (pixel units). Consecutive glyphs with the same texture and scissor
-     * merge into one draw (one draw per glyph page). [argb] is the already-truncated text colour.
+     * One glyph quad in the text's scaled pose [m] (pixel units). Glyphs batch like everything else (one draw per glyph
+     * page, wherever nothing overlaps them in between). [argb] is the already-truncated text colour.
      */
     fun glyph(texture: GpuTextureView, scissor: IntArray?, m: Matrix3x2f, x: Float, y: Float, w: Float, h: Float,
               u0: Float, v0: Float, u1: Float, v1: Float, argb: Int) {
-        val vc = begin(Pipelines.COLORED_TEXTURE, null, texture, scissor, merge = true) ?: return
+        area(m, x, y, x + w, y + h)
+        val vc = begin(Pipelines.COLORED_TEXTURE, null, texture, scissor) ?: return
         vc.at(m, x, y + h).setUv(u0, v1).color(argb)
         vc.at(m, x + w, y + h).setUv(u1, v1).color(argb)
         vc.at(m, x + w, y).setUv(u1, v0).color(argb)
@@ -372,7 +528,8 @@ object Canvas {
     /** [glyph] in a horizontal gradient, [left] to [right] (WebText's gradient text). */
     fun glyph(texture: GpuTextureView, scissor: IntArray?, m: Matrix3x2f, x: Float, y: Float, w: Float, h: Float,
               u0: Float, v0: Float, u1: Float, v1: Float, left: Int, right: Int) {
-        val vc = begin(Pipelines.COLORED_TEXTURE, null, texture, scissor, merge = true) ?: return
+        area(m, x, y, x + w, y + h)
+        val vc = begin(Pipelines.COLORED_TEXTURE, null, texture, scissor) ?: return
         vc.at(m, x, y + h).setUv(u0, v1).color(left)
         vc.at(m, x + w, y + h).setUv(u1, v1).color(right)
         vc.at(m, x + w, y).setUv(u1, v0).color(right)
@@ -405,6 +562,7 @@ object Canvas {
                 val s = c.scissor
                 if (s != null) pass.enableScissor(s[0], s[1], s[2], s[3]) else pass.disableScissor()
                 if (c.ubo != null) pass.setUniform("UBO", c.ubo)
+                else if (c.stride > 0) pass.setUniform("UBO", shapeUbo(c))
                 if (c.texture != null) pass.setUniform("Sampler0", c.texture, sampler())
                 pass.setIndexBuffer(info.indexBuffer(), info.indexType())
                 pass.drawIndexed(info.indexCount(), 1, info.firstIndex(), info.baseVertex(), 0)
@@ -415,10 +573,21 @@ object Canvas {
         cmds.clear()
     }
 
+    /** A batch's shape parameters, copied as they are (vec4s back to back, as std140 lays out a vec4 array). */
+    private class ShapeBlock(val params: FloatArray, val count: Int) : DynamicGpuDataStorage.DynamicGpuData {
+        override fun write(byteBuffer: ByteBuffer) {
+            byteBuffer.asFloatBuffer().put(params, 0, count)
+        }
+    }
+
+    /** A batch's shape parameters as its UBO: [Cmd.shapes] times [Cmd.stride] vec4s. */
+    private fun shapeUbo(c: Cmd): GpuBufferSlice = shapeData.writeData(ShapeBlock(c.params, c.shapes * c.stride * 4))
+
     /** Once a frame, after the last flush. */
     fun endFrame() {
         vertices.endFrame()
         uniforms.endFrame()
+        shapeData.endFrame()
         scissorStack.clear()
         ownPose.clear()
         pose = ownPose

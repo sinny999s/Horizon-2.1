@@ -1,16 +1,15 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-// A rounded rectangle with an optional border.
+// A rounded rectangle with an optional border. Its parameters are two vec4s of the draw's Shapes array: size, radius,
+// border width; border colour.
 layout(std140) uniform UBO {
-    vec2 uSize;
-    float uRadius;
-    float uBorderWidth;
-    vec4 uBorderColor;
+    vec4 Shapes[256];
 };
 
 layout(location = 0) in vec2 FragCoord;
 layout(location = 1) in vec4 vertexColor;
+layout(location = 2) flat in int vShape;
 
 layout(location = 0) out vec4 color;
 
@@ -20,6 +19,12 @@ float roundedDistance(vec2 pos, vec2 size, float radius) {
 }
 
 void main() {
+    vec4 p0 = Shapes[vShape * 2];
+    vec2 uSize = p0.xy;
+    float uRadius = p0.z;
+    float uBorderWidth = p0.w;
+    vec4 uBorderColor = Shapes[vShape * 2 + 1];
+
     vec2 center = uSize * 0.5;
     vec2 fragPos = center - (FragCoord * uSize);
     float dist = roundedDistance(fragPos, center - 1.0, uRadius);

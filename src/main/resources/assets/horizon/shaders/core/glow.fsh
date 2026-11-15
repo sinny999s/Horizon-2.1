@@ -8,19 +8,14 @@
 // uRadius >= 0: a rounded box, full out to uInner inside its edge and gone at uOuter outside it. uSize is the quad's
 // size: the box plus uOuter all round. uRadius < 0: an ellipse filling the quad, fading linearly from the middle (a CSS
 // radial-gradient). uMaskRadius >= 0 cuts it to a rounded box, uMaskCenter from the quad's middle (CSS overflow: hidden
-// on a rounded parent, which a scissor can't do).
+// on a rounded parent, which a scissor can't do). The parameters are three vec4s of the draw's Shapes array.
 layout(std140) uniform UBO {
-    vec2 uSize;
-    float uRadius;
-    float uInner;
-    float uOuter;
-    float uMaskRadius;
-    vec2 uMaskCenter;
-    vec2 uMaskSize;
+    vec4 Shapes[256];
 };
 
 layout(location = 0) in vec2 FragCoord;
 layout(location = 1) in vec4 vertexColor;
+layout(location = 2) flat in int vShape;
 
 layout(location = 0) out vec4 color;
 
@@ -35,6 +30,17 @@ float noise(vec2 p) {
 }
 
 void main() {
+    vec4 p0 = Shapes[vShape * 3];
+    vec4 p1 = Shapes[vShape * 3 + 1];
+    vec4 p2 = Shapes[vShape * 3 + 2];
+    vec2 uSize = p0.xy;
+    float uRadius = p0.z;
+    float uInner = p0.w;
+    float uOuter = p1.x;
+    float uMaskRadius = p1.y;
+    vec2 uMaskCenter = p1.zw;
+    vec2 uMaskSize = p2.xy;
+
     vec2 pos = (FragCoord - 0.5) * uSize;
     float shape;
     if (uRadius < 0.0) {

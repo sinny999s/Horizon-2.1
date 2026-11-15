@@ -4,16 +4,15 @@
 // Canvas.box, a rounded rectangle as a browser draws one. uSize is the quad's size: the box plus a
 // one-unit margin all round for the anti-aliased edge. The border lies inside the box, over the fill, and the fill's
 // alpha counts once. With DITHER (gradients, whose few colour levels show as lines) the output is premultiplied, with about
-// one level of noise, as in glow.fsh; an opaque one keeps its colours exact.
+// one level of noise, as in glow.fsh; an opaque one keeps its colours exact. The parameters are two vec4s of the draw's
+// Shapes array: size, radius, border width; border colour.
 layout(std140) uniform UBO {
-    vec2 uSize;
-    float uRadius;
-    float uBorderWidth;
-    vec4 uBorderColor;
+    vec4 Shapes[256];
 };
 
 layout(location = 0) in vec2 FragCoord;
 layout(location = 1) in vec4 vertexColor;
+layout(location = 2) flat in int vShape;
 
 layout(location = 0) out vec4 color;
 
@@ -23,6 +22,12 @@ float roundedDistance(vec2 pos, vec2 size, float radius) {
 }
 
 void main() {
+    vec4 p0 = Shapes[vShape * 2];
+    vec2 uSize = p0.xy;
+    float uRadius = p0.z;
+    float uBorderWidth = p0.w;
+    vec4 uBorderColor = Shapes[vShape * 2 + 1];
+
     vec2 pos = (FragCoord - 0.5) * uSize;
     float dist = roundedDistance(pos, uSize * 0.5 - 1.0, uRadius);
     // One screen pixel, in GUI units: the edge fades over it.
