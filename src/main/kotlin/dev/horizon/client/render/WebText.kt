@@ -32,7 +32,7 @@ import kotlin.math.roundToInt
  * position glyphs in quarter pixels too) and its baseline on a whole pixel, then kept as one texture. Coverage is
  * thickened a little to match the browser's heavier strokes. `§` codes are not read.
  *
- * The rasters live on shared pages ([TextAtlas]), so a screen's text batches into a draw per page; one that doesn't
+ * The rasters live on shared pages ([Atlas]), so a screen's text batches into a draw per page; one that doesn't
  * fit there gets a texture of its own as before.
  */
 class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) {
@@ -44,7 +44,7 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
     private val frc = FontRenderContext(null, true, true)
 
     /** A string's picture: on an atlas page ([slot]) or, when it didn't fit there, in a texture of its own ([own]). */
-    private class Raster(val slot: TextAtlas.Slot?, val own: DynamicTexture?, val w: Int, val h: Int, val originX: Int, val baseline: Int) {
+    private class Raster(val slot: Atlas.Slot?, val own: DynamicTexture?, val w: Int, val h: Int, val originX: Int, val baseline: Int) {
         var used = System.currentTimeMillis()
 
         /** Its texels are still there: an atlas page it was on may have been wiped since. */
@@ -183,7 +183,7 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
             val a = img.getRGB(xx, yy) ushr 24
             if (a != 0) img.setRGB(xx, yy, (BOOST[a] shl 24) or 0xFFFFFF)
         }
-        val slot = TextAtlas.put(img.getRGB(0, 0, w, h, null, 0, w), w, h)
+        val slot = Atlas.put(img.getRGB(0, 0, w, h, null, 0, w), w, h)
         val r = Raster(slot, if (slot == null) Textures.upload("horizon web text", img) else null, w, h, -left, -top)
         rasters[key] = r
         if (rasters.size > MAX) {

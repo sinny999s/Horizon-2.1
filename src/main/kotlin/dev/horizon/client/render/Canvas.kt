@@ -588,7 +588,7 @@ object Canvas {
         vertices.endFrame()
         uniforms.endFrame()
         shapeData.endFrame()
-        TextAtlas.endFrame()
+        Atlas.endFrame()
         scissorStack.clear()
         ownPose.clear()
         pose = ownPose

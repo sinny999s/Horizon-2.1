@@ -16,8 +16,13 @@ import kotlin.math.roundToInt
  * quirks (a (0.5, 2) offset, and a fractional size re-rasterised at 1x, so a 6.5 icon comes out at half resolution);
  * this one is rasterised at the screen's pixel size for any size and drawn exactly where asked, on whole pixels.
  * With [mask] only the shape is kept (every pixel white), as a CSS mask-image: the widget icons are #e8eaed.
+ * The picture goes on the shared pages ([Atlas]), so icons batch with the text round them; one that doesn't fit there
+ * gets a texture of its own.
  */
 class VectorIcon(private val name: String, private val size: Float, private val mask: Boolean = false) {
+    /** The icon at the current GUI scale, [px] square: its pixels, and where they are (an atlas [slot], or [texture]). */
+    private var pixels: IntArray? = null
+    private var slot: Atlas.Slot? = null
     private var texture: DynamicTexture? = null
     private var px = 0
     private var scale = -1
@@ -27,10 +32,19 @@ class VectorIcon(private val name: String, private val size: Float, private val 
         if (s != scale) {
             scale = s
             texture?.close()
+            texture = null
+            slot = null
             px = (size * s).roundToInt().coerceAtLeast(1)
-            texture = raster(px)
+            pixels = raster(px)
         }
-        val tex = texture ?: return
+        val image = pixels ?: return
+        // Onto a page (again, if the one it was on has been wiped since), or else a texture of its own.
+        if (texture == null && slot?.valid() != true) {
+            slot = Atlas.put(image, px, px)
+            if (slot == null) texture = Textures.upload("horizon icon $name", BufferedImage(px, px, BufferedImage.TYPE_INT_ARGB).also {
+                it.setRGB(0, 0, px, px, image, 0, px)
+            })
+        }
         var dx = x
         var dy = y
         val pose = Canvas.pose
@@ -40,10 +54,17 @@ class VectorIcon(private val name: String, private val size: Float, private val 
             dy += ((p.y * s).roundToInt() - p.y * s) / s
         }
         val d = px / s.toFloat()
-        Canvas.texture(tex.textureView, dx, dy, d, d, color, second, color, second)
+        val at = slot
+        if (at != null) {
+            at.use()
+            Canvas.texture(at.page.view, dx, dy, d, d, color, second, color, second, at.u0, at.v0, at.u1, at.v1)
+        } else {
+            Canvas.texture(texture?.textureView ?: return, dx, dy, d, d, color, second, color, second)
+        }
     }
 
-    private fun raster(px: Int): DynamicTexture? = try {
+    /** The icon's pixels, [px] square, row by row from the top; null when the SVG won't load. */
+    private fun raster(px: Int): IntArray? = try {
         val doc = VectorIcon::class.java.getResourceAsStream("/assets/${HorizonClient.ID}/vector/$name.svg")!!.use { SVGLoader().load(it) }!!
         val img = BufferedImage(px, px, BufferedImage.TYPE_INT_ARGB)
         val g = img.createGraphics()
@@ -53,7 +74,7 @@ class VectorIcon(private val name: String, private val size: Float, private val 
         doc.render(null, g, ViewBox(px.toFloat(), px.toFloat()))
         g.dispose()
         if (mask) for (yy in 0 until px) for (xx in 0 until px) img.setRGB(xx, yy, img.getRGB(xx, yy) or 0xFFFFFF)
-        Textures.upload("horizon icon $name", img)
+        img.getRGB(0, 0, px, px, null, 0, px)
     } catch (t: Throwable) {
         HorizonClient.LOG.warn("Couldn't rasterise icon {}", name, t)
         null

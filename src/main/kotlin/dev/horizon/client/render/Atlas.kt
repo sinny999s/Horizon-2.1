@@ -8,16 +8,16 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * [WebText]'s strings, each rasterised exactly as before, on shared texture pages instead of a texture apiece, so
- * [Canvas] can batch the text of a whole HUD or screen into a draw per page. A string keeps its pixels: drawn at the
- * same place it samples the same texels, and a [GAP] of transparent pixels round every slot stands in for the clamp a
- * texture of its own had at its edges.
+ * The 2D layer's small pictures, [WebText]'s strings and [VectorIcon]'s and [Icon]'s icons, each rasterised exactly as
+ * before, on shared texture pages instead of a texture apiece, so [Canvas] can batch the text and icons of a whole HUD
+ * or screen into a draw per page. A picture keeps its pixels: drawn at the same place it samples the same texels, and a
+ * [GAP] of transparent pixels round every slot stands in for the clamp a texture of its own had at its edges.
  *
  * Slots are packed in shelves. A full page starts the next one; past [MAX_PAGES] the page used longest ago is wiped and
  * its strings go back to being rasterised on demand ([Slot.valid]), never one drawn this frame, whose earlier draws
  * still read it. Everything here runs on the render thread.
  */
-internal object TextAtlas {
+internal object Atlas {
     const val SIZE = 2048
     private const val GAP = 2
     private const val MAX_PAGES = 3
@@ -30,7 +30,7 @@ internal object TextAtlas {
         var usedFrame = -1L
     }
 
-    /** A string's place: [x], [y] (its top left, inside the gap) on [page], [w] by [h]. */
+    /** A picture's place: [x], [y] (its top left, inside the gap) on [page], [w] by [h]. */
     class Slot(val page: Page, private val generation: Int, val x: Int, val y: Int, val w: Int, val h: Int) {
         /** Still on the page (it wasn't wiped since). */
         fun valid() = page.generation == generation
@@ -58,10 +58,10 @@ internal object TextAtlas {
         frame++
     }
 
-    /** Off, every string gets a texture of its own again, as before the atlas (for comparing the two: [testAtlas]). */
+    /** Off, every picture gets a texture of its own again, as before the atlas (for comparing the two: [testAtlas]). */
     private var enabled = true
 
-    /** For ShotBot: the atlas "on" or "off" (off also sends every string back to being rasterised). */
+    /** For ShotBot: the atlas "on" or "off" (off also sends every picture back to a texture of its own). */
     @JvmStatic
     fun testAtlas(on: String) {
         enabled = on != "off"
@@ -70,7 +70,7 @@ internal object TextAtlas {
 
     /**
      * [w] by [h] straight-alpha pixels ([argb], row by row from the top) on a page, or null when they don't fit (too
-     * big, or every page full and drawn from this frame): the caller then gives the string a texture of its own.
+     * big, or every page full and drawn from this frame): the caller then gives the picture a texture of its own.
      */
     fun put(argb: IntArray, w: Int, h: Int): Slot? {
         val sw = w + 2 * GAP
@@ -96,7 +96,7 @@ internal object TextAtlas {
         if (current >= 0 && fits(pages[current])) return pages[current]
         if (pages.size < MAX_PAGES) {
             val device = RenderSystem.getDevice()
-            val texture = device.createTexture({ "horizon web text atlas ${pages.size}" }, 5, GpuFormat.RGBA8_UNORM, SIZE, SIZE, 1, 1)
+            val texture = device.createTexture({ "horizon atlas ${pages.size}" }, 5, GpuFormat.RGBA8_UNORM, SIZE, SIZE, 1, 1)
             pages += Page(texture, device.createTextureView(texture))
             current = pages.size - 1
             return pages[current]
