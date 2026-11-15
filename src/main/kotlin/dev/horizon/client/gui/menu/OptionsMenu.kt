@@ -1,8 +1,10 @@
 package dev.horizon.client.gui.menu
 
+import com.mojang.blaze3d.Blaze3D
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import dev.horizon.client.compat.SodiumOptions
+import dev.horizon.client.compat.Sulkan
 import dev.horizon.client.config.Storage
 import dev.horizon.client.updater.AutoUpdater
 import dev.horizon.client.gui.Cursor
@@ -28,6 +30,7 @@ import dev.horizon.client.render.Easing
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.client.OptionInstance
+import net.minecraft.client.PreferredGraphicsApi
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractButton
 import net.minecraft.client.gui.screens.Screen
@@ -53,6 +56,9 @@ import kotlin.math.roundToInt
  * It's drawn with the ClickGUI's parts (its glass window, sidebar, switches, sliders and keycaps) in white instead of
  * the theme's colours, as the menus are. The sidebar scrolls above Done once the mods' pages make it longer than the
  * window, its ends fading out while there's more that way.
+ *
+ * With Sulkan (Vulkan shaders) installed, its shaders are pages here too, in place of its own screens: shaders on or
+ * off and the pack to use, and the pack's options (Basic and Advanced), which are applied with Apply or on leaving.
  */
 class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("options.title")), MenuScreen {
     private val mc: Minecraft get() = Minecraft.getInstance()
@@ -63,15 +69,25 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
      * it's in, shown over its title.
      */
     private class Page(val title: String, val sub: String, val rows: () -> List<Row>, val section: Boolean = false,
-                       val icon: String? = null, val group: String = "", val open: (() -> Unit)? = null)
+                       val icon: String? = null, val group: String = "", val actions: () -> List<Action> = { emptyList() },
+                       val open: (() -> Unit)? = null)
+
+    /** A button in a page's header (Reset Keys, Apply). */
+    private class Action(val label: String, val icon: String?, val enabled: Boolean, val click: () -> Unit)
 
     private sealed interface Row
     private class Header(val title: String) : Row
     private class Vanilla(val option: OptionInstance<*>) : Row
     private class Sodium(val option: SodiumOptions.Opt) : Row
-    private class Toggle(val title: String, val get: () -> Boolean, val set: (Boolean) -> Unit) : Row
-    private class Link(val title: String, val note: () -> String, val action: () -> Unit) : Row
+    private class Toggle(val title: String, val get: () -> Boolean, val enabled: () -> Boolean = { true }, val set: (Boolean) -> Unit) : Row
+    private class Link(val title: String, val note: () -> String, val enabled: () -> Boolean = { true }, val action: () -> Unit) : Row
     private class Key(val mapping: KeyMapping) : Row
+    /** A line of status: what Sulkan is doing, or why it can't. */
+    private class Note(val text: () -> String, val error: () -> Boolean) : Row
+    /** A Sulkan shader pack to pick. */
+    private class PackRow(val pack: Sulkan.Pack, val note: String) : Row
+    /** One of the selected Sulkan pack's options, as on its Basic page or its Advanced one. */
+    private class ShaderOpt(val key: String, val advanced: Boolean) : Row
 
     /** Where a click, drag or release goes, from the last frame. */
     private class Hit(val x0: Float, val y0: Float, val x1: Float, val y1: Float, val click: (Int) -> Unit, val drag: ((Float) -> Unit)? = null, val release: (() -> Unit)? = null) {
@@ -105,6 +121,13 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
     private var rowMx = 0f
     private var rowMy = -1f
     private val pendingSlides = HashMap<OptionInstance<*>, Any?>()
+    /** Sulkan applying a change (shaders on or off, another pack, a reload), and what came of the last one. */
+    private var sulkanBusy = false
+    private var sulkanStatus = ""
+    private var sulkanError = false
+    /** The selected Sulkan pack's options while they're being changed, or why they couldn't be read. */
+    private var shaderSettings: Sulkan.Settings? = null
+    private var shaderSettingsError = ""
     private val enter = Animation(Easing.OUT_EXPO, 350)
     /** The selected page's pill's place in the sidebar list (below 0 until first placed). */
     private val pill = Animation(Easing.OUT_EXPO, 500).also { it.value = -1f }
@@ -122,7 +145,9 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
     override fun init() {
         vanilla.init(width, height)
         val more = vanilla.children().filterIsInstance<AbstractButton>().filter {
-            it.visible && it.message.string.isNotBlank() && (it.message.contents as? TranslatableContents)?.key !in OWN_PAGES
+            it.visible && it.message.string.isNotBlank() && (it.message.contents as? TranslatableContents)?.key !in OWN_PAGES &&
+                // Sulkan's button to its shader screen: its pages are here instead.
+                !(Sulkan.present && it.message.string == "Shaders")
         }
         val list = ArrayList<Page>()
         list += Page(MINECRAFT, "", { emptyList() }, section = true)
@@ -184,7 +209,14 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                     add(Key(k))
                 }
             }
-        }, icon = "key", group = MINECRAFT)
+        }, icon = "key", group = MINECRAFT, actions = {
+            listOf(Action(Component.translatable("controls.resetAll").string, "reset", options.keyMappings.any { !it.isDefault }) {
+                for (key in options.keyMappings) key.setKey(key.defaultKey)
+                KeyMapping.resetMapping()
+                options.save()
+                Menus.toggle(false)
+            })
+        })
         list += Page(t("options.chat"), "Chat visibility, size and safety", { ChatOptionsScreenInvoker.horizon_options(options).map(::Vanilla) },
             icon = "chat", group = MINECRAFT)
         list += Page(t("options.accessibility"), "Narrator, contrast, motion and more", {
@@ -196,6 +228,12 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
             PlayerModelPart.values().map { part -> Toggle(part.getName().string, { options.isModelPartEnabled(part) }) { options.setModelPart(part, it) } } +
                 Vanilla(options.mainHand())
         }, icon = "player", group = MINECRAFT)
+        if (Sulkan.present) {
+            list += Page(SULKAN, "", { emptyList() }, section = true)
+            list += Page("Shaders", "Turn shaders on and pick the pack to use", ::shaderRows, group = SULKAN)
+            list += Page("Settings", "The pack's effects, quality and colour style", { optionRows(false) }, group = SULKAN, actions = ::optionActions)
+            list += Page("Advanced", "Every option the pack has, by what it changes", { optionRows(true) }, group = SULKAN, actions = ::optionActions)
+        }
         if (sodium) for (mod in SodiumOptions.mods()) {
             if (mod.pages.isEmpty()) continue
             list += Page(mod.name, "", { emptyList() }, section = true)
@@ -261,6 +299,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
     private fun apply() {
         for ((o, v) in pendingSlides) @Suppress("UNCHECKED_CAST") (o as OptionInstance<Any?>).set(v)
         pendingSlides.clear()
+        if (shaderSettings?.dirty == true) applyShaderOptions()
         vanilla.removed()
         options.save()
         if (options.mipmapLevels().get() != oldMipmaps || options.maxAnisotropyBit().get() != oldAnisotropy || options.textureFiltering().get() != oldFiltering) {
@@ -396,18 +435,12 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         Canvas.pose.pushMatrix()
         Canvas.pose.translate(0f, (1f - pk) * 6f * pageFrom)
         var titleRight = right
-        if (rows.any { it is Key }) {
-            val changed = options.keyMappings.any { !it.isDefault }
-            val label = Component.translatable("controls.resetAll").string
-            val bw = buttonWidth(label, "reset")
-            button(right - bw, py + 21f, label, "reset", changed, mx, my) {
-                for (key in options.keyMappings) key.setKey(key.defaultKey)
-                KeyMapping.resetMapping()
-                options.save()
-                Menus.toggle(false)
-            }
-            titleRight = right - bw - 8f
+        for (a in p.actions().asReversed()) {
+            val bw = buttonWidth(a.label, a.icon)
+            button(titleRight - bw, py + 21f, a.label, a.icon, a.enabled, mx, my, a.click)
+            titleRight -= bw + 5f
         }
+        titleRight -= 3f
         if (p.group.isNotEmpty()) Ui.text(Type.crumb, p.group.uppercase(Locale.ROOT), lx, py + 15f, Tok.T4)
         Ui.text(Type.h2, Ui.fit(Type.h2, p.title, titleRight - lx), lx, py + 28f, Tok.T1)
         if (p.sub.isNotEmpty()) Ui.text(Type.desc, Ui.fit(Type.desc, p.sub, right - lx), lx, py + 40.5f, Tok.T3)
@@ -488,26 +521,41 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
             is Sodium -> sodiumRow(r.option, x, y, w, lx, right, cy, hovered, top, bottom)
             is Toggle -> {
                 val on = r.get()
-                label(r.title, lx, cy, right - 24f - lx, true)
+                val enabled = r.enabled()
+                label(r.title, lx, cy, right - 24f - lx, enabled)
                 if (hovered) hintName = r.title
-                switch(r.title, right - 17f, cy - 5f, on, true, hovered)
-                hit(x, y, x + w, y + h, top, bottom, { b -> if (b == Keys.MOUSE_LEFT) { r.set(!on); options.save(); Menus.toggle(!on) } })
+                switch(r.title, right - 17f, cy - 5f, on, enabled, hovered)
+                if (enabled) hit(x, y, x + w, y + h, top, bottom, { b -> if (b == Keys.MOUSE_LEFT) { r.set(!on); options.save(); Menus.toggle(!on) } })
             }
             is Link -> {
                 val title = r.title.removeSuffix("...").trimEnd()
                 val note = r.note()
                 val slide = if (hovered) 1.5f else 0f
-                val noteW = if (note.isEmpty()) 0f else Type.small.width(note) + 10f
-                label(title, lx, cy, right - 12f - noteW - lx, true)
-                if (note.isNotEmpty()) Ui.textR(Type.small, note, right - 12f, cy, Tok.T3)
-                Ui.icon("chev", right - 6f + slide, cy - 3f, 6f, if (hovered) Tok.T1 else Tok.T3)
+                val enabled = r.enabled()
+                val noteW = if (note.isEmpty()) 0f else minOf(Type.small.width(note), w * 0.5f) + 10f
+                label(title, lx, cy, right - 12f - noteW - lx, enabled)
+                if (note.isNotEmpty()) Ui.textR(Type.small, Ui.fit(Type.small, note, w * 0.5f), right - 12f, cy, Tok.T3)
+                Ui.icon("chev", right - 6f + if (enabled) slide else 0f, cy - 3f, 6f, if (hovered && enabled) Tok.T1 else if (enabled) Tok.T3 else Tok.T4)
                 if (hovered) {
                     hintName = title
-                    Cursor.request(CursorTypes.POINTING_HAND)
+                    if (note.isNotEmpty()) hint = note
+                    if (enabled) Cursor.request(CursorTypes.POINTING_HAND)
                 }
-                hit(x, y, x + w, y + h, top, bottom, { b -> if (b == Keys.MOUSE_LEFT) { Menus.open(); r.action() } })
+                if (enabled) hit(x, y, x + w, y + h, top, bottom, { b -> if (b == Keys.MOUSE_LEFT) { Menus.open(); r.action() } })
             }
             is Key -> keyRow(r.mapping, lx, right, cy, hovered, top, bottom, mouseX, mouseY)
+            is Note -> {
+                val text = r.text()
+                val error = r.error()
+                Ui.box(lx + 0.5f, cy - 1.75f, 3.5f, 3.5f, 1.75f, if (error) ERROR else Tok.T2)
+                Ui.text(Type.small, Ui.fit(Type.small, text, right - lx - 10f), lx + 9f, cy, if (error) ERROR else Tok.T2)
+                if (hovered) {
+                    hintName = if (error) "Sulkan" else "Status"
+                    hint = text
+                }
+            }
+            is PackRow -> packRow(r, x, y, w, h, lx, right, cy, hovered, top, bottom)
+            is ShaderOpt -> shaderOptRow(r, x, y, w, lx, right, cy, hovered, top, bottom)
             is Header -> {}
         }
     }
@@ -652,6 +700,238 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         })
     }
 
+    // ---- Sulkan ----
+
+    /** The Shaders page: what Sulkan is doing, shaders on or off, the packs, and the shader folder. */
+    private fun shaderRows(): List<Row> = buildList {
+        val usable = { Sulkan.vulkan() && !sulkanBusy }
+        add(Note(::shaderStatus) { !Sulkan.vulkan() || (!sulkanBusy && (sulkanError || Sulkan.failure() != null)) })
+        add(Toggle("Shaders", Sulkan::enabled, usable) { on ->
+            applyShaders(on, Sulkan.selected(), false, if (on) "Turning shaders on..." else "Turning shaders off...")
+        })
+        val scan = try {
+            Sulkan.scan()
+        } catch (e: Exception) {
+            Sulkan.Scan(emptyList(), 0)
+        }
+        add(Header("Packs"))
+        add(PackRow(Sulkan.Pack(Sulkan.BUILTIN, Sulkan.BUILTIN_NAME), "Built in"))
+        for (pack in scan.packs) add(PackRow(pack, "Shader pack"))
+        add(Header("Folder"))
+        add(Link("Open shader folder", { if (scan.unsupported > 0) "${scan.unsupported} Iris or OptiFine packs it can't run" else "" }) {
+            Blaze3D.openPath(Sulkan.folder())
+        })
+        add(Link("Look for new packs", { "" }, usable) { rows = shaderRows() })
+        add(Link("Reload shaders", { "" }, usable) {
+            applyShaders(Sulkan.enabled(), Sulkan.selected(), true, "Reloading ${Sulkan.name(Sulkan.selected())}...")
+        })
+        if (!Sulkan.vulkan()) add(Link("Use Vulkan next launch", {
+            if (options.preferredGraphicsBackend().get() == PreferredGraphicsApi.VULKAN) "Set: restart Minecraft" else ""
+        }) {
+            options.preferredGraphicsBackend().set(PreferredGraphicsApi.VULKAN)
+            options.save()
+        })
+    }
+
+    /** What Sulkan is doing: paused (OpenGL), applying a change, failed, or which pack is live. */
+    private fun shaderStatus(): String = when {
+        !Sulkan.vulkan() -> Component.translatable("sulkan.backend.inactive_short").string
+        sulkanBusy -> sulkanStatus
+        Sulkan.failure() != null -> Sulkan.failure() ?: ""
+        sulkanStatus.isNotEmpty() -> sulkanStatus
+        Sulkan.enabled() -> "Live: ${Sulkan.name(Sulkan.selected())}"
+        else -> "Shaders are off"
+    }
+
+    /** Has Sulkan turn shaders on or off and use [packId] ([reload]: rebuild it even if nothing changed). */
+    private fun applyShaders(enabled: Boolean, packId: String, reload: Boolean, pending: String) {
+        if (sulkanBusy || !Sulkan.vulkan()) return
+        // Changed options of the pack being left: saved first, not lost.
+        if (packId != shaderSettings?.packId && shaderSettings?.dirty == true) applyShaderOptions()
+        sulkanBusy = true
+        sulkanError = false
+        sulkanStatus = pending
+        val done = { failure: Throwable? ->
+            mc.execute {
+                sulkanBusy = false
+                sulkanError = failure != null
+                sulkanStatus = when {
+                    failure != null -> "Couldn't apply ${Sulkan.name(packId)}. The log has the shader errors."
+                    reload -> "Reloaded ${Sulkan.name(packId)}"
+                    enabled -> "Live: ${Sulkan.name(packId)}"
+                    else -> "Shaders are off"
+                }
+                if (shaderSettings?.packId != Sulkan.selected()) shaderSettings = null
+                if (page?.group == SULKAN) rows = page?.rows?.invoke() ?: rows
+            }
+        }
+        try {
+            Sulkan.apply(enabled, packId, reload).whenComplete { _, failure -> done(failure) }
+        } catch (e: Exception) {
+            done(e)
+        }
+    }
+
+    /** A pack: its name and kind; a chip says it's live, or selected while shaders are off. Clicking it uses it. */
+    private fun packRow(r: PackRow, x: Float, y: Float, w: Float, h: Float, lx: Float, right: Float, cy: Float, hovered: Boolean, top: Float, bottom: Float) {
+        val id = r.pack.id
+        val selected = id == Sulkan.selected()
+        val live = selected && Sulkan.enabled() && Sulkan.failure() == null && Sulkan.vulkan()
+        val usable = Sulkan.vulkan() && !sulkanBusy
+        val chip = when {
+            live -> "Live"
+            selected -> "Selected"
+            else -> ""
+        }
+        val chipW = if (chip.isEmpty()) 0f else Type.chip.width(chip) + 10f
+        val nameW = Type.label.width(r.pack.name)
+        label(r.pack.name, lx, cy, right - chipW - 10f - lx, true)
+        val noteX = lx + nameW + 8f
+        if (noteX + Type.small.width(r.note) < right - chipW - 10f) Ui.text(Type.small, r.note, noteX, cy, Tok.T3)
+        if (chip.isNotEmpty()) {
+            if (live) Ui.box(right - chipW, cy - 5f, chipW, 10f, 3.5f, Tok.WHITE)
+            else Ui.box(right - chipW, cy - 5f, chipW, 10f, 3.5f, Tok.FILL2, 0.5f, Tok.LINE2)
+            Ui.textC(Type.chip, chip, right - chipW / 2f, cy, if (live) 0xFF111111.toInt() else Tok.T2)
+        }
+        if (hovered) {
+            hintName = r.pack.name
+            hint = when {
+                live -> "In use"
+                selected -> "Selected: turn shaders on to use it"
+                else -> "Click to use it"
+            }
+        }
+        if (!selected && usable) {
+            if (hovered) Cursor.request(CursorTypes.POINTING_HAND)
+            hit(x, y, x + w, y + h, top, bottom, { b ->
+                if (b == Keys.MOUSE_LEFT) {
+                    Menus.step(true)
+                    applyShaders(Sulkan.enabled(), id, false, "Switching to ${r.pack.name}...")
+                }
+            })
+        }
+    }
+
+    /** The selected pack's options, read when first wanted (again after another pack is picked). */
+    private fun shaderOptions(): Sulkan.Settings? {
+        val id = Sulkan.selected()
+        shaderSettings?.takeIf { it.packId == id }?.let { return it }
+        return try {
+            Sulkan.settings(id).also {
+                shaderSettings = it
+                shaderSettingsError = ""
+            }
+        } catch (e: Exception) {
+            shaderSettings = null
+            shaderSettingsError = "Couldn't read ${Sulkan.name(id)}'s options: ${(e.cause ?: e).message ?: e.javaClass.simpleName}"
+            null
+        }
+    }
+
+    /** The Settings page (Sulkan's Basic options) or Advanced (all of them, under what they change). */
+    private fun optionRows(advanced: Boolean): List<Row> = buildList {
+        val s = shaderOptions()
+        if (s == null) {
+            add(Note({ shaderSettingsError }, { true }))
+            return@buildList
+        }
+        add(Note({
+            val pack = Sulkan.name(s.packId)
+            when {
+                sulkanError && sulkanStatus.startsWith("Couldn't save") -> sulkanStatus
+                s.dirty -> "$pack: changes not applied yet. Apply, or they're applied when you leave"
+                sulkanStatus == "$pack's options applied" -> sulkanStatus
+                else -> "$pack's options"
+            }
+        }, { sulkanError && sulkanStatus.startsWith("Couldn't save") }))
+        var group = ""
+        for (k in s.keys(advanced)) {
+            if (advanced && s.group(k) != group) {
+                group = s.group(k)
+                add(Header(group))
+            }
+            add(ShaderOpt(k, advanced))
+        }
+    }
+
+    /** The options pages' header: back to the defaults, and Apply. */
+    private fun optionActions(): List<Action> {
+        val s = shaderSettings ?: return emptyList()
+        return listOf(
+            Action("Defaults", "reset", true) {
+                s.reset()
+                Menus.toggle(false)
+            },
+            Action("Apply", "check", s.dirty && !sulkanBusy) {
+                applyShaderOptions()
+                Menus.toggle(true)
+            },
+        )
+    }
+
+    /** Saves the pack's changed options (Sulkan rebuilds it with them when it's live). */
+    private fun applyShaderOptions() {
+        val s = shaderSettings ?: return
+        try {
+            s.apply()
+            sulkanError = false
+            sulkanStatus = "${Sulkan.name(s.packId)}'s options applied"
+        } catch (e: Exception) {
+            sulkanError = true
+            sulkanStatus = "Couldn't save ${Sulkan.name(s.packId)}'s options: ${(e.cause ?: e).message ?: e.javaClass.simpleName}"
+        }
+    }
+
+    /** One of the pack's options: on/off as a switch, a few values as segments or a picker, many on a slider. */
+    private fun shaderOptRow(r: ShaderOpt, x: Float, y: Float, w: Float, lx: Float, right: Float, cy: Float, hovered: Boolean, top: Float, bottom: Float) {
+        val s = shaderSettings ?: return
+        val key = r.key
+        val enabled = s.available(key)
+        val name = s.name(key)
+        if (hovered) {
+            hintName = name
+            // (Sulkan's help ends on how its own screen works: pressing Apply, clicking to cycle.)
+            hint = if (enabled) s.help(key).removeSuffix(" Changes take effect when you press Apply.").removeSuffix(" Click to cycle through available values.")
+            else "Turn on Enhanced water first"
+        }
+        val choices = s.choices(key)
+        val v = s.value(key)
+        // Changed from its default: a dot after the name, as on Key Binds.
+        fun dot(shown: String) {
+            if (!s.isDefault(key)) Ui.box(lx + Type.label.width(shown) + 3.5f, cy - 1.25f, 2.5f, 2.5f, 1.25f, Tok.T2)
+        }
+        when {
+            s.toggle(key) -> {
+                val shown = Ui.fit(Type.label, name, right - 30f - lx)
+                label(shown, lx, cy, right - 24f - lx, enabled)
+                dot(shown)
+                switch(r, right - 17f, cy - 5f, v != 0.0, enabled, hovered)
+                if (enabled) hit(x, y, x + w, y + ROW_H, top, bottom, { b ->
+                    if (b == Keys.MOUSE_LEFT) {
+                        s.flip(key)
+                        Menus.toggle(s.value(key) != 0.0)
+                    }
+                })
+            }
+            choices.size in 1..5 -> {
+                val labels = choices.map { s.label(key, it, r.advanced) }
+                val i = choices.indexOf(v)
+                val pw = pickerWidth(labels, i, w * 0.55f)
+                val shown = Ui.fit(Type.label, name, right - pw - 14f - lx)
+                label(shown, lx, cy, right - pw - 8f - lx, enabled)
+                dot(shown)
+                picker(r, right - pw, cy, pw, w * 0.55f, labels, i, enabled, top, bottom) { n -> s.set(key, choices[n]) }
+            }
+            else -> {
+                val i = choices.indexOf(v).coerceAtLeast(0)
+                slider(r, name, enabled, x, y, w, i / (choices.size - 1).toFloat(), s.label(key, v, r.advanced), hovered, top, bottom, { t ->
+                    val n = (t * (choices.size - 1)).roundToInt().coerceIn(0, choices.size - 1)
+                    if (choices[n] != s.value(key)) s.set(key, choices[n])
+                }) {}
+            }
+        }
+    }
+
     // ---- controls ----
 
     private fun id(key: Any) = System.identityHashCode(key).toString()
@@ -673,19 +953,19 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         Canvas.alpha = a
     }
 
-    /** How wide [picker] draws: the segments when there are two or three short ones, else a box round the value. */
+    /** How wide [picker] draws: the segments when there are up to five short ones, else a box round the value. */
     private fun pickerWidth(labels: List<String>, index: Int, max: Float): Float {
         if (segmented(labels, max)) return segWidth(labels)
         val text = labels.getOrElse(index) { "" }
         return (Type.sub.width(text) + 22f).coerceIn(44f, minOf(120f, max))
     }
 
-    private fun segmented(labels: List<String>, max: Float) = labels.size in 2..3 && segWidth(labels) <= minOf(160f, max)
+    private fun segmented(labels: List<String>, max: Float) = labels.size in 2..5 && segWidth(labels) <= minOf(170f, max)
 
     private fun segWidth(labels: List<String>) = labels.sumOf { (Type.small.width(it) + 12f).toDouble() }.toFloat() + 3f
 
     /**
-     * A value from a list, [w] wide from [x]: two or three short ones as the ClickGUI's segmented control (a grey thumb
+     * A value from a list, [w] wide from [x]: up to five short ones as the ClickGUI's segmented control (a grey thumb
      * sliding to the one picked), more as a box with the value that steps forward on a click, back on a right-click.
      */
     private fun picker(key: Any, x: Float, cy: Float, w: Float, max: Float, labels: List<String>, index: Int, enabled: Boolean, top: Float, bottom: Float, pick: (Int) -> Unit) {
@@ -880,6 +1160,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
 
     private companion object {
         const val MINECRAFT = "Minecraft"
+        const val SULKAN = "Sulkan"
         const val GENERAL = "General"
 
         // In GUI units, the ClickGUI's (the mockup's CSS px / 2).
@@ -903,6 +1184,8 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         val ON_LEFT = 0xFFF0F0F2.toInt()
         val ON_RIGHT = 0xFFC4C4CA.toInt()
         val KNOB_ON = 0xFF1C1C20.toInt()
+        /** A status line saying something went wrong (as a clashing key does). */
+        val ERROR = 0xFFF87171.toInt()
 
         /** Vanilla's buttons for the pages drawn here (the rest become rows on the General page). */
         val OWN_PAGES = setOf(
