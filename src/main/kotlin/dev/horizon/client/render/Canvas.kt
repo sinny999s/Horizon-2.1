@@ -64,7 +64,7 @@ object Canvas {
 
     /** A batch's shape parameters: [SHAPE_VEC4S] vec4s (the `Shapes` array in the shape shaders). */
     private const val SHAPE_VEC4S = 256
-    private val shapeData = DynamicGpuDataStorageMapped<ShapeBlock>("HorizonClient shapes", SHAPE_VEC4S * 16, 128, 16)
+    private val shapeData = DynamicGpuDataStorageMapped<ShapeBlock>("HorizonClient shapes", SHAPE_VEC4S * 16, 128, 64)
 
     /** How many draws back a shape looks for one to join. */
     private const val MERGE_DEPTH = 48
