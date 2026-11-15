@@ -31,6 +31,9 @@ import kotlin.math.roundToInt
  * advances and rasterised whole at the screen's pixel size, its pen started at the right quarter pixel (browsers
  * position glyphs in quarter pixels too) and its baseline on a whole pixel, then kept as one texture. Coverage is
  * thickened a little to match the browser's heavier strokes. `§` codes are not read.
+ *
+ * The rasters live on shared pages ([TextAtlas]), so a screen's text batches into a draw per page; one that doesn't
+ * fit there gets a texture of its own as before.
  */
 class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) {
     /** [letterSpacing] is the CSS letter-spacing in the mockup's pixels (half a GUI unit each). */
@@ -40,8 +43,16 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
     private var scale = -1
     private val frc = FontRenderContext(null, true, true)
 
-    private class Raster(val texture: DynamicTexture, val w: Int, val h: Int, val originX: Int, val baseline: Int) {
+    /** A string's picture: on an atlas page ([slot]) or, when it didn't fit there, in a texture of its own ([own]). */
+    private class Raster(val slot: TextAtlas.Slot?, val own: DynamicTexture?, val w: Int, val h: Int, val originX: Int, val baseline: Int) {
         var used = System.currentTimeMillis()
+
+        /** Its texels are still there: an atlas page it was on may have been wiped since. */
+        fun valid() = slot?.valid() ?: true
+
+        fun close() {
+            own?.close()
+        }
     }
 
     /** By text and the pen's quarter pixel; the least recently drawn are dropped past [MAX] (once unused for 2 s). */
@@ -52,7 +63,7 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
     private fun checkScale() {
         val s = Minecraft.getInstance().window.guiScale
         if (s == scale) return
-        rasters.values.forEach { it.texture.close() }
+        rasters.values.forEach { it.close() }
         rasters.clear()
         widths.clear()
         scale = s
@@ -113,10 +124,17 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
         }
         r.used = System.currentTimeMillis()
         val scissor = Canvas.currentScissor()
+        val slot = r.slot
+        val view = slot?.page?.view ?: r.own!!.textureView
+        slot?.use()
+        val u0 = slot?.u0 ?: 0f
+        val v0 = slot?.v0 ?: 0f
+        val u1 = slot?.u1 ?: 1f
+        val v1 = slot?.v1 ?: 1f
         if (left == right) {
-            Canvas.glyph(r.texture.textureView, scissor, m, dx, dy, r.w.toFloat(), r.h.toFloat(), 0f, 0f, 1f, 1f, left)
+            Canvas.glyph(view, scissor, m, dx, dy, r.w.toFloat(), r.h.toFloat(), u0, v0, u1, v1, left)
         } else {
-            Canvas.glyph(r.texture.textureView, scissor, m, dx, dy, r.w.toFloat(), r.h.toFloat(), 0f, 0f, 1f, 1f, left, right)
+            Canvas.glyph(view, scissor, m, dx, dy, r.w.toFloat(), r.h.toFloat(), u0, v0, u1, v1, left, right)
         }
     }
 
@@ -140,7 +158,7 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
 
     private fun raster(text: String, quarter: Int): Raster {
         val key = "$quarter$text"
-        rasters[key]?.let { return it }
+        rasters[key]?.let { if (it.valid()) return it else rasters.remove(key) }
         val layout = layout(text)
         val q = quarter / 4f
         val b = layout.getPixelBounds(frc, q, 0f)
@@ -165,7 +183,8 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
             val a = img.getRGB(xx, yy) ushr 24
             if (a != 0) img.setRGB(xx, yy, (BOOST[a] shl 24) or 0xFFFFFF)
         }
-        val r = Raster(Textures.upload("horizon web text", img), w, h, -left, -top)
+        val slot = TextAtlas.put(img.getRGB(0, 0, w, h, null, 0, w), w, h)
+        val r = Raster(slot, if (slot == null) Textures.upload("horizon web text", img) else null, w, h, -left, -top)
         rasters[key] = r
         if (rasters.size > MAX) {
             val now = System.currentTimeMillis()
@@ -173,7 +192,7 @@ class WebText(file: String, private val size: Float, letterSpacing: Float = 0f) 
             while (rasters.size > MAX && it.hasNext()) {
                 val e = it.next()
                 if (now - e.value.used < 2000) break
-                e.value.texture.close()
+                e.value.close()
                 it.remove()
             }
         }
