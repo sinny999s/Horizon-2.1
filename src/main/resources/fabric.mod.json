@@ -4,7 +4,7 @@
   "version": "${version}",
   "name": "Horizon",
   "description": "Next-generation utility & exploration client tailored for modern Minecraft anarchy. Features a sleek glassmorphic interface, intelligent base & stash hunting suites, high-precision combat systems, and advanced dimension navigation.",
-  "license": "All Rights Reserved",
+  "license": "MIT",
   "icon": "assets/horizon/icon.png",
   "authors": [
     "sinny999s"
