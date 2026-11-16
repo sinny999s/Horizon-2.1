@@ -127,9 +127,13 @@ object Sulkan {
             }
         }
 
+        /** Sets [key]; Sulkan's model also applies a preset's options and turns presets to Custom when they change. */
         fun set(key: String, v: Double) {
-            values[key] = v
+            if (modelSet) call(model, "set", key, v) else values[key] = v
         }
+
+        // Sulkan builds without presets have no set(key, value): write the value then.
+        private val modelSet = runCatching { method(model.javaClass, "set", 2) }.isSuccess
 
         /** Flips an on/off option, back to the value it had when on. */
         fun flip(key: String) {
