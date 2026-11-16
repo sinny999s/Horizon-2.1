@@ -44,6 +44,9 @@ object World3D {
     /** This frame's level projection and camera rotation. */
     val projection = Matrix4f()
     val view = Matrix4f()
+
+    /** [projection] without the view bobbing and hurt tilt. */
+    val baseProjection = Matrix4f()
     var camera: Vec3 = Vec3.ZERO
         private set
     private var frustum: Frustum? = null
@@ -81,6 +84,7 @@ object World3D {
     fun fire(cam: CameraRenderState, proj: Matrix4f) {
         if (mc.player == null || mc.level == null) return
         projection.set(proj)
+        baseProjection.set(cam.projectionMatrix)
         view.set(cam.viewRotationMatrix)
         camera = mc.gameRenderer.mainCamera().position()
         frustum = cam.cullFrustum

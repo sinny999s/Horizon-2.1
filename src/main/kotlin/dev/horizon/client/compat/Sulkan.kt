@@ -54,6 +54,19 @@ object Sulkan {
     /** Why the selected pack failed to build, or null. */
     fun failure(): String? = static(NATIVE, "failure") as? String
 
+    private val sceneFields: Pair<Field, Field>? by lazy {
+        if (!present) null else runCatching { field(cls(NATIVE), "sceneScope") to field(cls(NATIVE), "active") }.getOrNull()
+    }
+
+    /**
+     * During GameRenderer.renderLevel: whether a pack draws this frame's world into its own targets, so the finished
+     * picture (hand included) is only in the main target after renderLevel returns. Cheap enough for every frame.
+     */
+    fun drawingScene(): Boolean {
+        val (scope, active) = sceneFields ?: return false
+        return scope.getBoolean(null) && active.get(null) != null
+    }
+
     fun name(id: String) = if (id == BUILTIN) BUILTIN_NAME else id.removeSuffix(".zip")
 
     /** Scans the shader pack folder again. */

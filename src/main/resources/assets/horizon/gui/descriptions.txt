@@ -84,6 +84,7 @@ damage-tint=Red screen edges at low health and arcs pointing to where hits came 
 dismemberment=Players who leave fall apart into tumbling pieces.
 free-look=Turns the third-person camera without turning your player.
 full-bright=Full brightness everywhere, without night vision.
+motion-blur=Real per-pixel camera motion blur from the depth buffer, the same at any frame rate; the hand and HUD stay sharp.
 hand-chams=Draws your first-person hands through the chams shaders.
 hit-fx=A smoke puff and spark burst on every hit.
 no-camera-clip=Lets the third-person camera pass through blocks.

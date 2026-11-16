@@ -49,6 +49,7 @@ import dev.horizon.client.module.cosmetic.Dismemberment
 import dev.horizon.client.module.cosmetic.FreeLook
 import dev.horizon.client.module.cosmetic.FullBright
 import dev.horizon.client.module.cosmetic.HandChams
+import dev.horizon.client.module.cosmetic.MotionBlur
 import dev.horizon.client.module.cosmetic.HitFx
 import dev.horizon.client.module.cosmetic.NoCameraClip
 import dev.horizon.client.module.cosmetic.Particles
@@ -437,5 +438,6 @@ object HorizonModules {
         Modules.register(NoHitDelay())
         Modules.register(LunarSpoof())
         Modules.register(BetterChat)
+        Modules.register(MotionBlur())
     }
 }
