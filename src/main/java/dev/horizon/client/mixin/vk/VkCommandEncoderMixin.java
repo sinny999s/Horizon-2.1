@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.backend.vulkan.VulkanCommandEncoder;
+import com.mojang.renderpearl.backend.vulkan.VulkanDevice;
 import com.mojang.renderpearl.backend.vulkan.VulkanTransientMemory;
 import dev.horizon.client.render.vk.Barriers;
 import org.joml.Vector4fc;
@@ -17,6 +18,7 @@ import org.lwjgl.vulkan.VkRenderingInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -24,16 +26,50 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 
 /**
  * GPU Sync ({@link Barriers}): Minecraft's full barrier after every render pass, clear, upload and copy is skipped
  * while it is active, each of those commands reports what it touches first, and a render pass begins at its first
  * draw. Ends of the command buffer and other command buffers added to the submit stay fully synchronized.
+ * <p>
+ * Fence polls: at the end of every frame each of Minecraft's vertex buffer pools asks whether the buffers it used a
+ * frame ago are free again, a driver call each (vkWaitSemaphores with no timeout), dozens a frame. The GPU's progress
+ * (the timeline semaphore's value) is read once and reused for 0.1 ms, so that burst costs one call: a buffer that
+ * frees up in between is reused a little later, nothing else changes. A loop polling until the GPU is done still sees
+ * it finish (a fresh read every 0.1 ms). Waits with a timeout still wait.
  */
 @Mixin(VulkanCommandEncoder.class)
 public abstract class VkCommandEncoderMixin {
 	@Shadow private VkCommandBuffer currentCommandBuffer;
 	@Shadow @Final private VulkanTransientMemory transientMemory;
+	@Shadow @Final private VulkanDevice device;
+	@Shadow @Final private long submitSemaphore;
+	@Shadow private long currentSubmitIndex;
+	@Shadow private long completedSubmitIndex;
+	/** When the GPU's progress was last read ({@link #horizon$pollOnce}), System.nanoTime. */
+	@Unique private long horizon$polledAt;
+	@Unique private boolean horizon$polled;
+
+	@Inject(method = "awaitSubmitCompletion", at = @At("HEAD"), cancellable = true)
+	private void horizon$pollOnce(long submitIndex, long timeoutNS, CallbackInfoReturnable<Boolean> cir) {
+		// Minecraft answers these itself without the driver: already known done, or this frame's own submit.
+		if (!Barriers.cachedPolls || timeoutNS != 0L || this.completedSubmitIndex >= submitIndex || submitIndex >= this.currentSubmitIndex) return;
+		long now = System.nanoTime();
+		if (this.horizon$polled && now - this.horizon$polledAt < 100_000L) {
+			// Read just now, and it wasn't done then.
+			cir.setReturnValue(false);
+			return;
+		}
+		this.horizon$polled = true;
+		this.horizon$polledAt = now;
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+			LongBuffer value = stack.mallocLong(1);
+			if (VK12.vkGetSemaphoreCounterValue(this.device.vkDevice(), this.submitSemaphore, value) != 0) return;
+			if (value.get(0) > this.completedSubmitIndex) this.completedSubmitIndex = value.get(0);
+			cir.setReturnValue(value.get(0) >= submitIndex);
+		}
+	}
 
 	@Shadow private VkCommandBuffer commandBuffer() { throw new AssertionError(); }
 

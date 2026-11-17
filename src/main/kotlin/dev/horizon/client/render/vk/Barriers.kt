@@ -488,6 +488,15 @@ object Barriers {
         return names.filter { mask and it.first != 0L }.joinToString("|") { it.second }
     }
 
+    /** Fence polls answered from one read of the GPU's progress (VkCommandEncoderMixin.pollOnce); off only for tests. */
+    @JvmField var cachedPolls = true
+
+    /** Test hook: `call dev.horizon.client.render.vk.Barriers polls true|false`. */
+    @JvmStatic
+    fun polls(on: String) {
+        cachedPolls = on.trim().toBoolean()
+    }
+
     /** Test hook: on, off or follow the option (`call dev.horizon.client.render.vk.Barriers set true|false|option`). */
     @JvmStatic
     fun set(on: String) {
