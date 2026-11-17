@@ -26,21 +26,34 @@ object ArrayListWidget : HudWidget("array-list-widget") {
     private class Row(val module: Module) : ListRow() {
         /** The row's y in the list, chasing its place in the order (below 0 until first placed). */
         val y = Animation(Easing.OUT_QUINT, 250).also { it.value = -1f }
+        val modeSetting = module.settings.firstOrNull { it.id == "mode" } as? EnumSetting<*>
+        /** The mode value [modeText] was written for. */
+        var modeValue: Any? = null
+        var modeText = ""
+        // This frame's label, mode and width (worked out once, not again for every comparison of the sort).
+        var label = ""
+        var mode = ""
+        var width = 0f
     }
 
     private val rows = ArrayList<Row>()
 
     /** The module's mode as the ClickGUI writes it ("AROUND_PLAYERS" -> "Around Players"), or "". */
-    private fun mode(m: Module): String {
+    private fun mode(r: Row): String {
         if (!modes.value) return ""
-        val s = m.settings.firstOrNull { it.id == "mode" } as? EnumSetting<*> ?: return ""
-        return s.value.name.lowercase(Locale.ROOT).split("_").joinToString(" ") { it.replaceFirstChar(Char::uppercaseChar) }
+        val v = r.modeSetting?.value ?: return ""
+        if (v !== r.modeValue) {
+            r.modeValue = v
+            r.modeText = v.name.lowercase(Locale.ROOT).split("_").joinToString(" ") { it.replaceFirstChar(Char::uppercaseChar) }
+        }
+        return r.modeText
     }
 
-    private fun rowWidth(r: Row): Float {
-        val md = mode(r.module)
+    private fun measure(r: Row) {
+        r.label = r.module.name.trim()
+        r.mode = mode(r)
         // The new look's plates, the text 4 in from each side
-        return cellWidth(r.module.name.trim()) + if (md.isEmpty()) 0f else 1f + cellWidth(md)
+        r.width = cellWidth(r.label) + if (r.mode.isEmpty()) 0f else 1f + cellWidth(r.mode)
     }
 
     override fun render() {
@@ -61,17 +74,20 @@ object ArrayListWidget : HudWidget("array-list-widget") {
             return
         }
         var width = 0f
-        for (r in rows) width = max(width, rowWidth(r))
-        val ordered = if (byWidth.value) rows.sortedByDescending(::rowWidth) else rows.sortedBy { it.module.name }
+        for (r in rows) {
+            measure(r)
+            width = max(width, r.width)
+        }
+        val ordered = if (byWidth.value) rows.sortedByDescending { it.width } else rows.sortedBy { it.module.name }
         var y = 0f
         for (r in ordered) {
             val t = r.anim.value
             if (r.y.value < 0f) r.y.value = y
             r.y.update(y)
             val ry = top + r.y.value
-            val label = r.module.name.trim()
-            val md = mode(r.module)
-            val rx = if (alignRight) left + width - rowWidth(r) + (1 - t) * 10 else left - (1 - t) * 10
+            val label = r.label
+            val md = r.mode
+            val rx = if (alignRight) left + width - r.width + (1 - t) * 10 else left - (1 - t) * 10
             val cw = cell(label, rx, ry, alpha = t)
             if (md.isNotEmpty()) cell(md, rx + cw + 1f, ry, Tok.T3, t)
             y += 14 * t

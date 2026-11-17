@@ -44,9 +44,18 @@ object Blur {
         }
     }
 
+    private var refreshRate = 60
+    private var refreshChecked = 0L
+
+    /** The monitor's refresh rate, looked up at most once a second (the lookup asks the OS for every monitor). */
     private fun refreshRate(): Int {
-        val mode = Minecraft.getInstance().window.findBestMonitor()?.currentMode
-        return mode?.refreshRate?.toInt()?.takeIf { it > 0 } ?: 60
+        val now = System.nanoTime()
+        if (refreshChecked == 0L || now - refreshChecked > 1_000_000_000L) {
+            refreshChecked = now
+            val mode = Minecraft.getInstance().window.findBestMonitor()?.currentMode
+            refreshRate = mode?.refreshRate?.toInt()?.takeIf { it > 0 } ?: 60
+        }
+        return refreshRate
     }
 
     /** Called at the start of the client's 2D layer, in a world only. */

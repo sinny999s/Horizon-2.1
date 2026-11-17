@@ -161,10 +161,16 @@ class Hazards {
         val heads = if (image) imageHeads else bufferHeads
         val head = heads.get(handle)
         if (!write) {
-            // The same read again (a uniform buffer bound for every draw): nothing new to remember.
+            // The same read again (a uniform buffer bound for every draw) adds nothing, and a read right next to or
+            // over another of the same command (the next slice of a ring buffer) only widens it: one range for the
+            // pass's slices instead of one each. Only while no barrier has synced the earlier read (done 0).
             var i = head
             while (i >= 0) {
-                if (!writes[i] && ops[i] == op && stages[i] == stage && starts[i] <= start && end <= ends[i] && done[i] == 0L) return
+                if (!writes[i] && ops[i] == op && stages[i] == stage && done[i] == 0L && start <= ends[i] && starts[i] <= end) {
+                    if (start < starts[i]) starts[i] = start
+                    if (end > ends[i]) ends[i] = end
+                    return
+                }
                 i = next[i]
             }
         }

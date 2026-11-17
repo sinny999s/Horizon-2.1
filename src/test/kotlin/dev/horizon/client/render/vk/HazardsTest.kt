@@ -126,6 +126,43 @@ class HazardsTest {
     }
 
     @Test
+    fun aPassReadingNeighbouringSlicesKeepsOneRange() {
+        cmd {
+            for (i in 0 until 50) buffer(UBO, i * 256L, i * 256L + 256, STAGE_SHADERS, false)
+        }
+        assertEquals(1, h.pending)
+        // A write into any of those slices still waits for the reads; one past them doesn't.
+        assertEquals(listOf(Triple(STAGE_SHADERS, 0L, STAGE_TRANSFER)), upload(UBO, 30 * 256L, 31 * 256L))
+        assertEquals(emptyList(), upload(UBO, 50 * 256L, 51 * 256L))
+    }
+
+    @Test
+    fun slicesWithAGapStaySeparate() {
+        cmd {
+            buffer(UBO, 0, 256, STAGE_SHADERS, false)
+            buffer(UBO, 512, 768, STAGE_SHADERS, false)
+        }
+        assertEquals(2, h.pending)
+        assertEquals(emptyList(), upload(UBO, 256, 512))
+    }
+
+    @Test
+    fun aReadAfterABarrierIsNotMergedIntoASyncedOne() {
+        // A pass (op 900) reads a slice...
+        h.begin(900)
+        h.buffer(UBO, 0, 64, STAGE_SHADERS, false)
+        h.commit()
+        // ...a rewrite of that slice waits for it, which syncs the read for transfers...
+        assertEquals(listOf(Triple(STAGE_SHADERS, 0L, STAGE_TRANSFER)), upload(UBO, 0, 64))
+        // ...then the same pass, split and resumed, reads the next slice: that read happened after the barrier.
+        h.begin(900)
+        h.buffer(UBO, 64, 128, STAGE_SHADERS, false)
+        h.commit()
+        // Merged into the synced read, this write would skip its wait.
+        assertEquals(listOf(Triple(STAGE_SHADERS, 0L, STAGE_TRANSFER)), upload(UBO, 64, 128))
+    }
+
+    @Test
     fun endOfCommandBufferClearsEverything() {
         pass(MAIN, UBO)
         assertTrue(h.dirty)

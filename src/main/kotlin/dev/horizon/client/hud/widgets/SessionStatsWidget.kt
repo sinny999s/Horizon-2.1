@@ -7,6 +7,7 @@ import dev.horizon.client.event.AfterReceivePacketEvent
 import dev.horizon.client.event.EventBus
 import dev.horizon.client.event.PlayerDeathEvent
 import dev.horizon.client.gui.modern.Tok
+import dev.horizon.client.hud.Formatted
 import dev.horizon.client.hud.HudWidget
 import dev.horizon.client.render.Animation
 import dev.horizon.client.render.Easing
@@ -23,6 +24,8 @@ import kotlin.math.max
  * within 40 blocks is a kill, your health reaching 0 a death.
  */
 object SessionStatsWidget : HudWidget("session-stats-widget") {
+    private val kdText = Formatted("%.2f")
+    private val fkdrText = Formatted("%.2f")
     val showPlaytime = bool("playtime", true)
     val showKills = bool("kills", true)
     val showDeaths = bool("deaths", true)
@@ -119,13 +122,13 @@ object SessionStatsWidget : HudWidget("session-stats-widget") {
 
         if (showKd.value) {
             val kd = if (deaths == 0) kills.toFloat() else kills.toFloat() / deaths
-            rows += "K/D" to String.format("%.2f", kd)
+            rows += "K/D" to kdText.of(kd)
         }
 
         if (showBedwars.value && (hypixelSeen || editorMode)) {
             rows += "Finals" to finalKills.toString()
             val fkdr = if (finalDeaths == 0) finalKills.toFloat() else finalKills.toFloat() / finalDeaths
-            rows += "FKDR" to String.format("%.2f", fkdr)
+            rows += "FKDR" to fkdrText.of(fkdr)
             rows += "Beds" to beds.toString()
             rows += "W/L" to "$wins/$losses"
         }

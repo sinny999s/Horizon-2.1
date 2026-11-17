@@ -67,16 +67,21 @@ object SpeedWidget : HudWidget("speed-widget") {
     /** The tick-speed multiplier (1 without a Timer module). */
     private const val TIMER = 1f
 
+    /** The last text and what it was made from: the speed only changes once a tick, so it's formatted then. */
+    private var text = ""
+    private var tenths = Float.NaN
+    private var unit = -1
+
     override fun render() {
         val p = mc.player ?: return
         val perTick = if (p.isFallFlying) ServerInfo.speed else ServerInfo.horizontalSpeed
-        val text = if (bps.value) {
-            String.format("%.1f", Math.rint((perTick * 200f * TIMER).toDouble()).toFloat() * 0.1) + " b/s"
-        } else if (mph.value) {
-            // blocks/tick × 20 = m/s; × 2.23694 = mph.
-            String.format("%.1f", Math.rint((perTick * 447.388f * TIMER).toDouble()).toFloat() * 0.1) + " mph"
-        } else {
-            String.format("%.1f", Math.rint((perTick * 720f * TIMER).toDouble()).toFloat() * 0.1) + " km/h"
+        // blocks/tick × 20 = m/s; × 2.23694 = mph.
+        val u = if (bps.value) 0 else if (mph.value) 1 else 2
+        val n = Math.rint((perTick * (if (u == 0) 200f else if (u == 1) 447.388f else 720f) * TIMER).toDouble()).toFloat()
+        if (n != tenths || u != unit) {
+            tenths = n
+            unit = u
+            text = String.format("%.1f", n * 0.1) + if (u == 0) " b/s" else if (u == 1) " mph" else " km/h"
         }
         simple(text)
     }

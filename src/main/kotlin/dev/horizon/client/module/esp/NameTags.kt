@@ -25,6 +25,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.entity.state.AvatarRenderState
+import net.minecraft.core.Holder
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.chat.numbers.StyledFormat
@@ -97,6 +98,19 @@ class NameTags : Module("name-tags", Categories.ESP) {
         CONTAINER(Identifier.withDefaultNamespace("hud/heart/container"), Identifier.withDefaultNamespace("hud/heart/container")),
         NORMAL(Identifier.withDefaultNamespace("hud/heart/full"), Identifier.withDefaultNamespace("hud/heart/half")),
         ABSORBING(Identifier.withDefaultNamespace("hud/heart/absorbing_full"), Identifier.withDefaultNamespace("hud/heart/absorbing_half")),
+    }
+
+    /** [enchantNames]' enchantments as this level's registry has them (in the map's order), looked up once per registry. */
+    private var holderRegistry: Any? = null
+    private var holderList: List<Pair<Holder<Enchantment>, String>> = emptyList()
+
+    private fun enchantHolders(): List<Pair<Holder<Enchantment>, String>> {
+        val registry = mc.level!!.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+        if (registry !== holderRegistry) {
+            holderRegistry = registry
+            holderList = enchantNames.mapNotNull { (key, abbr) -> registry.get(key.identifier()).orElse(null)?.let { it to abbr } }
+        }
+        return holderList
     }
 
     /** Enchant abbreviations; a HashMap (on purpose), so their order on screen is the map's. */
@@ -223,7 +237,9 @@ class NameTags : Module("name-tags", Categories.ESP) {
             NameMode.SEMI -> p.displayName.string
             NameMode.DEFAULT -> p.gameProfile.name()
         }
-        s += name.map { smallCaps[it] ?: it }.joinToString("") + " "
+        val plain = StringBuilder(name.length + 1)
+        for (c in name) plain.append(smallCaps[c] ?: c)
+        s += plain.append(' ').toString()
         if (hP.value && health.value == Health.Number) {
             val hp = healthOf(p)
             s += hpColor(hp) + round1(hp) + " " + ChatFormatting.WHITE
@@ -305,7 +321,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
         var top = 0.0f
         var dx = 0.0f
         if (armorMode.value == ArmorMode.None) return top
-        val registry = mc.level!!.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+        val holders = enchantHolders()
         for (stack in list) {
             if (!stack.isEmpty) {
                 if (armorMode.value == ArmorMode.Full) {
@@ -323,8 +339,7 @@ class NameTags : Module("name-tags", Categories.ESP) {
                 if (enchants.value && (!onlyHandsEnchants.value || stack === p.offhandItem || stack === p.mainHandItem)) {
                     val ench = EnchantmentHelper.getEnchantmentsForCrafting(stack)
                     var dy = 0.0f
-                    for ((key, abbr) in enchantNames) {
-                        val holder = registry.get(key.identifier()).orElse(null) ?: continue
+                    for ((holder, abbr) in holders) {
                         if (!ench.keySet().contains(holder)) continue
                         Fonts.medium75.queue(abbr + ench.getLevel(holder), x.toFloat() - 50.0f + dx, y.toFloat() - 45 + dy, -1)
                         dy -= 8.0f

@@ -63,16 +63,24 @@ object KeybindsWidget : HudWidget("keybinds-widget") {
 
     val rows = ArrayList<KeyBind>()
     private val headerAnim = Animation(Easing.OUT_BACK, 250)
+    /** The names [rows] has, for the scan over every module each frame. */
+    private val listed = HashSet<String>()
 
     override fun render() {
-        for (m in Modules.all.filter { it !is ClickGuiModule }) {
-            val notListed = rows.none { it.name == m.name }
+        listed.clear()
+        for (r in rows) listed += r.name
+        for (m in Modules.all) {
+            if (m is ClickGuiModule) continue
+            val notListed = m.name !in listed
             if (m.bind.key != -1 && m.enabled) {
-                if (notListed) rows += KeyBind(m.name, Keys.name(m.bind))
+                if (notListed) {
+                    rows += KeyBind(m.name, Keys.name(m.bind))
+                    listed += m.name
+                }
                 continue
             }
             if (notListed) continue
-            rows.filter { it.name == m.name && it.extra == "" }.forEach { it.removing = true }
+            for (r in rows) if (r.name == m.name && r.extra == "") r.removing = true
         }
         rows.removeIf { it.step() }
         val title = "Key Binds"

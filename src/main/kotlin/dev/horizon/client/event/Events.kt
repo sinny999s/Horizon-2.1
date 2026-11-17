@@ -142,22 +142,38 @@ object EventBus {
     private val listeners = HashMap<Class<*>, CopyOnWriteArrayList<Listener>>()
     private var counter = 0L
 
+    /**
+     * Each event type's handlers as an array, rebuilt (as a new map) whenever one is plugged or unplugged: [post] runs
+     * many times a frame (for every entity drawn, every isUsingItem), and reads it without a lock or an iterator.
+     */
+    @Volatile
+    private var table: Map<Class<*>, Array<(Event) -> Unit>> = emptyMap()
+
+    private fun rebuild() {
+        val next = HashMap<Class<*>, Array<(Event) -> Unit>>()
+        for ((type, list) in listeners) if (list.isNotEmpty()) next[type] = list.map { it.fn }.toTypedArray()
+        table = next
+    }
+
     @Synchronized
     fun register(owner: Any, type: Class<out Event>, priority: Int, fn: (Event) -> Unit) {
         val list = listeners.getOrPut(type) { CopyOnWriteArrayList() }
         val l = Listener(owner, priority, counter++, fn)
         val index = list.indexOfFirst { it.priority < priority }
         if (index < 0) list.add(l) else list.add(index, l)
+        rebuild()
     }
 
     @Synchronized
     fun unregister(owner: Any) {
-        for (list in listeners.values) list.removeIf { it.owner === owner }
+        var changed = false
+        for (list in listeners.values) if (list.removeIf { it.owner === owner }) changed = true
+        if (changed) rebuild()
     }
 
     fun <E : Event> post(event: E): E {
-        val list = listeners[event.javaClass] ?: return event
-        for (l in list) l.fn(event)
+        val handlers = table[event.javaClass] ?: return event
+        for (fn in handlers) fn(event)
         return event
     }
 

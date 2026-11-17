@@ -18,9 +18,20 @@ import kotlin.math.sqrt
 object ServerInfo {
     private val mc get() = Minecraft.getInstance()
 
-    /** Block entities of every loaded chunk within render distance, rebuilt every tick at PlayerUpdate +10. */
-    var blockEntities: List<BlockEntity> = emptyList()
-        private set
+    /**
+     * Block entities of every loaded chunk within render distance, as of this tick: marked stale every tick at
+     * PlayerUpdate +10 and rebuilt on the first read after that (most ticks nothing reads it).
+     */
+    val blockEntities: List<BlockEntity>
+        get() {
+            if (blockEntitiesStale) {
+                blockEntitiesStale = false
+                collectBlockEntities()
+            }
+            return blockEntityList
+        }
+    private var blockEntityList: List<BlockEntity> = emptyList()
+    private var blockEntitiesStale = false
 
     /** The local player's latency from the tab list (0 in singleplayer). */
     var ping = 0
@@ -39,6 +50,10 @@ object ServerInfo {
     private val pops = HashMap<String, Int>()
 
     fun rebuildBlockEntities() {
+        blockEntitiesStale = true
+    }
+
+    private fun collectBlockEntities() {
         val p = mc.player ?: return
         val level = mc.level ?: return
         val rd = mc.options.renderDistance().get()
@@ -47,7 +62,7 @@ object ServerInfo {
         val cz = p.z.toInt() / 16
         val list = ArrayList<BlockEntity>()
         for (i in -rd..rd) for (j in -rd..rd) level.chunkSource.getChunkNow(cx + i, cz + j)?.let { list.addAll(it.blockEntities.values) }
-        blockEntities = list
+        blockEntityList = list
     }
 
     fun tick() {

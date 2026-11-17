@@ -8,6 +8,7 @@ import dev.horizon.client.config.Storage
 import dev.horizon.client.event.AfterReceivePacketEvent
 import dev.horizon.client.event.EventBus
 import dev.horizon.client.gui.modern.Tok
+import dev.horizon.client.hud.Formatted
 import dev.horizon.client.hud.HudWidget
 import dev.horizon.client.render.Animation
 import dev.horizon.client.render.Easing
@@ -27,6 +28,12 @@ import kotlin.math.max
  * (`horizon/hypixel-stats/stats.json`), so the widget shows it from the start, on Hypixel or not.
  */
 object HypixelStatsWidget : HudWidget("hypixel-stats-widget") {
+    private val levelText = Formatted("%.2f")
+    private val fkdrText = Formatted("%.2f")
+    private val wlrText = Formatted("%.2f")
+    private val bblrText = Formatted("%.2f")
+    private val finalsText = Formatted("%,d")
+    private val winsText = Formatted("%,d")
     val showLevel = bool("network-level", true)
     val showStars = bool("bedwars-stars", true)
     val showFkdr = bool("fkdr", true)
@@ -149,14 +156,14 @@ object HypixelStatsWidget : HudWidget("hypixel-stats-widget") {
             rows += Row("Stats", problem ?: if (key == null) "^hypixel key <key>" else "waiting for Hypixel", Tok.T3)
         } else {
             fun gain(now: Int, then: Int?) = if (showGain.value && then != null && now > then) "+${now - then}" else null
-            if (showLevel.value) rows += Row("Level", "%.2f".format(s.networkLevel), Tok.T1)
+            if (showLevel.value) rows += Row("Level", levelText.of(s.networkLevel), Tok.T1)
             if (showStars.value) rows += Row("Bedwars", "${s.bedwarsStars}✫", HypixelPlayerApi.prestigeColor(s.bedwarsStars),
                 gain(s.bedwarsStars, base?.bedwarsStars))
-            if (showFkdr.value) rows += Row("FKDR", "%.2f".format(s.fkdr), Tok.T1)
-            if (showWlr.value) rows += Row("W/L", "%.2f".format(s.wlr), Tok.T1)
-            if (showBblr.value) rows += Row("BBLR", "%.2f".format(s.bblr), Tok.T1)
-            if (showFinals.value) rows += Row("Finals", "%,d".format(s.finalKills), Tok.T1, gain(s.finalKills, base?.finalKills))
-            if (showWins.value) rows += Row("Wins", "%,d".format(s.wins), Tok.T1, gain(s.wins, base?.wins))
+            if (showFkdr.value) rows += Row("FKDR", fkdrText.of(s.fkdr), Tok.T1)
+            if (showWlr.value) rows += Row("W/L", wlrText.of(s.wlr), Tok.T1)
+            if (showBblr.value) rows += Row("BBLR", bblrText.of(s.bblr), Tok.T1)
+            if (showFinals.value) rows += Row("Finals", finalsText.of(s.finalKills), Tok.T1, gain(s.finalKills, base?.finalKills))
+            if (showWins.value) rows += Row("Wins", winsText.of(s.wins), Tok.T1, gain(s.wins, base?.wins))
             if (showWinstreak.value) rows += Row("Winstreak", s.winstreak?.toString() ?: "hidden", Tok.T1)
             problem?.let { rows += Row("!", it, Tok.T3) }
         }
