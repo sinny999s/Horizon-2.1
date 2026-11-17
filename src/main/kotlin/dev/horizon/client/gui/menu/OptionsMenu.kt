@@ -238,6 +238,11 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                     Storage.shared.gpuSync = it
                     Storage.saveShared()
                 })
+                add(Toggle("GPU Crash Markers", { Storage.shared.crashMarkers }, tooltip =
+                    "Marks every render pass on the GPU so a GPU-hang crash report can name it. Off: about 1% more FPS.") {
+                    Storage.shared.crashMarkers = it
+                    Storage.saveShared()
+                })
             }
         }, icon = "rage", group = HORIZON)
         if (Sulkan.present) {

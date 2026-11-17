@@ -71,7 +71,11 @@
     "CommandSuggestionsMixin",
     "vk.VkCommandEncoderMixin",
     "vk.VkRenderPassMixin",
-    "vk.VkTransientMemoryAccessor"
+    "vk.VkTransientMemoryAccessor",
+    "vk.CheckpointStorageMixin",
+    "vk.VertexFormatMixin",
+    "vk.VkDirectBufferMixin",
+    "vk.VkDirectBufferViewMixin"
   ],
   "injectors": {
     "defaultRequire": 1

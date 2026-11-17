@@ -491,6 +491,35 @@ object Barriers {
     /** Fence polls answered from one read of the GPU's progress (VkCommandEncoderMixin.pollOnce); off only for tests. */
     @JvmField var cachedPolls = true
 
+    /** Buffers kept mapped after their first map (VkDirectBufferMixin); off only for tests. */
+    @JvmField var keepMapped = true
+
+    /** Vertex formats' attributes looked up by hash (VertexFormatMixin); off only for tests. */
+    @JvmField var fastVertexFormats = true
+
+    /** Allocations kept mapped by VkDirectBufferMixin, whose views' unmaps do nothing. */
+    private val kept = it.unimi.dsi.fastutil.longs.LongOpenHashSet()
+
+    @JvmStatic
+    fun keptMapped(allocation: Long, on: Boolean) {
+        synchronized(kept) { if (on) kept.add(allocation) else kept.remove(allocation) }
+    }
+
+    @JvmStatic
+    fun isKeptMapped(allocation: Long): Boolean = synchronized(kept) { kept.contains(allocation) }
+
+    /** Test hook: `call dev.horizon.client.render.vk.Barriers tweak keepMapped=false` (keepMapped, fastVertexFormats, crashMarkers). */
+    @JvmStatic
+    fun tweak(spec: String) {
+        val (k, v) = spec.trim().split("=")
+        val on = v.toBoolean()
+        when (k) {
+            "keepMapped" -> keepMapped = on
+            "fastVertexFormats" -> fastVertexFormats = on
+            "crashMarkers" -> Storage.shared.crashMarkers = on
+        }
+    }
+
     /** Test hook: `call dev.horizon.client.render.vk.Barriers polls true|false`. */
     @JvmStatic
     fun polls(on: String) {

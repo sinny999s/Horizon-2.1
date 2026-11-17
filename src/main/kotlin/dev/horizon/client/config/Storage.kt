@@ -45,6 +45,8 @@ object Storage {
         var autoUpdate: Boolean = true,
         /** Options > Horizon > Performance: GPU Sync (render/vk/Barriers) instead of Minecraft's full GPU barriers. */
         var gpuSync: Boolean = true,
+        /** Options > Horizon > Performance: Minecraft's GPU crash markers (mixin/vk/CheckpointStorageMixin); off saves a little. */
+        var crashMarkers: Boolean = false,
     )
 
     var shared = Shared()
