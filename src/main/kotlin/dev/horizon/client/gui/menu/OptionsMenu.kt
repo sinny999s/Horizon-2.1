@@ -79,7 +79,8 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
     private class Header(val title: String) : Row
     private class Vanilla(val option: OptionInstance<*>) : Row
     private class Sodium(val option: SodiumOptions.Opt) : Row
-    private class Toggle(val title: String, val get: () -> Boolean, val enabled: () -> Boolean = { true }, val set: (Boolean) -> Unit) : Row
+    private class Toggle(val title: String, val get: () -> Boolean, val enabled: () -> Boolean = { true }, val tooltip: String = "",
+                         val set: (Boolean) -> Unit) : Row
     private class Link(val title: String, val note: () -> String, val enabled: () -> Boolean = { true }, val action: () -> Unit) : Row
     private class Key(val mapping: KeyMapping) : Row
     /** A line of status: what Sulkan is doing, or why it can't. */
@@ -228,6 +229,17 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
             PlayerModelPart.values().map { part -> Toggle(part.getName().string, { options.isModelPartEnabled(part) }) { options.setModelPart(part, it) } } +
                 Vanilla(options.mainHand())
         }, icon = "player", group = MINECRAFT)
+        list += Page(HORIZON, "", { emptyList() }, section = true)
+        list += Page("Performance", "More FPS from Horizon, with the same picture", {
+            buildList {
+                add(Header("Vulkan"))
+                add(Toggle("GPU Sync", { Storage.shared.gpuSync }, tooltip =
+                    "Lets the graphics card overlap steps Minecraft makes it do one at a time: about 5-10% more FPS, same picture. Vulkan only.") {
+                    Storage.shared.gpuSync = it
+                    Storage.saveShared()
+                })
+            }
+        }, icon = "rage", group = HORIZON)
         if (Sulkan.present) {
             list += Page(SULKAN, "", { emptyList() }, section = true)
             list += Page("Shaders", "Turn shaders on and pick the pack to use", ::shaderRows, group = SULKAN)
@@ -523,7 +535,10 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                 val on = r.get()
                 val enabled = r.enabled()
                 label(r.title, lx, cy, right - 24f - lx, enabled)
-                if (hovered) hintName = r.title
+                if (hovered) {
+                    hintName = r.title
+                    if (r.tooltip.isNotEmpty()) hint = r.tooltip
+                }
                 switch(r.title, right - 17f, cy - 5f, on, enabled, hovered)
                 if (enabled) hit(x, y, x + w, y + h, top, bottom, { b -> if (b == Keys.MOUSE_LEFT) { r.set(!on); options.save(); Menus.toggle(!on) } })
             }
@@ -1161,6 +1176,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
     private companion object {
         const val MINECRAFT = "Minecraft"
         const val SULKAN = "Sulkan"
+        const val HORIZON = "Horizon"
         const val GENERAL = "General"
 
         // In GUI units, the ClickGUI's (the mockup's CSS px / 2).

@@ -43,6 +43,8 @@ object Storage {
         var lastServerName: String = "",
         var lastServerIp: String = "",
         var autoUpdate: Boolean = true,
+        /** Options > Horizon > Performance: GPU Sync (render/vk/Barriers) instead of Minecraft's full GPU barriers. */
+        var gpuSync: Boolean = true,
     )
 
     var shared = Shared()
