@@ -81,7 +81,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
         "coord-widget" to "Where you are, and in the Nether", "fps-widget" to "Frames per second",
         "keybinds-widget" to "Enabled modules that have a bind", "ping-widget" to "Your latency",
         "potions-widget" to "Active effects and the time left", "staff-widget" to "Staff detected on the server",
-        "target-info" to "Your Aura or Auto Crystal target", "tps-widget" to "Server ticks per second, and the average",
+        "target-info" to "Your Aura or Auto Crystal target, and who's winning", "tps-widget" to "Server ticks per second, and the average",
         "watermark-widget" to "Your head, Horizon, your name and the server", "notifications" to "Pop-ups when modules turn on or off",
         "speed-widget" to "Your speed in km/h, mph or blocks/s", "inventory-widget" to "Your 27 inventory slots",
         "crystal-speed-widget" to "Auto Crystal's crystals per second", "media-player-widget" to "What's playing on your computer",
