@@ -1,6 +1,6 @@
 package dev.horizon.client.compat
 
-import net.fabricmc.loader.api.FabricLoader
+import dev.horizon.shaders.ShadersGate
 import net.minecraft.client.Minecraft
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -8,29 +8,30 @@ import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
 /**
- * Sulkan (Vulkan shaders on Sodium), when it's installed: its shader packs, which one is selected and whether shaders
- * are on, and the selected pack's options, for the client's Options menu to draw in its own style in place of Sulkan's
- * screens. Reached by reflection, so the client neither needs nor bundles Sulkan.
+ * Horizon's shaders (dev.horizon.shaders, built from Sulkan: Vulkan shaders on Sodium), while they run: their shader
+ * packs, which one is selected and whether shaders are on, and the selected pack's options, for the client's Options
+ * menu to draw in its own style in place of the shaders' own screens. Reached by reflection, so nothing of the module
+ * (which needs Sodium's classes) loads while it's off.
  *
  * A pack's options are held as Sulkan's own settings screen holds them, in its settings model (whose labels, value
  * names and descriptions [Settings] uses, so they read as Sulkan's do) until [Settings.apply], which saves them and
  * rebuilds the pack when it's the live one.
  */
 object Sulkan {
-    private const val RUNTIME = "com.sulkan.shaders.runtime.ShaderRuntime"
-    private const val BACKEND = "com.sulkan.shaders.runtime.BackendStatus"
-    private const val NATIVE = "com.sulkan.shaders.graph.NativePackRuntime"
-    private const val GRAPH = "com.sulkan.shaders.graph.PackGraph"
-    private const val SCANNER = "com.sulkan.shaders.pack.ShaderPackScanner"
-    private const val MODEL = "com.sulkan.shaders.screen.PackSettingsModel"
+    private const val RUNTIME = "dev.horizon.shaders.runtime.ShaderRuntime"
+    private const val BACKEND = "dev.horizon.shaders.runtime.BackendStatus"
+    private const val NATIVE = "dev.horizon.shaders.graph.NativePackRuntime"
+    private const val GRAPH = "dev.horizon.shaders.graph.PackGraph"
+    private const val SCANNER = "dev.horizon.shaders.pack.ShaderPackScanner"
+    private const val MODEL = "dev.horizon.shaders.screen.PackSettingsModel"
 
     /** The pack Sulkan ships with. */
     const val BUILTIN = "__builtin__"
     const val BUILTIN_NAME = "Sulkan Realistic"
 
-    /** Whether Sulkan is installed and has what this reaches for. */
+    /** Whether the shaders run (Sodium installed, ShadersGate) and have what this reaches for. */
     val present: Boolean by lazy {
-        FabricLoader.getInstance().isModLoaded("sulkan") && runCatching {
+        ShadersGate.enabled() && runCatching {
             for (c in listOf(RUNTIME, BACKEND, NATIVE, GRAPH, SCANNER, MODEL)) cls(c)
             method(cls(RUNTIME), "applyConfig", 3)
             method(cls(NATIVE), "settings", 1)

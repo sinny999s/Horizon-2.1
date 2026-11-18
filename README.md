@@ -9,7 +9,7 @@
 [![Minecraft](https://img.shields.io/badge/Minecraft-26.3-FF2A4A?style=for-the-badge&logo=minecraft&logoColor=white)](https://www.minecraft.net)
 [![Fabric](https://img.shields.io/badge/Fabric_Loader-0.20+-black?style=for-the-badge&logo=fabric&logoColor=white)](https://fabricmc.net)
 [![Java](https://img.shields.io/badge/Java-25-orange?style=for-the-badge&logo=openjdk&logoColor=white)](https://adoptium.net)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=for-the-badge)](LICENSE)
 
 [Features](#-features) · [Installation](#-installation) · [Commands](#-commands) · [Building](#-building-from-source) · [License](#-license)
 
@@ -116,8 +116,9 @@ The compiled mod will be generated in `build/libs/horizon-26.3-2.0.0.jar`.
 
 ## 📄 License
 
-Horizon 2.0 is open-source software licensed under the **[MIT License](LICENSE)**.
+Horizon is free software licensed under the **[GNU General Public License v3.0](LICENSE)** (releases up to 2.1.32 were MIT). See [NOTICE.md](NOTICE.md).
 
 ### Third-Party Notices
+- **Sulkan** by mravatin: Horizon's shaders (`dev.horizon.shaders`) are built from [Sulkan](https://github.com/mravatins/sulkanShaders), licensed under the GPL-3.0. They need [Sodium](https://modrinth.com/mod/sodium) installed (not included).
 - **Baritone**: Pathfinding functionality is licensed under the [LGPL-3.0](https://github.com/cabaletta/baritone/blob/master/LICENSE).
 - **Fabric**: Fabric Loader and Fabric API are developed by the FabricMC project under the Apache-2.0 license.

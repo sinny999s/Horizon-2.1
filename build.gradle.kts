@@ -24,6 +24,8 @@ repositories {
     maven("https://repo.hypixel.net/repository/Hypixel/")
     // Lunar Client's public repository (apollo-protos, for Lunar Spoof).
     maven("https://repo.lunarclient.dev")
+    // Sodium, which the shaders (dev.horizon.shaders) draw through; compiled against, never shipped.
+    maven("https://maven.caffeinemc.net/releases")
 }
 
 dependencies {
@@ -59,6 +61,9 @@ dependencies {
     implementation("io.netty:netty-handler-proxy:4.2.16.Final")
     include("io.netty:netty-handler-proxy:4.2.16.Final")
     include("io.netty:netty-codec-socks:4.2.16.Final")
+    // The shaders module (dev.horizon.shaders, built from Sulkan) draws through Sodium's terrain renderer. Only compiled
+    // against: players install Sodium themselves, and without it the module stays off (ShadersGate).
+    compileOnly("net.caffeinemc:sodium-fabric:0.9.3-beta.5+mc26.3") { isTransitive = false }
     // Tests of game-free logic (./gradlew test), e.g. Elytra Autopilot's trail steering.
     testImplementation(kotlin("test"))
 }
@@ -91,10 +96,27 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// The GPL's text and the notices (Sulkan, bundled libraries) travel inside the jar.
+tasks.jar {
+    from("LICENSE", "NOTICE.md")
+}
+
+// The shaders' built-in pack lives unpacked in shaders/Sulkan-Realistic so it can be edited; the jar carries it as
+// sulkan-bundled/Sulkan-Realistic.zip, where the shaders look for it (graph/PackFiles).
+val bundledShaderPack = tasks.register<Zip>("bundledShaderPack") {
+    from("shaders/Sulkan-Realistic")
+    archiveFileName = "Sulkan-Realistic.zip"
+    destinationDirectory = layout.buildDirectory.dir("bundled-pack/sulkan-bundled")
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
+
 tasks.processResources {
     val version = project.version
     inputs.property("version", version)
     filesMatching("fabric.mod.json") {
         expand("version" to version)
     }
+    dependsOn(bundledShaderPack)
+    from(layout.buildDirectory.dir("bundled-pack"))
 }

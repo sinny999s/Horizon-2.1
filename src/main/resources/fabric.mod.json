@@ -4,10 +4,13 @@
   "version": "${version}",
   "name": "Horizon",
   "description": "Next-generation utility & exploration client tailored for modern Minecraft anarchy. Features a sleek glassmorphic interface, intelligent base & stash hunting suites, high-precision combat systems, and advanced dimension navigation.",
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "icon": "assets/horizon/icon.png",
   "authors": [
     "sinny999s"
+  ],
+  "contributors": [
+    "mravatin (Sulkan, which Horizon's shaders are built from)"
   ],
   "environment": "client",
   "entrypoints": {
@@ -41,12 +44,16 @@
     "horizon.world.mixins.json",
     "horizon.pvp.mixins.json",
     "horizon.legit.mixins.json",
-    "horizon.deps.mixins.json"
+    "horizon.deps.mixins.json",
+    "horizon.shaders.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.20.1",
     "fabric-api": "*",
     "fabric-language-kotlin": ">=1.14.2+kotlin.2.4.21",
     "minecraft": "26.3"
+  },
+  "breaks": {
+    "sulkan": "*"
   }
 }

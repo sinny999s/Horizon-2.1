@@ -24,6 +24,8 @@ import dev.horizon.client.hud.widgets.StaffDetector
 import dev.horizon.client.module.HorizonModules
 import dev.horizon.client.render.Pipelines
 import dev.horizon.client.render.World3D
+import dev.horizon.shaders.ShadersGate
+import dev.horizon.shaders.SulkanShadersClient
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -36,6 +38,8 @@ object HorizonClient : ClientModInitializer {
     private var lastSave = System.currentTimeMillis()
 
     override fun onInitializeClient() {
+        // The shaders module (dev.horizon.shaders, built from Sulkan): only with a Sodium it's written for.
+        if (ShadersGate.enabled()) SulkanShadersClient().onInitializeClient()
         PreLaunch.stage("Compiling shaders", 0.12f)
         Pipelines.init()
         WaypointRenderer.init()

@@ -1,0 +1,9 @@
+{
+  "sulkan.shaders.compatibility": "Choose Sulkan Realistic or a native Sulkan pack. Legacy and Iris/OptiFine packs are unsupported.",
+  "sulkan.shaders.compatibility_short": "Native Sulkan packs only.",
+  "sulkan.backend.title": "Sulkan shaders are paused",
+  "sulkan.backend.unavailable": "Minecraft is running with OpenGL, so Sulkan's Vulkan shaders are paused. You can keep playing without shaders. Vulkan may be unavailable on your graphics device or driver, or disabled by your graphics preference, launch arguments, or startup recovery. To try Vulkan, update your graphics driver and select Prefer Vulkan in Video Settings, then restart Minecraft. If your device does not support Minecraft's Vulkan requirements, continue using OpenGL.",
+  "sulkan.backend.inactive_short": "OpenGL active. Sulkan shaders are paused; Vulkan requires a restart.",
+  "sulkan.backend.continue": "Continue without shaders",
+  "sulkan.backend.retry": "Use Vulkan next launch"
+}
