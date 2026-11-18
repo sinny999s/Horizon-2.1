@@ -69,7 +69,7 @@ public final class PackFiles {
     public static PackFiles bundled() throws IOException {
         InputStream resource = PackFiles.class.getResourceAsStream("/sulkan-bundled/Sulkan-Realistic.zip");
         if (resource == null) {
-            throw new IOException("Sulkan Realistic is missing from this installation. Reinstall the Sulkan JAR.");
+            throw new IOException("Horizon Realistic is missing from this installation. Reinstall Horizon.");
         }
 
         Map<String, byte[]> entries = new LinkedHashMap<>();

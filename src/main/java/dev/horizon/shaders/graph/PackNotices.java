@@ -56,7 +56,7 @@ public final class PackNotices {
             SystemToast.addOrUpdate(client.gui.toastManager(), TOAST, Component.literal(title), Component.literal(shortText));
             if (client.player != null) {
                 client.player.sendSystemMessage(
-                    Component.literal("[Sulkan] ").withStyle(ChatFormatting.GOLD)
+                    Component.literal("[Horizon Shaders] ").withStyle(ChatFormatting.GOLD)
                         .append(Component.literal(title + ": ").withStyle(ChatFormatting.RED))
                         .append(Component.literal(text).withStyle(ChatFormatting.GRAY))
                 );

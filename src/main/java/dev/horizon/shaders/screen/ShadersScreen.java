@@ -19,7 +19,7 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 public final class ShadersScreen extends ShaderScreenBase {
-    private static final String BUILTIN_PACK_NAME = "Sulkan Realistic";
+    private static final String BUILTIN_PACK_NAME = "Horizon Realistic";
     private static final Component BUILTIN_PACK_DESCRIPTION = Component.literal(
         "Default Vulkan shader. Clouds, reflections, atmospheric lighting and player shadows."
     );
@@ -218,7 +218,7 @@ public final class ShadersScreen extends ShaderScreenBase {
     private void refreshPackEntries() {
         List<ShadersScreen.PackEntry> entries = new ArrayList<>();
         ShadersScreen.PackEntry selectedEntry = null;
-        ShadersScreen.PackEntry builtinEntry = new ShadersScreen.PackEntry("__builtin__", Component.literal("Sulkan Realistic"), BUILTIN_PACK_DESCRIPTION);
+        ShadersScreen.PackEntry builtinEntry = new ShadersScreen.PackEntry("__builtin__", Component.literal(BUILTIN_PACK_NAME), BUILTIN_PACK_DESCRIPTION);
         entries.add(builtinEntry);
         if (Objects.equals(this.selectedPackId, "__builtin__")) {
             selectedEntry = builtinEntry;

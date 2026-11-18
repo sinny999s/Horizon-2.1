@@ -103,7 +103,7 @@ public final class NativePackRuntime {
         }
 
         if (!selected(config)) {
-            throw new IOException("This pack is not a native Sulkan shader pack. Select Sulkan Realistic or a pack with sulkan.json.");
+            throw new IOException("This pack is not a native Sulkan shader pack. Select Horizon Realistic or a pack with sulkan.json.");
         }
 
         PackFiles files = packFiles(config.selectedPackId());

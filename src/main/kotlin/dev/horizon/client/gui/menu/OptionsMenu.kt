@@ -57,8 +57,8 @@ import kotlin.math.roundToInt
  * the theme's colours, as the menus are. The sidebar scrolls above Done once the mods' pages make it longer than the
  * window, its ends fading out while there's more that way.
  *
- * With Sulkan (Vulkan shaders) installed, its shaders are pages here too, in place of its own screens: shaders on or
- * off and the pack to use, and the pack's options (Basic and Advanced), which are applied with Apply or on leaving.
+ * While Horizon's shaders run (Vulkan, with Sodium), they're pages here too, under Horizon Shaders: shaders on or off
+ * and the pack to use, and the pack's options (Basic and Advanced), which are applied with Apply or on leaving.
  */
 class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("options.title")), MenuScreen {
     private val mc: Minecraft get() = Minecraft.getInstance()
@@ -246,10 +246,10 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
             }
         }, icon = "rage", group = HORIZON)
         if (Sulkan.present) {
-            list += Page(SULKAN, "", { emptyList() }, section = true)
-            list += Page("Shaders", "Turn shaders on and pick the pack to use", ::shaderRows, group = SULKAN)
-            list += Page("Settings", "The pack's effects, quality and colour style", { optionRows(false) }, group = SULKAN, actions = ::optionActions)
-            list += Page("Advanced", "Every option the pack has, by what it changes", { optionRows(true) }, group = SULKAN, actions = ::optionActions)
+            list += Page(SHADERS, "", { emptyList() }, section = true)
+            list += Page("Shaders", "Turn shaders on and pick the pack to use", ::shaderRows, group = SHADERS)
+            list += Page("Settings", "The pack's effects, quality and colour style", { optionRows(false) }, group = SHADERS, actions = ::optionActions)
+            list += Page("Advanced", "Every option the pack has, by what it changes", { optionRows(true) }, group = SHADERS, actions = ::optionActions)
         }
         if (sodium) for (mod in SodiumOptions.mods()) {
             if (mod.pages.isEmpty()) continue
@@ -570,7 +570,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                 Ui.box(lx + 0.5f, cy - 1.75f, 3.5f, 3.5f, 1.75f, if (error) ERROR else Tok.T2)
                 Ui.text(Type.small, Ui.fit(Type.small, text, right - lx - 10f), lx + 9f, cy, if (error) ERROR else Tok.T2)
                 if (hovered) {
-                    hintName = if (error) "Sulkan" else "Status"
+                    hintName = if (error) "Shaders" else "Status"
                     hint = text
                 }
             }
@@ -720,9 +720,9 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
         })
     }
 
-    // ---- Sulkan ----
+    // ---- Horizon Shaders ----
 
-    /** The Shaders page: what Sulkan is doing, shaders on or off, the packs, and the shader folder. */
+    /** The Shaders page: what the shaders are doing, shaders on or off, the packs, and the shader folder. */
     private fun shaderRows(): List<Row> = buildList {
         val usable = { Sulkan.vulkan() && !sulkanBusy }
         add(Note(::shaderStatus) { !Sulkan.vulkan() || (!sulkanBusy && (sulkanError || Sulkan.failure() != null)) })
@@ -782,7 +782,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                     else -> "Shaders are off"
                 }
                 if (shaderSettings?.packId != Sulkan.selected()) shaderSettings = null
-                if (page?.group == SULKAN) rows = page?.rows?.invoke() ?: rows
+                if (page?.group == SHADERS) rows = page?.rows?.invoke() ?: rows
             }
         }
         try {
@@ -1180,7 +1180,7 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
 
     private companion object {
         const val MINECRAFT = "Minecraft"
-        const val SULKAN = "Sulkan"
+        const val SHADERS = "Horizon Shaders"
         const val HORIZON = "Horizon"
         const val GENERAL = "General"
 

@@ -9,7 +9,7 @@ Horizon's shaders are built from **Sulkan** by mravatin (<https://github.com/mra
 the GNU General Public License, version 3: native shader packs for Minecraft's Vulkan renderer on Sodium. Horizon's copy
 is Sulkan 0.6.0 for Minecraft 26.3, moved into the `dev.horizon.shaders` package, with Horizon's changes (the pack
 features listed in Sulkan's source README, the Sodium 0.9.3 port, and the module gate `ShadersGate`). The bundled pack
-`shaders/Sulkan-Realistic` and the sun and moon textures under `assets/minecraft/textures/environment/celestial` are
+`shaders/Sulkan-Realistic` (listed in the game as Horizon Realistic) and the sun and moon textures under `assets/minecraft/textures/environment/celestial` are
 Sulkan's too.
 
 The shaders draw through **Sodium** (CaffeineMC, PolyForm Shield 1.0.0), which Horizon compiles against but does not

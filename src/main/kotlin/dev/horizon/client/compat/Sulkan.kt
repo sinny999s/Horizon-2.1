@@ -25,9 +25,9 @@ object Sulkan {
     private const val SCANNER = "dev.horizon.shaders.pack.ShaderPackScanner"
     private const val MODEL = "dev.horizon.shaders.screen.PackSettingsModel"
 
-    /** The pack Sulkan ships with. */
+    /** The pack built into Horizon. */
     const val BUILTIN = "__builtin__"
-    const val BUILTIN_NAME = "Sulkan Realistic"
+    const val BUILTIN_NAME = "Horizon Realistic"
 
     /** Whether the shaders run (Sodium installed, ShadersGate) and have what this reaches for. */
     val present: Boolean by lazy {
