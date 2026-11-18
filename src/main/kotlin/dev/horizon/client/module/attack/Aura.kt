@@ -10,6 +10,8 @@ import dev.horizon.client.combat.RotationManager
 import dev.horizon.client.combat.Swings
 import dev.horizon.client.combat.moduleMessage
 import dev.horizon.client.compat.Via
+import dev.horizon.client.event.AttackBlockEvent
+import dev.horizon.client.event.BlockBreakProgressEvent
 import dev.horizon.client.event.CrosshairEvent
 import dev.horizon.client.event.MouseTurnEvent
 import dev.horizon.client.event.PlayerUpdateEvent
@@ -209,6 +211,11 @@ class Aura : Module("aura", Categories.ATTACK) {
      * knockback. Not when they look about to hit you first: then it hits at once. Not every time.
      */
     val sprintSync = bool("sprint-sync", false, parent = ghostPlay.value) { rotationMode.value == RotationMode.LEGIT && isLegacyCombat() }
+    /**
+     * While Aura is fighting, your clicks only swing: they don't start breaking the block under the aim (your bridge, the
+     * ground when the aim dips) and don't set off Auto Tool or Bed Breaker.
+     */
+    val fightOnlyClicks = bool("fight-only-clicks", true, parent = ghostPlay.value) { rotationMode.value == RotationMode.LEGIT }
     val autoWeapon = enum("auto-weapon", AutoWeapon.NONE)
     val onlyWeapon = bool("only-weapon", false)
     val combatMode = enum("combat-mode", CombatMode.AUTO)
@@ -294,6 +301,9 @@ class Aura : Module("aura", Categories.ATTACK) {
         on<ReceivePacketEvent> { e -> receive(e) }
         on<PostTasksEvent> { if (backTrack.value) backTracker.postTasks() }
         on<CrosshairEvent> { e -> overrideCrosshair(e) }
+        // fight-only-clicks: no block starts breaking, and none carries on breaking, while Aura fights.
+        on<AttackBlockEvent> { e -> if (blocksClicks()) e.cancel() }
+        on<BlockBreakProgressEvent> { e -> if (blocksClicks()) e.cancel() }
         on<Render3DEvent> { render() }
         on<MouseTurnEvent> {
             // A fireball deflect, a clutch or a pearl throw has the camera meanwhile.
@@ -349,6 +359,9 @@ class Aura : Module("aura", Categories.ATTACK) {
 
     /** Aura is fighting someone with a weapon. */
     fun isAttacking(): Boolean = enabled && target != null && weapon.gate()
+
+    /** `fight-only-clicks`: a fight is on, so clicks don't mine and block tools stay out of it. */
+    fun blocksClicks(): Boolean = fightOnlyClicks.value && effectiveRotation() === LegitRotation && isAttacking()
 
     /** DEFAULT while elytra-targeting (gliding) or mace-elytra-targeting, else the setting. */
     fun effectiveRotation(): AuraRotation {
@@ -419,6 +432,8 @@ class Aura : Module("aura", Categories.ATTACK) {
         }
         if (backTrack.value) backTracker.update()
         Modules.get<ElytraTarget>().resolve { selectAndAim(p) }
+        // A block you were breaking when the fight started is let go of (as letting go of the click would).
+        if (blocksClicks() && mc.gameMode?.isDestroying == true) mc.gameMode?.stopDestroyBlock()
     }
 
     /** Pick the target, aim, and queue the hit with the rotation. */

@@ -12,6 +12,7 @@ import dev.horizon.client.mixin.MinecraftAccessor
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
 import dev.horizon.client.module.Modules
+import dev.horizon.client.module.attack.Aura
 import dev.horizon.client.render.Theme
 import dev.horizon.client.render.World3D
 import net.minecraft.client.player.LocalPlayer
@@ -120,7 +121,9 @@ class BedBreaker : Module("bed-breaker", Categories.LEGIT, listOf("legit-bed-bre
             val level = mc.level ?: return@on
             // Now and then a wide look at which bed colours are around: if they're all one, colour isn't the team's.
             if (p.tickCount % 40 == 0) BedTeams.scan(p, level, 64)
+            // Not while Aura fights with fight-only-clicks: your clicks are for the fight then.
             val active = mc.gui.screen() == null && !p.isSpectator && !Modules.get<Clutch>().busy &&
+                !Modules.get<Aura>().blocksClicks() &&
                 (activation.value == Activation.ALWAYS || mc.options.keyAttack.isDown)
             val w = if (active) plan(p, level) else null
             if (w == null) {

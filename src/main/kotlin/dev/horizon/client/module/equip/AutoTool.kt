@@ -5,6 +5,8 @@ import dev.horizon.client.event.BreakDeltaEvent
 import dev.horizon.client.event.PlayerUpdateEvent
 import dev.horizon.client.module.Categories
 import dev.horizon.client.module.Module
+import dev.horizon.client.module.Modules
+import dev.horizon.client.module.attack.Aura
 import net.minecraft.core.BlockPos
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
@@ -38,6 +40,15 @@ class AutoTool : Module("auto-tool", Categories.EQUIP) {
         on<PlayerUpdateEvent> {
             val p = mc.player ?: return@on
             val level = mc.level ?: return@on
+            // Aura's fight-only-clicks: no tool while it fights. If something else took the slot meanwhile (your sword's
+            // key), there's nothing to go back from.
+            if (Modules.get<Aura>().blocksClicks()) {
+                if (switched && p.inventory.selectedSlot != tool) {
+                    previous.clear()
+                    switched = false
+                }
+                return@on
+            }
             val hit = mc.hitResult as? BlockHitResult ?: return@on
             val pos = hit.blockPos
             if (level.getBlockState(pos).isAir) return@on
