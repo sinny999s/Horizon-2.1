@@ -48,7 +48,7 @@ object Blur {
     private var refreshChecked = 0L
 
     /** The monitor's refresh rate, looked up at most once a second (the lookup asks the OS for every monitor). */
-    private fun refreshRate(): Int {
+    fun refreshRate(): Int {
         val now = System.nanoTime()
         if (refreshChecked == 0L || now - refreshChecked > 1_000_000_000L) {
             refreshChecked = now

@@ -85,6 +85,10 @@ object Pipelines {
         shader = "colored_texture", blend = BlendFunction.LIGHTNING)
     val POS_COLOR = quad("pos_color", DefaultVertexFormat.POSITION_COLOR, null)
 
+    /** [Canvas.cacheLayer]: a texture of premultiplied pixels (the HUD's cached layer). */
+    val HUD_CACHE = quad("hud_cache", DefaultVertexFormat.POSITION_TEX_COLOR, SAMPLER, shader = "colored_texture",
+        blend = BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA)
+
     /** GL lines, 1 px wide, no anti-aliasing. */
     val LINES = quad("pos_color_lines", DefaultVertexFormat.POSITION_COLOR, null, shader = "pos_color",
         topology = PrimitiveTopology.DEBUG_LINES)

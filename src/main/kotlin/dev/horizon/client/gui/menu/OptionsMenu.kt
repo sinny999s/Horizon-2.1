@@ -245,6 +245,12 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                     Storage.shared.crashMarkers = it
                     Storage.saveShared()
                 })
+                add(Header("HUD"))
+                add(Toggle("HUD Refresh Cap", { Storage.shared.hudCache }, tooltip =
+                    "Draws the HUD once per monitor refresh instead of every frame, and reuses it in between. Same look, more FPS.") {
+                    Storage.shared.hudCache = it
+                    Storage.saveShared()
+                })
                 add(Header("World"))
                 add(Toggle("Particle Light Cache", { Storage.shared.particleLight }, tooltip =
                     "Particles look up their light when it changes instead of every frame. Same picture; more FPS with lots of smoke.") {

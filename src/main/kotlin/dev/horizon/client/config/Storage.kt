@@ -49,6 +49,8 @@ object Storage {
         var crashMarkers: Boolean = false,
         /** Options > Horizon > Performance: particles keep their world light until it changes (render/perf/ParticleLight). */
         var particleLight: Boolean = true,
+        /** Options > Horizon > Performance: the HUD redrawn at the monitor's refresh rate, reused between (hud/HudCache). */
+        var hudCache: Boolean = true,
     )
 
     var shared = Shared()

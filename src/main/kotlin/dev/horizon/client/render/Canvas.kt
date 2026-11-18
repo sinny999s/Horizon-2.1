@@ -18,10 +18,12 @@ import net.minecraft.client.renderer.DynamicGpuDataStorageMapped
 import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.StagedVertexBuffer
+import net.minecraft.world.item.ItemStack
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Vector2f
+import dev.horizon.client.hud.HudCache
 import java.nio.ByteBuffer
 import java.util.Optional
 import java.util.OptionalDouble
@@ -448,6 +450,31 @@ object Canvas {
         vc.at(pose, x + w + 2, y - 1).setUv(1f, 0f).setColor(-1)
     }
 
+    /**
+     * The HUD's cached layer ([HudCache]) over the whole screen: [texture] holds pixels drawn with alpha onto
+     * transparency (premultiplied colour), so it is blended as premultiplied and lands as if drawn here directly.
+     */
+    fun cacheLayer(texture: GpuTextureView, w: Float, h: Float, flipV: Boolean) {
+        area(pose, 0f, 0f, w, h)
+        val vc = begin(Pipelines.HUD_CACHE, null, texture) ?: return
+        val top = if (flipV) 1f else 0f
+        val bottom = 1f - top
+        vc.at(pose, 0f, h).setUv(0f, bottom).setColor(-1)
+        vc.at(pose, w, h).setUv(1f, bottom).setColor(-1)
+        vc.at(pose, w, 0f).setUv(1f, top).setColor(-1)
+        vc.at(pose, 0f, 0f).setUv(0f, top).setColor(-1)
+    }
+
+    /** Vanilla item renders a 2D layer asks for, counted so [HudCache] keeps the widgets that use them live. */
+    var itemCalls = 0
+        private set
+
+    /** Submits [stack] to vanilla's GUI item renderer at the pose (drawn after this layer's Canvas draws). */
+    fun item(stack: ItemStack, x: Int, y: Int) {
+        itemCalls++
+        graphics?.item(stack, x, y)
+    }
+
     /** A 1-pixel outline rectangle (GL lines, no anti-aliasing). */
     fun outline(x: Float, y: Float, w: Float, h: Float, color: Int) {
         area(pose, x - 1, y - 1, x + w + 1, y + h + 1)
@@ -539,7 +566,10 @@ object Canvas {
     // ---- execution ----
 
     /** Draws everything recorded so far onto [target] (the main render target). */
-    fun flush(target: RenderTarget) {
+    fun flush(target: RenderTarget) = flush(target.colorTextureView!!)
+
+    /** Draws everything recorded so far onto [view] (the main render target's colour, or [HudCache]'s layer). */
+    fun flush(view: GpuTextureView) {
         if (cmds.isEmpty()) return
         val window = Minecraft.getInstance().window
         for (c in cmds) vertices.requestIndexCount(c.draw)
@@ -551,7 +581,7 @@ object Canvas {
         RenderSystem.setProjectionMatrix(projectionBuffer.getBuffer(projection), ProjectionType.ORTHOGRAPHIC)
         val transforms = RenderSystem.getDynamicUniforms().writeTransform(Matrix4f())
         RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-            { "HorizonClient GUI" }, target.colorTextureView!!, Optional.empty(), null, OptionalDouble.empty()
+            { "HorizonClient GUI" }, view, Optional.empty(), null, OptionalDouble.empty()
         ).use { pass ->
             RenderSystem.bindDefaultUniforms(pass)
             pass.setUniform("DynamicTransforms", transforms)

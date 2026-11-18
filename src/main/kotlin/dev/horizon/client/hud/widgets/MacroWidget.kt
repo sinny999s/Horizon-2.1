@@ -35,7 +35,7 @@ object MacroWidget : HudWidget("macro-widget") {
             pose.pushMatrix()
             pose.translate(x + 2.5f, top + 1.5f)
             pose.scale(0.8125f, 0.8125f)
-            Canvas.graphics?.item(item.defaultInstance, 0, 0)
+            Canvas.item(item.defaultInstance, 0, 0)
             pose.popMatrix()
             val cd = if (p.cooldowns.isOnCooldown(item.defaultInstance))
                 p.cooldowns.getCooldownPercent(item.defaultInstance, mc.deltaTracker.getGameTimeDeltaPartialTick(false)) else 0f

@@ -95,7 +95,7 @@ object Notifications {
         } else {
             pose.translate(x + 3.8f, n.y + 1.3f)
             pose.scale(0.65f, 0.65f)
-            Canvas.graphics?.item(n.item, 0, 0)
+            Canvas.item(n.item, 0, 0)
         }
         pose.popMatrix()
     }

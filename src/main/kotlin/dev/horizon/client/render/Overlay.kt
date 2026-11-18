@@ -23,8 +23,13 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 object Overlay {
     private val lateDraws = ArrayList<() -> Unit>()
 
+    /** Late draws asked for, counted so [dev.horizon.client.hud.HudCache] keeps the widgets that use them live. */
+    var lateCalls = 0
+        private set
+
     /** Draws after the vanilla items submitted this frame by the same layer. */
     fun late(draw: () -> Unit) {
+        lateCalls++
         lateDraws += draw
     }
 

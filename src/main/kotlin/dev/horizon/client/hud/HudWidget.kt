@@ -67,6 +67,12 @@ abstract class HudWidget(override val id: String) : SettingsHolder {
     var width = 0f
     var height = 0f
 
+    /**
+     * Drawn every frame, outside [HudCache]'s layer: set once this widget has asked vanilla for an item render or a late
+     * draw (both happen after Horizon's layer, so a cached picture can't hold them).
+     */
+    var live = false
+
     private var dragging = false
     private var grabX = 0f
     private var grabY = 0f

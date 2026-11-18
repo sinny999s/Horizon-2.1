@@ -158,7 +158,7 @@ object CooldownsWidget : HudWidget("cooldowns-widget") {
             pose.pushMatrix()
             pose.translate(rx + 2.1f, top + y + 2.1f)
             pose.scale(0.55f, 0.55f)
-            if (t > 0.8f) Canvas.graphics?.item(e.item.defaultInstance, 0, 0)
+            if (t > 0.8f) Canvas.item(e.item.defaultInstance, 0, 0)
             pose.popMatrix()
             y += 14 * t
         }

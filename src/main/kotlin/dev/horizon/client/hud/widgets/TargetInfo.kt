@@ -151,7 +151,7 @@ object TargetInfo : HudWidget("target-info") {
                     pose.pushMatrix()
                     pose.translate(4.5f + i * 13f, 36.5f)
                     pose.scale(0.6875f, 0.6875f)
-                    Canvas.graphics?.item(stack, 0, 0)
+                    Canvas.item(stack, 0, 0)
                     pose.popMatrix()
                 }
             }

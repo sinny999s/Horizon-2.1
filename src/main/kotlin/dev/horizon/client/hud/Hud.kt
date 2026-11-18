@@ -31,6 +31,7 @@ import dev.horizon.client.hud.widgets.WatermarkWidget
 import dev.horizon.client.gui.modern.Tok
 import dev.horizon.client.gui.modern.Ui
 import dev.horizon.client.render.Canvas
+import dev.horizon.client.render.Overlay
 import dev.horizon.client.render.Colors
 import dev.horizon.client.render.Fonts
 import dev.horizon.client.render.VectorIcon
@@ -91,11 +92,34 @@ object Hud {
         pose.popMatrix()
     }
 
-    /** Once per frame in a world. */
+    /**
+     * Once per frame in a world. With [HudCache] on, the widgets that draw only through the Canvas are drawn into its
+     * layer at the monitor's refresh rate and the layer is reused in the frames between; the live ones (item renders,
+     * late draws) are drawn every frame over it.
+     */
     fun render() {
         cursorOwner = null
         guides.clear()
-        for (w in widgets) if (w.enabled) w.frame()
+        if (!HudCache.active()) {
+            draw(null)
+            return
+        }
+        if (HudCache.due(cachedSignature())) HudCache.refresh { draw(true) }
+        HudCache.composite()
+        draw(false)
+    }
+
+    /** Which widgets the cached layer holds (enabled, not live), to redraw it at once when that changes. */
+    private fun cachedSignature(): Int {
+        var h = 1
+        for (w in widgets) h = h * 31 + if (w.enabled && !w.live) w.hashCode() else 0
+        return h
+    }
+
+    /** Draws the enabled widgets: all of them ([cached] null), or only the cached ([cached] true) or live ones. */
+    private fun draw(cached: Boolean?) {
+        fun picked(w: HudWidget) = w.enabled && (cached == null || w.live != cached)
+        for (w in widgets) if (picked(w)) tracked(w) { w.frame() }
         for (p in plates) withMatrix(p.m) { plate(p.x, p.y, p.w, p.h, p.radius, p.alpha) }
         plates.clear()
         for (d in dividers) withMatrix(d.m) {
@@ -104,10 +128,21 @@ object Hud {
         dividers.clear()
         for (i in icons) withMatrix(i.m) { i.vector.draw(i.x, i.y, Colors.withAlpha(Tok.light(Tok.a1, 0.25f), i.alpha)) }
         icons.clear()
-        for (w in widgets) if (w.enabled) w.postRender()
+        for (w in widgets) if (picked(w)) tracked(w) { w.postRender() }
         Fonts.medium75.flush()
         for (t in texts) withMatrix(t.m) { t.font.drawGradientMiddle(t.s, t.x, t.cy, t.left, t.right) }
         texts.clear()
+    }
+
+    /** Runs [part] of [w]'s frame and makes it live if it asked for an item render or a late draw. */
+    private inline fun tracked(w: HudWidget, part: () -> Unit) {
+        val items = Canvas.itemCalls
+        val late = Overlay.lateCalls
+        part()
+        if (!w.live && (Canvas.itemCalls != items || Overlay.lateCalls != late)) {
+            w.live = true
+            HudCache.invalidate()
+        }
     }
 
     /**

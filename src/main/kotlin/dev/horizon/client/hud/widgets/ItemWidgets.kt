@@ -30,7 +30,7 @@ object ArmorWidget : HudWidget("armor-widget") {
             val pose = Canvas.pose
             pose.pushMatrix()
             pose.translate(sx + 2f, top + 0.5f)
-            Canvas.graphics?.item(stack, 0, 0)
+            Canvas.item(stack, 0, 0)
             pose.popMatrix()
         }
         size(85f, 22f)
@@ -82,7 +82,7 @@ object PvpResourcesWidget : HudWidget("pvp-resources-widget") {
             val pose = Canvas.pose
             pose.pushMatrix()
             pose.translate(sx + 2f, top + 1f)
-            Canvas.graphics?.item(item.defaultInstance, 0, 0)
+            Canvas.item(item.defaultInstance, 0, 0)
             pose.popMatrix()
             val n = ServerInfo.count(item)
             val label = if (n <= 0) "-" else n.toString()
@@ -111,7 +111,7 @@ object InventoryWidget : HudWidget("inventory-widget") {
             pose.pushMatrix()
             pose.translate(left + 7.5f + i % 9 * 16f + 1.5f, top + 18.5f + i / 9 * 16f + 1.5f)
             pose.scale(0.75f, 0.75f)
-            Canvas.graphics?.item(stack, 0, 0)
+            Canvas.item(stack, 0, 0)
             pose.popMatrix()
         }
         size(158f, 72f)
