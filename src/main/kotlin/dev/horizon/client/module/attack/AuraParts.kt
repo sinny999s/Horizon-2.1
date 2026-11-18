@@ -36,6 +36,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.inventory.ContainerInput
+import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.world.item.Items
@@ -213,12 +214,97 @@ class ShieldHook(private val aura: Aura) : AuraHook {
 class WeaponHook(private val aura: Aura) : AuraHook {
     private var saved = -1
 
+    // auto-weapon LEGIT: when the sword's key gets pressed (ms, -1 none), the slot to go back to after the fight (blocks
+    // you were holding, -1 none), the sword's slot, when to go back, and a key pressed one off to put right.
+    private var swapAt = -1L
+    private var backSlot = -1
+    private var swordSlot = -1
+    private var backAt = -1L
+    private var fixSlot = -1
+    private var fixAt = -1L
+
     /** The only-weapon gate. */
     fun gate(): Boolean {
         if (!aura.onlyWeapon.value) return true
         val p = mc.player ?: return false
         if (aura.autoWeapon.value == Aura.AutoWeapon.NONE) return isWeapon(p.mainHandItem)
         return Inventory.hotbarFind { it.`is`(ItemTags.SWORDS) } != null || Inventory.hotbarFind { it.`is`(ItemTags.AXES) } != null
+    }
+
+    /** auto-weapon LEGIT is about to press the sword's key (or put a wrong key right): hits wait for the sword. */
+    fun swapPending() = aura.autoWeapon.value == Aura.AutoWeapon.LEGIT && (swapAt >= 0 || fixSlot >= 0)
+
+    /**
+     * auto-weapon LEGIT, each tick. A fight is on (the target within a block and a bit of your reach) and you aren't
+     * holding a weapon: after a reaction time, your best sword's hotbar key (now and then the key next to it first, put
+     * right a moment later). Not while you use an item or have a screen open; while you place blocks, only once they're
+     * within reach. Blocks you were holding come back a second or so after the fight, unless you changed slots yourself.
+     */
+    private fun legitTick() {
+        if (aura.autoWeapon.value != Aura.AutoWeapon.LEGIT) {
+            swapAt = -1
+            backSlot = -1
+            fixSlot = -1
+            return
+        }
+        val p = mc.player ?: return
+        val now = System.nanoTime() / 1_000_000L
+        if (fixSlot >= 0) {
+            if (now >= fixAt) {
+                Inventory.selectHotbar(fixSlot)
+                fixSlot = -1
+            }
+            return
+        }
+        val t = aura.target
+        val eye = PlayerState.eye
+        val dist = t?.boundingBox?.let { b -> eye.distanceTo(Vec3(eye.x.coerceIn(b.minX, b.maxX), eye.y.coerceIn(b.minY, b.maxY), eye.z.coerceIn(b.minZ, b.maxZ))) }
+        val placing = PlayerState.physical(mc.options.keyUse) || mc.options.keyUse.isDown
+        val engaged = dist != null && dist <= aura.reach.value + (if (placing) 0.0 else 1.2)
+        if (engaged) {
+            backAt = -1
+            if (isWeapon(p.mainHandItem) || p.isUsingItem || mc.gui.screen() != null || PlayerState.containerOpen) {
+                swapAt = -1
+                return
+            }
+            val slot = best(ItemTags.SWORDS) ?: best(ItemTags.AXES) ?: return
+            if (swapAt < 0) {
+                val lag = GhostMath.lagScale(aura.ghost.strength)
+                swapAt = now + (Random.nextDouble(140.0, 290.0) * lag).toLong()
+                return
+            }
+            if (now < swapAt) return
+            swapAt = -1
+            val from = Inventory.selected
+            backSlot = if (p.mainHandItem.item is BlockItem) from else -1
+            swordSlot = slot
+            GhostHook.stats.swaps++
+            val off = if (Random.nextBoolean()) slot - 1 else slot + 1
+            if (Random.nextDouble() < 0.06 && off in 0..8 && off != from) {
+                Inventory.selectHotbar(off)
+                fixSlot = slot
+                fixAt = now + Random.nextLong(70, 170)
+                GhostHook.stats.fumbles++
+            } else {
+                Inventory.selectHotbar(slot)
+            }
+            return
+        }
+        swapAt = -1
+        if (backSlot < 0) return
+        if (Inventory.selected != swordSlot) {
+            // You changed slots yourself: yours.
+            backSlot = -1
+            return
+        }
+        if (t != null && dist != null && dist <= aura.reach.value + 3.0) return
+        if (backAt < 0) backAt = now + Random.nextLong(700, 1500)
+        if (now >= backAt) {
+            Inventory.selectHotbar(backSlot)
+            GhostHook.stats.swapsBack++
+            backSlot = -1
+            backAt = -1
+        }
     }
 
     private fun isWeapon(s: ItemStack) =
@@ -248,7 +334,10 @@ class WeaponHook(private val aura: Aura) : AuraHook {
         return best
     }
 
-    override fun tick() = restore()
+    override fun tick() {
+        restore()
+        legitTick()
+    }
 
     override fun pre() {
         if (aura.autoWeapon.value != Aura.AutoWeapon.SILENT) return

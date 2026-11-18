@@ -854,7 +854,7 @@ object LegitRotation : AuraRotation() {
             follow.reset()
             val rLo = minOf(aura.reactionMin.value, aura.reactionMax.value) / 1000.0
             val rHi = maxOf(aura.reactionMin.value, aura.reactionMax.value) / 1000.0
-            reaction = if (rHi <= 0.0) 0.0 else Rng.double(rLo, rHi)
+            reaction = if (rHi <= 0.0) 0.0 else Rng.double(rLo, rHi) * GhostMath.lagScale(aura.ghost.strength)
             speedBias = Rng.double(0.0, 1.0)
             stiffJitter = Rng.double(0.90, 1.10)
             dampJitter = Rng.double(0.93, 1.07)
@@ -881,6 +881,11 @@ object LegitRotation : AuraRotation() {
         }
         val k = 1.0 - exp(-dt * 3.0)
         spot = spot.add(spotTo.subtract(spot).scale(k))
+        // `void-knockback`: drift across their box to the side that turns the hit's push towards a drop.
+        aura.ghost.voidSpot(t, eyeNow)?.let { v ->
+            val kv = 1.0 - exp(-dt * 4.0)
+            spot = Vec3(spot.x + (v.x - spot.x) * kv, spot.y, spot.z + (v.z - spot.z) * kv)
+        }
         clickImpulse *= exp(-dt * 28.0)
 
         val aim = aimPoint(aura, t)
@@ -914,7 +919,8 @@ object LegitRotation : AuraRotation() {
             if (inst.lengthSqr() * dt * dt < 4.0) relVel = relVel.add(inst.subtract(relVel).scale(1.0 - exp(-dt / 0.1)))
         }
         lastSeen = rel
-        val ff = aura.tracking.value / 100.0
+        val strength = aura.ghost.strength
+        val ff = aura.tracking.value / 100.0 * GhostMath.trackScale(strength)
         val aimNow = aim.add(shift).add(relVel.scale(0.05 * ff))
         val ax = aimNow.x - eyeNow.x
         val ay = aimNow.y - eyeNow.y
@@ -932,10 +938,10 @@ object LegitRotation : AuraRotation() {
         val damping = (0.72 + smooth * 0.30) * dampJitter
         val sLo = minOf(aura.minAimSpeed.value, aura.maxAimSpeed.value).toDouble()
         val sHi = maxOf(aura.minAimSpeed.value, aura.maxAimSpeed.value).toDouble()
-        val topSpeed = sLo + (sHi - sLo) * speedBias
+        val topSpeed = (sLo + (sHi - sLo) * speedBias) * GhostMath.speedScale(strength)
 
         val onBox = rayHitsTarget(t, Rotation(lookYaw(p), lookPitch(p)), aura.range.value + 0.75f, true)
-        val relax = aura.hitboxRelax.value / 100.0
+        val relax = aura.hitboxRelax.value / 100.0 * aura.ghost.relaxScale()
         val pullScale = if (onBox) 1.0 - relax else 1.0
         val dampBoost = if (onBox) 1.0 + relax * 2.0 else 1.0
         val pitchScale = aura.pitchAssist.value / 100.0
@@ -988,19 +994,23 @@ object LegitRotation : AuraRotation() {
 
     private fun hv(v: Vec3) = HumanAim.V(v.x, v.y, v.z)
 
-    private fun humanParams(aura: Aura) = HumanAim.Params(
-        speedLo = aura.minAimSpeed.value.toDouble(),
-        speedHi = aura.maxAimSpeed.value.toDouble(),
-        fittsB = 0.05 + 0.15 * aura.smoothness.value.toDouble().coerceIn(0.05, 1.0),
-        perceptionDelay = aura.perceptionDelay.value / 1000.0,
-        overshoot = aura.overshoot.value / 100.0,
-        aimError = aura.aimError.value / 100.0,
-        curve = aura.curve.value / 100.0,
-        tracking = aura.tracking.value / 100.0,
-        pitchScale = aura.pitchAssist.value / 100.0,
-        relax = aura.hitboxRelax.value / 100.0,
-        tremor = aura.tremor.value.toDouble(),
-    )
+    /** The hand from Aura's settings, played looser by `adaptive-strength` while the fight is easy. */
+    private fun humanParams(aura: Aura): HumanAim.Params {
+        val s = aura.ghost.strength
+        return HumanAim.Params(
+            speedLo = aura.minAimSpeed.value * GhostMath.speedScale(s),
+            speedHi = aura.maxAimSpeed.value * GhostMath.speedScale(s),
+            fittsB = 0.05 + 0.15 * aura.smoothness.value.toDouble().coerceIn(0.05, 1.0),
+            perceptionDelay = aura.perceptionDelay.value / 1000.0 * GhostMath.lagScale(s),
+            overshoot = (aura.overshoot.value / 100.0 * (1.0 + (1.0 - s) * 0.6)).coerceAtMost(1.0),
+            aimError = aura.aimError.value / 100.0 * GhostMath.errorScale(s),
+            curve = aura.curve.value / 100.0,
+            tracking = aura.tracking.value / 100.0 * GhostMath.trackScale(s),
+            pitchScale = aura.pitchAssist.value / 100.0,
+            relax = aura.hitboxRelax.value / 100.0 * aura.ghost.relaxScale(),
+            tremor = aura.tremor.value.toDouble(),
+        )
+    }
 
     /** `follow-mouse`: how far each side of the target's box is drawn in for your crosshair to count as well on it, and as on it. */
     private const val INNER = 0.2

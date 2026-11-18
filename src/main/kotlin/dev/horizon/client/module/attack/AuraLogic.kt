@@ -348,7 +348,11 @@ class AttackTimer(private val aura: Aura) : AuraHook {
     override fun post(rotation: Rotation) {
         counter++
         countdown = if (aura.isLegacyCombat()) {
-            val ms = clicker.onClick(System.nanoTime() / 1_000_000L, aura.minCps.value, aura.maxCps.value, aura.clickPattern.value)
+            // adaptive-strength: fewer clicks while the fight is easy.
+            val cs = GhostMath.cpsScale(aura.ghost.strength)
+            val lo = max(1, Math.round(aura.minCps.value * cs).toInt())
+            val hi = max(lo, Math.round(aura.maxCps.value * cs).toInt())
+            val ms = clicker.onClick(System.nanoTime() / 1_000_000L, lo, hi, aura.clickPattern.value)
             max(1, (ms / 50.0).toInt())
         } else {
             baseDelay()

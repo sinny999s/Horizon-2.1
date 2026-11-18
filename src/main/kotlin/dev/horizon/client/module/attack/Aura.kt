@@ -66,7 +66,8 @@ class Aura : Module("aura", Categories.ATTACK) {
     enum class CombatMode { AUTO, COOLDOWN, LEGACY }
     /** BLOCK_HIT / HOLD: sword blocking around Aura's hits. LEGIT: block-hits with the use key (see ShieldHook). */
     enum class AutoBlock { OFF, BLOCK_HIT, HOLD, LEGIT }
-    enum class AutoWeapon { NORMAL, NONE, SILENT }
+    /** LEGIT: when a fight starts, your best sword's hotbar key after a moment, as you'd press it ([WeaponHook]). */
+    enum class AutoWeapon { NORMAL, NONE, SILENT, LEGIT }
     enum class WhileShielding { PAUSE, IGNORE, UNPRESS, LEGIT }
     enum class RandomizeDelay { OFF, VULCAN, DEFAULT, LEGIT }
     enum class Sprint { LEGIT, LEGIT_EXTRA, NORMAL, HVH }
@@ -181,6 +182,33 @@ class Aura : Module("aura", Categories.ATTACK) {
     val aimError = int("aim-error", 6, 0..25, parent = legit.value) { isHumanAim() }
     val curve = int("curve", 6, 0..30, parent = legit.value) { isHumanAim() }
     val tracking = int("tracking", 80, 0..100, parent = legit.value) { rotationMode.value == RotationMode.LEGIT }
+    // `ghost`: how LEGIT plays beyond the aim (GhostHook).
+    val ghostPlay = group("ghost") { rotationMode.value == RotationMode.LEGIT }.also { it.value.opened = true }
+    /**
+     * Plays looser when the fight is easy and at full strength when it's close, you're losing or others join in (judged
+     * like Target Info's Winning / Losing): slower, later and less exact aim and fewer clicks while you're well ahead.
+     */
+    val adaptiveStrength = bool("adaptive-strength", false, parent = ghostPlay.value) { rotationMode.value == RotationMode.LEGIT }
+    /** How strong it plays in an easy fight, as a share of these settings. */
+    val easyStrength = int("easy-strength", 65, 30..100, parent = ghostPlay.value) {
+        rotationMode.value == RotationMode.LEGIT && adaptiveStrength.value
+    }
+    /**
+     * Misses where a person would (percent, about how often in an ordinary fight): more at the edge of reach, on a
+     * target crossing your view, right after a flick or while you're in the air, next to none on someone standing in front
+     * of you. On top of `attack-chance`. 0 is off.
+     */
+    val smartMisses = int("smart-misses", 0, 0..20, parent = ghostPlay.value) { rotationMode.value == RotationMode.LEGIT }
+    /**
+     * Aims at the side of the target that turns your hit's knockback towards a drop near them (an island's edge, a
+     * bridge's side), staying on their box. A hit pushes the way you face.
+     */
+    val voidKnockback = bool("void-knockback", false, parent = ghostPlay.value) { rotationMode.value == RotationMode.LEGIT }
+    /**
+     * 1.8 combat: a hit about to land while you're trying to sprint but aren't waits a tick or two for sprint, for its
+     * knockback. Not when they look about to hit you first: then it hits at once. Not every time.
+     */
+    val sprintSync = bool("sprint-sync", false, parent = ghostPlay.value) { rotationMode.value == RotationMode.LEGIT && isLegacyCombat() }
     val autoWeapon = enum("auto-weapon", AutoWeapon.NONE)
     val onlyWeapon = bool("only-weapon", false)
     val combatMode = enum("combat-mode", CombatMode.AUTO)
@@ -252,9 +280,10 @@ class Aura : Module("aura", Categories.ATTACK) {
     val sprintHook = SprintHook(this, timer, offhandSwap)
     private val shield = ShieldHook(this)
     val weapon = WeaponHook(this)
+    val ghost = GhostHook(this)
 
-    /** The hooks, in order: attack timing, offhand-hit-swap, sprint, while-shielding, auto-weapon. */
-    private val hooks: List<AuraHook> = listOf(timer, offhandSwap, sprintHook, shield, weapon)
+    /** The hooks, in order: attack timing, offhand-hit-swap, sprint, while-shielding, auto-weapon, ghost. */
+    private val hooks: List<AuraHook> = listOf(timer, offhandSwap, sprintHook, shield, weapon, ghost)
     val backTracker = BackTrack(this)
     private val finder = AuraTargets(this)
 
@@ -443,6 +472,9 @@ class Aura : Module("aura", Categories.ATTACK) {
             if (isLegacyCombat() && swingRange.value > 0f && inPreSwingRange(t)) preSwing()
             return
         }
+        // The sword's key is about to be pressed (auto-weapon LEGIT), or sprint is about to come back (sprint-sync): the
+        // click waits, still due next tick.
+        if (weapon.swapPending() || ghost.holdForSprint(t)) return
         if (!isLegacyCombat() && breakShield()) return
         attack(t, rotation)
     }
@@ -470,7 +502,8 @@ class Aura : Module("aura", Categories.ATTACK) {
         val p = mc.player ?: return
         val gm = mc.gameMode ?: return
         val legacy = isLegacyCombat()
-        if (attackChance.value == 100 || Random.nextFloat() * 100 < attackChance.value) {
+        val hitChance = attackChance.value / 100.0 * (1.0 - ghost.missChance(t))
+        if (hitChance >= 1.0 || Random.nextDouble() < hitChance) {
             for (h in hooks) h.pre()
             val center = Rotation.lookAt(t.boundingBox.center)
             val grim = rotationMode.value == RotationMode.GRIM_SILENT
@@ -493,6 +526,7 @@ class Aura : Module("aura", Categories.ATTACK) {
             Swings.punch()
             timer.post(rot)
             shield.post(rot)
+            ghost.missed()
         }
         p.resetOnlyAttackStrengthTicker()
         AdvancedRotation.onAttack(this)
