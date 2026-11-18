@@ -6,6 +6,8 @@ import com.mojang.blaze3d.platform.cursor.CursorTypes
 import dev.horizon.client.compat.SodiumOptions
 import dev.horizon.client.compat.Sulkan
 import dev.horizon.client.config.Storage
+import dev.horizon.input.core.Ixeris
+import net.minecraft.util.Util
 import dev.horizon.client.updater.AutoUpdater
 import dev.horizon.client.gui.Cursor
 import dev.horizon.client.gui.Fps
@@ -248,6 +250,19 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                     "Particles look up their light when it changes instead of every frame. Same picture; more FPS with lots of smoke.") {
                     Storage.shared.particleLight = it
                     Storage.saveShared()
+                })
+                // Threaded input (dev.horizon.input): its own settings file, read once at start.
+                val input = Ixeris.getConfig()
+                add(Header("Input"))
+                add(Toggle("Threaded Input", { input.isEnabledHere }, tooltip =
+                    "Mouse and keyboard are read on their own thread so moving the mouse doesn't cost FPS. Applies after a restart.") {
+                    input.setEnabledHere(it)
+                    input.save()
+                })
+                if (Util.getPlatform() == Util.OS.WINDOWS) add(Toggle("Buffered Mouse Input", { input.isBufferedRawMouse }, tooltip =
+                    "Reads mouse movement in batches instead of one event at a time (fast mice). Applies after a restart.") {
+                    input.setBufferedRawMouse(it)
+                    input.save()
                 })
             }
         }, icon = "rage", group = HORIZON)

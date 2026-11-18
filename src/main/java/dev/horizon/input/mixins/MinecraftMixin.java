@@ -1,0 +1,109 @@
+//~ auto_logger
+package dev.horizon.input.mixins;
+
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import dev.horizon.input.VersionCompatUtils;
+import dev.horizon.input.core.Ixeris;
+import dev.horizon.input.core.glfw.GlfwEventHandler;import dev.horizon.input.core.sdl.SdlEventHandler;
+import dev.horizon.input.core.threading.MainThreadDispatcher;
+import dev.horizon.input.core.threading.RenderThreadDispatcher;
+import net.minecraft.client.Minecraft;
+import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+//? >=26.3 {
+import com.mojang.blaze3d.platform.SDLEventHandler;
+//? }
+
+@Mixin(value = Minecraft.class, priority = 500)
+public abstract class MinecraftMixin {
+    //? if >=26.3 {
+    @Inject(method = "runTick", at = @At("HEAD"))
+    //?} else if >=26.2 {
+    /*@Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;submit()V"))
+    *///?} else if >=26 {
+    /*@Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;flipFrame(Lcom/mojang/blaze3d/TracyFrameCapture;)V"))
+    *///?} else if >=1.21.2 {
+    /*@Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;updateDisplay(Lcom/mojang/blaze3d/TracyFrameCapture;)V"))
+    *///?} else {
+    /*@Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;updateDisplay()V"))
+    *///?}
+    private void ixeris$pollEvents(boolean tick, CallbackInfo ci) {
+        MainThreadDispatcher.requestPollEvents();
+    }
+
+    //? >=26.1 {
+    @Inject(method = "renderFrame", at = @At(value = "CONSTANT", args = "stringValue=present"))
+    //? } else {
+    /*@Inject(method = "runTick", at = @At(value = "CONSTANT", args = "stringValue=updateDisplay"))
+    *///? }
+    private void ixeris$updateTextInputArea(boolean advanceGameTime, CallbackInfo ci) {
+        if (Ixeris.getEventHandler() instanceof SdlEventHandler sdlEventHandler) {
+            sdlEventHandler.updateTextInputArea();
+        }
+    }
+
+    //? if >=26.3 {
+    @Inject(method = "run", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;pollEvents(Lcom/mojang/blaze3d/platform/SDLEventHandler;)V"))
+    private void ixeris$replayQueue(CallbackInfo ci)
+    {
+        VersionCompatUtils.profilerPush("dispatchedCalls");
+        RenderThreadDispatcher.replayQueue();
+        VersionCompatUtils.profilerPop();
+    }
+    //?} else if >=26 {
+    /*@Inject(method = "run", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;pollEvents()V"))
+    private void ixeris$replayQueue(CallbackInfo ci)
+    {
+        VersionCompatUtils.profilerPush("callback");
+        RenderThreadDispatcher.replayQueue();
+        if (Ixeris.getEventHandler() instanceof GlfwEventHandler glfwEventHandler) {
+            glfwEventHandler.replayErrorQueue();
+        }
+        VersionCompatUtils.profilerPop();
+    }
+    *///?} else {
+    /*@Inject(method = "runTick", at = @At(value = "INVOKE", target = "Ljava/lang/Thread;yield()V", shift = At.Shift.AFTER))
+    private void ixeris$replayQueue(boolean tick, CallbackInfo ci) {
+        VersionCompatUtils.profilerPopPush("callback"); // Pop the "yield" section and push ours
+        RenderThreadDispatcher.replayQueue();
+        if (Ixeris.getEventHandler() instanceof GlfwEventHandler glfwEventHandler) {
+            glfwEventHandler.replayErrorQueue();
+        }
+        // We injected before the "pop" call for the "yield" section, do not pop here
+    }
+    *///?}
+
+    //? if <26.2 {
+    /*@Inject(method = "destroy", at = @At(value = "INVOKE", target = "Ljava/lang/System;exit(I)V"))
+    private void ixeris$destroy(CallbackInfo ci) {
+        Ixeris.shouldExit = true;
+        if (!Ixeris.getConfig().isFullyBlockingMode()) {
+            try {
+                Ixeris.mainThread.join(); // wait for the queued GLFW commands to finish
+            } catch (InterruptedException ignored) {
+            }
+        }
+    }
+    *///?}
+
+    //? >=26.2 {
+    @ModifyExpressionValue(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;windowSurfaceNeedsReconfiguring:Z", opcode = Opcodes.GETFIELD))
+    private boolean ixeris$reconfigureSurfaceWhenNeeded(boolean original) {
+        return original || Ixeris.forceReconfigureSwapchain;
+    }
+
+    //? >=26.3 {
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/device/GpuSurface;configure(Lcom/mojang/renderpearl/api/device/GpuSurface$Configuration;)V", shift = At.Shift.AFTER))
+    //? } else {
+    /*@Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/GpuSurface;configure(Lcom/mojang/blaze3d/systems/GpuSurface$Configuration;)V", shift = At.Shift.AFTER))
+    *///? }
+    private void ixeris$postSurfaceConfiguration(CallbackInfo ci) {
+        Ixeris.forceReconfigureSwapchain = false;
+    }
+    //? }
+}

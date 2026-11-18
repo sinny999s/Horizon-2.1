@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "package": "dev.horizon.input.mixins",
+  "minVersion": "0.8",
+  "plugin": "dev.horizon.input.IxerisMixinPlugin",
+  "client": [
+    "MainMixin",
+    "MinecraftMixin",
+    "MouseHandlerAccessor",
+    "MouseHandlerMixin",
+    "RenderSystemMixin",
+    "TitleScreenMixin",
+    "WindowMixin",
+    "enhanced_fps_limiter.RenderSystemMixin",
+    "macos.MacosUtilMixin",
+    "macos.MinecraftMixin",
+    "workarounds.WindowAccessor"
+  ],
+  "mixins": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

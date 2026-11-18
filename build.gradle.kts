@@ -64,6 +64,17 @@ dependencies {
     // The shaders module (dev.horizon.shaders, built from Sulkan) draws through Sodium's terrain renderer. Only compiled
     // against: players install Sodium themselves, and without it the module stays off (ShadersGate).
     compileOnly("net.caffeinemc:sodium-fabric:0.9.3-beta.5+mc26.3") { isTransitive = false }
+    // Threaded input (dev.horizon.input, built from Ixeris) keeps its settings in config/horizon-input.toml with
+    // NightConfig (LGPL-3.0), shipped inside Horizon's jar. Its GLFW code paths only compile against GLFW: 26.3 runs on SDL.
+    for (lib in listOf("com.electronwill.night-config:core", "com.electronwill.night-config:toml")) {
+        implementation("$lib:3.9.0")
+        include("$lib:3.9.0")
+    }
+    compileOnly("org.lwjgl:lwjgl-glfw:3.4.3")
+    // Its Win32 raw-input structs use JSR-305's @Nullable, and its macOS window fix the Objective-C bridge Minecraft
+    // ships on macOS: compile-time only.
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    compileOnly("ca.weblite:java-objc-bridge:1.1")
     // Tests of game-free logic (./gradlew test), e.g. Elytra Autopilot's trail steering.
     testImplementation(kotlin("test"))
 }

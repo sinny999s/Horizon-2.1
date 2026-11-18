@@ -10,7 +10,8 @@
     "sinny999s"
   ],
   "contributors": [
-    "mravatin (Sulkan, which Horizon's shaders are built from)"
+    "mravatin (Sulkan, which Horizon's shaders are built from)",
+    "decce and LitnhJacuzzi (Ixeris, which Horizon's threaded input is built from)"
   ],
   "environment": "client",
   "entrypoints": {
@@ -18,7 +19,8 @@
       {
         "adapter": "kotlin",
         "value": "dev.horizon.client.HorizonClient"
-      }
+      },
+      "dev.horizon.input.fabric.IxerisModFabric"
     ],
     "preLaunch": [
       {
@@ -45,7 +47,9 @@
     "horizon.pvp.mixins.json",
     "horizon.legit.mixins.json",
     "horizon.deps.mixins.json",
-    "horizon.shaders.mixins.json"
+    "horizon.shaders.mixins.json",
+    "horizon.input.mixins.json",
+    "horizon.input.core.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.20.1",
@@ -54,6 +58,7 @@
     "minecraft": "26.3"
   },
   "breaks": {
-    "sulkan": "*"
+    "sulkan": "*",
+    "ixeris": "*"
   }
 }

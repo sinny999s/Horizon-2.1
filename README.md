@@ -120,5 +120,6 @@ Horizon is free software licensed under the **[GNU General Public License v3.0](
 
 ### Third-Party Notices
 - **Sulkan** by mravatin: Horizon's shaders (`dev.horizon.shaders`) are built from [Sulkan](https://github.com/mravatins/sulkanShaders), licensed under the GPL-3.0. They need [Sodium](https://modrinth.com/mod/sodium) installed (not included).
+- **Ixeris** by decce: Horizon's threaded input (`dev.horizon.input`) is built from [Ixeris](https://github.com/decce6/Ixeris), licensed under the LGPL-3.0.
 - **Baritone**: Pathfinding functionality is licensed under the [LGPL-3.0](https://github.com/cabaletta/baritone/blob/master/LICENSE).
 - **Fabric**: Fabric Loader and Fabric API are developed by the FabricMC project under the Apache-2.0 license.

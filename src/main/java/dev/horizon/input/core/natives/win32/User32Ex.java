@@ -1,0 +1,173 @@
+package dev.horizon.input.core.natives.win32;
+
+import org.lwjgl.system.APIUtil;
+import org.lwjgl.system.Checks;
+import org.lwjgl.system.NativeType;
+import org.lwjgl.system.SharedLibrary;
+import org.lwjgl.system.windows.POINT;
+import org.lwjgl.system.windows.RECT;
+
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+
+import static org.lwjgl.system.APIUtil.apiGetFunctionAddress;
+import static org.lwjgl.system.JNI.*;
+import static org.lwjgl.system.MemoryUtil.memAddress;
+
+public class User32Ex {
+    public static final int RIDEV_NOLEGACY = 0x00000030;
+    public static final int RIDEV_REMOVE = 0x00000001;
+    public static final int RIM_TYPEMOUSE = 0;
+    public static final int RIM_TYPEKEYBOARD = 1;
+    public static final short RI_KEY_MAKE = 0;
+    public static final short RI_KEY_BREAK = 1;
+    public static final short RI_KEY_E0 = 2;
+    public static final short RI_KEY_E1 = 4;
+    public static final short KEYBOARD_OVERRUN_MAKE_CODE = 0xFF;
+    public static final short UCHAR_MAX = 0xFF;
+    public static final int USHRT_MAX  = 0xFFFF;
+    public static final short MOUSE_MOVE_RELATIVE = 0x00;
+    public static final short MOUSE_MOVE_ABSOLUTE = 0x01;
+    public static final short MOUSE_VIRTUAL_DESKTOP = 0x02;
+    public static final short MOUSE_ATTRIBUTES_CHANGED = 0x04;
+    public static final short MOUSE_MOVE_NOCOALESCE = 0x08;
+    public static final short RI_MOUSE_BUTTON_1_DOWN = 0x0001;
+    public static final short RI_MOUSE_LEFT_BUTTON_DOWN = 0x0001;
+    public static final short RI_MOUSE_BUTTON_1_UP = 0x0002;
+    public static final short RI_MOUSE_LEFT_BUTTON_UP = 0x0002;
+    public static final short RI_MOUSE_BUTTON_2_DOWN = 0x0004;
+    public static final short RI_MOUSE_RIGHT_BUTTON_DOWN = 0x0004;
+    public static final short RI_MOUSE_BUTTON_2_UP = 0x0008;
+    public static final short RI_MOUSE_RIGHT_BUTTON_UP = 0x0008;
+    public static final short RI_MOUSE_BUTTON_3_DOWN = 0x0010;
+    public static final short RI_MOUSE_MIDDLE_BUTTON_DOWN = 0x0010;
+    public static final short RI_MOUSE_BUTTON_3_UP = 0x0020;
+    public static final short RI_MOUSE_MIDDLE_BUTTON_UP = 0x0020;
+    public static final short RI_MOUSE_BUTTON_4_DOWN = 0x0040;
+    public static final short RI_MOUSE_BUTTON_4_UP = 0x0080;
+    public static final short RI_MOUSE_BUTTON_5_DOWN = 0x0100;
+    public static final short RI_MOUSE_BUTTON_5_UP = 0x0200;
+    public static final short RI_MOUSE_WHEEL = 0x0400;
+    public static final short RI_MOUSE_HWHEEL = 0x0800;
+    public static final short HID_USAGE_PAGE_GENERIC = 0x01;
+    public static final short HID_USAGE_GENERIC_MOUSE = 0x02;
+    public static final short HID_USAGE_GENERIC_KEYBOARD = 0x06;
+    public static final int MAPVK_VK_TO_VSC = 0;
+    public static final int MAPVK_VSC_TO_VK = 1;
+    public static final int MAPVK_VK_TO_CHAR = 2;
+    public static final int MAPVK_VSC_TO_VK_EX = 3;
+    public static final int MAPVK_VK_TO_VSC_EX = 4;
+
+    private static final SharedLibrary USER32 = APIUtil.apiCreateLibrary("user32");
+
+    public static final long ClientToScreen = apiGetFunctionAddress(USER32, "ClientToScreen");
+    public static final long GetActiveWindow = apiGetFunctionAddress(USER32, "GetActiveWindow");
+    public static final long GetRawInputBuffer = apiGetFunctionAddress(USER32, "GetRawInputBuffer");
+    public static final long RegisterRawInputDevices = apiGetFunctionAddress(USER32, "RegisterRawInputDevices");
+    public static final long ScreenToClient = apiGetFunctionAddress(USER32, "ScreenToClient");
+    public static final long GetKeyState = apiGetFunctionAddress(USER32, "GetKeyState");
+    public static final long GetClientRect = apiGetFunctionAddress(USER32, "GetClientRect");
+    public static final long MapVirtualKeyW = apiGetFunctionAddress(USER32, "MapVirtualKeyW");
+    public static final long SetFocus = apiGetFunctionAddress(USER32, "SetFocus");
+    public static final long PostMessageW = apiGetFunctionAddress(USER32, "PostMessageW");
+    public static final long GetKeyboardState = apiGetFunctionAddress(USER32, "GetKeyboardState");
+    public static final long SetKeyboardState = apiGetFunctionAddress(USER32, "SetKeyboardState");
+
+    public static int nClientToScreen(long hWnd, long lpPoint) {
+        if (Checks.CHECKS) {
+            Checks.check(hWnd);
+        }
+        return callPPI(hWnd, lpPoint, ClientToScreen);
+    }
+
+    @NativeType("BOOL")
+    public static boolean ClientToScreen(@NativeType("HWND") long hWnd, @NativeType("LPPOINT") POINT lpPoint) {
+        return nClientToScreen(hWnd, lpPoint.address()) != 0;
+    }
+
+    @NativeType("HWND")
+    public static long GetActiveWindow() {
+        return callP(GetActiveWindow);
+    }
+
+    public static int nGetRawInputBuffer(long pData, long pcbSize, int cbSizeHeader) {
+        return callPPI(pData, pcbSize, cbSizeHeader, GetRawInputBuffer);
+    }
+
+    @NativeType("UINT")
+    public static int GetRawInputBuffer(@NativeType("LPRAWINPUT") RAWINPUT pData, @NativeType("PUINT") IntBuffer pcbSize, @NativeType("UINT") int cbSizeHeader) {
+        return nGetRawInputBuffer(pData.address(), memAddress(pcbSize), cbSizeHeader);
+    }
+
+    @NativeType("BOOL")
+    public static boolean RegisterRawInputDevices(@NativeType("PCRAWINPUTDEVICE") RAWINPUTDEVICE pRawInputDevices, @NativeType("UINT") int uiNumDevices, @NativeType("UINT") int cbSize) {
+        return callPI(pRawInputDevices.address(), uiNumDevices, cbSize, RegisterRawInputDevices) != 0;
+    }
+
+    public static int nScreenToClient(long hWnd, long lpPoint) {
+        if (Checks.CHECKS) {
+            Checks.check(hWnd);
+        }
+        return callPPI(hWnd, lpPoint, ScreenToClient);
+    }
+
+    @NativeType("BOOL")
+    public static boolean ScreenToClient(@NativeType("HWND") long hWnd, @NativeType("LPPOINT") POINT lpPoint) {
+        return nScreenToClient(hWnd, lpPoint.address()) != 0;
+    }
+
+    @NativeType("SHORT")
+    public static short GetKeyState(@NativeType("INT") int nVirtKey) {
+        return callS(nVirtKey, GetKeyState);
+    }
+
+    public static int nGetClientRect(long hWnd, long lpRect) {
+        long __functionAddress = GetClientRect;
+        if (Checks.CHECKS) {
+            Checks.check(hWnd);
+        }
+        return callPPI(hWnd, lpRect, __functionAddress);
+    }
+
+    @NativeType("BOOL")
+    public static boolean GetClientRect(@NativeType("HWND") long hWnd, @NativeType("LPRECT") RECT lpRect) {
+        return nGetClientRect(hWnd, lpRect.address()) != 0;
+    }
+
+    @NativeType("UINT")
+    public static int MapVirtualKeyW(@NativeType("UINT") int uCode, @NativeType("UINT") int uMapType) {
+        return callI(uCode, uMapType, MapVirtualKeyW);
+    }
+
+    @NativeType("HWND")
+    public static long SetFocus(@NativeType("HWND") long hWnd) {
+        if (Checks.CHECKS) {
+            Checks.check(hWnd);
+        }
+        return callPP(hWnd, SetFocus);
+    }
+
+    @NativeType("BOOL")
+    public static boolean PostMessageW(@NativeType("HWND") long hWnd, @NativeType("UINT") int Msg, @NativeType("WPARAM") long wParam, @NativeType("LPARAM") long lParam) {
+        return callPPPI(hWnd, Msg, wParam, lParam, PostMessageW) != 0;
+    }
+
+
+    public static int nGetKeyboardState(long lpKeyState) {
+        return callPI(lpKeyState, GetKeyboardState);
+    }
+
+    @NativeType("BOOL")
+    public static boolean GetKeyboardState(@NativeType("BYTE *") ByteBuffer lpKeyState) {
+        return nGetKeyboardState(memAddress(lpKeyState)) != 0;
+    }
+
+    public static int nSetKeyboardState(long lpKeyState) {
+        return callPI(lpKeyState, SetKeyboardState);
+    }
+
+    @NativeType("BOOL")
+    public static boolean SetKeyboardState(@NativeType("BYTE *") ByteBuffer lpKeyState) {
+        return nSetKeyboardState(memAddress(lpKeyState)) != 0;
+    }
+}

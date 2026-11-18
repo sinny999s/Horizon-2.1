@@ -1,0 +1,122 @@
+/*
+Auto-generated. See the generator directory in project root.
+*/
+
+package dev.horizon.input.core.glfw.callback_dispatcher;
+
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import dev.horizon.input.core.Ixeris;
+import dev.horizon.input.core.glfw.callback_dispatcher.UpcallRunnable;
+import dev.horizon.input.core.threading.MainThreadDispatcher;
+import dev.horizon.input.core.threading.RenderThreadDispatcher;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWWindowMaximizeCallbackI;
+import org.lwjgl.system.Callback;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class WindowMaximizeCallbackDispatcher {
+    private static final Long2ReferenceMap<WindowMaximizeCallbackDispatcher> instance = new Long2ReferenceArrayMap<>(1);
+
+    private final ReferenceArrayList<GLFWWindowMaximizeCallbackI> mainThreadCallbacks = new ReferenceArrayList<>(1);
+    private boolean lastCallbackSet;
+    public GLFWWindowMaximizeCallbackI lastCallback;
+    public GLFWWindowMaximizeCallbackI effectiveLastCallback;
+    public long lastCallbackAddress;
+
+    private final long window;
+    public volatile boolean suppressChecks;
+    private final AtomicInteger suppressCallbacks = new AtomicInteger();
+
+    private WindowMaximizeCallbackDispatcher(long window) {
+        this.window = window;
+    }
+
+    public synchronized static WindowMaximizeCallbackDispatcher get(long window) {
+        if (!instance.containsKey(window)) {
+            instance.put(window, new WindowMaximizeCallbackDispatcher(window));
+            instance.get(window).validate();
+        }
+        return instance.get(window);
+    }
+
+    public void suppressCallbacks() {
+        suppressCallbacks.getAndIncrement();
+    }
+
+    public void unsuppressCallbacks() {
+        suppressCallbacks.getAndDecrement();
+    }
+
+    public synchronized void registerMainThreadCallback(GLFWWindowMaximizeCallbackI callback) {
+        mainThreadCallbacks.add(callback);
+        this.validate();
+    }
+
+    public synchronized long update(long newAddress) {
+        suppressChecks = true;
+        long ret = lastCallbackAddress;
+        if (newAddress == 0L && this.mainThreadCallbacks.isEmpty()) {
+            GLFW.nglfwSetWindowMaximizeCallback(window, 0L);
+        }
+        else {
+            GLFW.nglfwSetWindowMaximizeCallback(window, CommonCallbacks.windowMaximizeCallback.address());
+        }
+        lastCallbackAddress = newAddress;
+        if (!lastCallbackSet) {
+            lastCallback = newAddress == 0L ? null : Callback.get(newAddress);
+        }
+        lastCallbackSet = false;
+        suppressChecks = false;
+        var currentLastCallback = lastCallback;
+        MainThreadDispatcher.run(() -> effectiveLastCallback = currentLastCallback);
+        return ret;
+    }
+
+    public synchronized void update(GLFWWindowMaximizeCallbackI callback) {
+        lastCallback = callback;
+        lastCallbackSet = true;
+    }
+
+    public synchronized void validate() {
+        suppressChecks = true;
+        var current = GLFW.nglfwSetWindowMaximizeCallback(window, CommonCallbacks.windowMaximizeCallback.address());
+        if (current == 0L) {
+            if (this.mainThreadCallbacks.isEmpty()) {
+                // Remove callback when not needed
+                GLFW.nglfwSetWindowMaximizeCallback(window, 0L);
+            }
+        }
+        else if (current != CommonCallbacks.windowMaximizeCallback.address()) {
+            // This only happens when mods register callbacks without using LWJGL (e.x. directly in native code)
+            lastCallback = Callback.get(current);
+            lastCallbackAddress = current;
+        }
+        suppressChecks = false;
+    }
+
+    public void onCallback(long window, boolean maximized) {
+        if (this.window != window) {
+            return;
+        }
+        if (this.suppressCallbacks.get() > 0) {
+            return;
+        }
+        for (int i = 0; i < mainThreadCallbacks.size(); i++) {
+            mainThreadCallbacks.get(i).invoke(window, maximized);
+        }
+        if (effectiveLastCallback != null) {
+            var callback = effectiveLastCallback; // Keep a reference to the current callback; they are used as FunctionalInterface's so there are no issue even if the callback is already freed when we use it
+            RenderThreadDispatcher.runLater((DispatchedRunnable) () -> {
+                callback.invoke(window, maximized);
+            });
+        }
+    }
+
+    @FunctionalInterface
+    public interface DispatchedRunnable extends UpcallRunnable {
+    }
+}

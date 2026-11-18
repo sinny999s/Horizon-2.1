@@ -1,0 +1,66 @@
+package dev.horizon.input.core.sdl;
+
+import dev.horizon.input.core.EventHandler;
+import dev.horizon.input.core.Ixeris;
+import dev.horizon.input.core.sdl.state_caching.SdlStateCache;
+import dev.horizon.input.core.threading.MainThreadDispatcher;
+import dev.horizon.input.core.util.MemoryHelper;
+import org.lwjgl.sdl.SDLKeyboard;
+import org.lwjgl.system.MemoryUtil;
+
+public class SdlEventHandler implements EventHandler {
+    private final SdlEventQueue queue = new SdlEventQueue();
+    private volatile boolean requestedSetTextInputArea;
+    private volatile long textInputArea;
+    private volatile int textInputCursor;
+
+    @Override
+    public boolean canPollEvents() {
+        return Ixeris.sdlInitialized;
+    }
+
+    @Override
+    public void pollEvents() {
+        if (Ixeris.sdlInitialized) {
+            while (queue.pollEvent());
+            queue.flush();
+        }
+    }
+
+    @Override
+    public void afterMainThreadTask() {
+        if (Ixeris.sdlInitialized) {
+            SdlStateCache.refreshWindowFlags();
+        }
+    }
+
+    public void requestSetTextInputArea(long window, long rect, int cursor) {
+        if (window != Ixeris.accessor.getMinecraftWindow()) {
+            MainThreadDispatcher.query(() -> SDLKeyboard.nSDL_SetTextInputArea(window, rect, cursor));
+            return;
+        }
+        if (this.textInputArea != 0L) {
+            MemoryHelper.free(this.textInputArea);
+        }
+        this.textInputArea = SdlMemoryHelper.copySDL_Rect(rect);
+        this.textInputCursor = cursor;
+        this.requestedSetTextInputArea = true;
+    }
+
+    public void updateTextInputArea() {
+        MainThreadDispatcher.run(() -> {
+            if (!requestedSetTextInputArea) {
+                return;
+            }
+            requestedSetTextInputArea = false;
+            var area = textInputArea;
+            textInputArea = 0L;
+            SDLKeyboard.nSDL_SetTextInputArea(Ixeris.accessor.getMinecraftWindow(), area, textInputCursor);
+            MemoryHelper.free(area);
+        });
+    }
+
+    public boolean readEvents(long event) {
+        return queue.readEvent(event);
+    }
+}

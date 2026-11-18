@@ -1,0 +1,126 @@
+/*
+Auto-generated. See the generator directory in project root.
+*/
+
+package dev.horizon.input.core.glfw.callback_dispatcher;
+
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMaps;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceArrayMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+import dev.horizon.input.core.Ixeris;
+import dev.horizon.input.core.glfw.GlfwEventHandler;
+import dev.horizon.input.core.glfw.callback_dispatcher.UpcallRunnable;
+import dev.horizon.input.core.threading.MainThreadDispatcher;
+import dev.horizon.input.core.threading.RenderThreadDispatcher;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWErrorCallbackI;
+import org.lwjgl.system.Callback;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import dev.horizon.input.core.util.MemoryHelper;
+
+public class ErrorCallbackDispatcher {
+    private static ErrorCallbackDispatcher instance;
+
+    private final ReferenceArrayList<GLFWErrorCallbackI> mainThreadCallbacks = new ReferenceArrayList<>(1);
+    private boolean lastCallbackSet;
+    public GLFWErrorCallbackI lastCallback;
+    public GLFWErrorCallbackI effectiveLastCallback;
+    public long lastCallbackAddress;
+
+    public volatile boolean suppressChecks;
+    private final AtomicInteger suppressCallbacks = new AtomicInteger();
+
+    private ErrorCallbackDispatcher() {}
+
+    public synchronized static ErrorCallbackDispatcher get() {
+        if (instance == null) {
+            instance = new ErrorCallbackDispatcher();
+            instance.validate();
+        }
+        return instance;
+    }
+
+    public void suppressCallbacks() {
+        suppressCallbacks.getAndIncrement();
+    }
+
+    public void unsuppressCallbacks() {
+        suppressCallbacks.getAndDecrement();
+    }
+
+    public synchronized void registerMainThreadCallback(GLFWErrorCallbackI callback) {
+        mainThreadCallbacks.add(callback);
+        this.validate();
+    }
+
+    public synchronized long update(long newAddress) {
+        suppressChecks = true;
+        long ret = lastCallbackAddress;
+        if (newAddress == 0L && this.mainThreadCallbacks.isEmpty()) {
+            GLFW.nglfwSetErrorCallback(0L);
+        }
+        else {
+            GLFW.nglfwSetErrorCallback(CommonCallbacks.errorCallback.address());
+        }
+        lastCallbackAddress = newAddress;
+        if (!lastCallbackSet) {
+            lastCallback = newAddress == 0L ? null : Callback.get(newAddress);
+        }
+        lastCallbackSet = false;
+        suppressChecks = false;
+        var currentLastCallback = lastCallback;
+        MainThreadDispatcher.run(() -> effectiveLastCallback = currentLastCallback);
+        return ret;
+    }
+
+    public synchronized void update(GLFWErrorCallbackI callback) {
+        lastCallback = callback;
+        lastCallbackSet = true;
+    }
+
+    public synchronized void validate() {
+        suppressChecks = true;
+        var current = GLFW.nglfwSetErrorCallback(CommonCallbacks.errorCallback.address());
+        if (current == 0L) {
+            if (this.mainThreadCallbacks.isEmpty()) {
+                // Remove callback when not needed
+                GLFW.nglfwSetErrorCallback(0L);
+            }
+        }
+        else if (current != CommonCallbacks.errorCallback.address()) {
+            // This only happens when mods register callbacks without using LWJGL (e.x. directly in native code)
+            lastCallback = Callback.get(current);
+            lastCallbackAddress = current;
+        }
+        suppressChecks = false;
+    }
+
+    public void onCallback(int error, long description) {
+        if (this.suppressCallbacks.get() > 0) {
+            return;
+        }
+        for (int i = 0; i < mainThreadCallbacks.size(); i++) {
+            mainThreadCallbacks.get(i).invoke(error, description);
+        }
+        if (effectiveLastCallback != null) {
+            if (Ixeris.getEventHandler() instanceof GlfwEventHandler glfwEventHandler) {
+                var callback = effectiveLastCallback; // Keep a reference to the current callback; they are used as FunctionalInterface's so there are no issue even if the callback is already freed when we use it
+                var descriptionCopy = MemoryHelper.copyString(description);
+                glfwEventHandler.recordError((DispatchedRunnable) () -> {
+                    callback.invoke(error, descriptionCopy);
+                    MemoryHelper.free(descriptionCopy);
+               });
+            }
+            else {
+                effectiveLastCallback.invoke(error, description);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface DispatchedRunnable extends UpcallRunnable {
+    }
+}

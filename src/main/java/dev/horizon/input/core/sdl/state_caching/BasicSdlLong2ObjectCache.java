@@ -1,0 +1,33 @@
+package dev.horizon.input.core.sdl.state_caching;
+
+import dev.horizon.input.core.threading.MainThreadDispatcher;
+import dev.horizon.input.core.util.VolatileObjectHolder;
+
+import java.util.function.LongFunction;
+
+public class BasicSdlLong2ObjectCache<T> {
+    protected final long window;
+    protected final LongFunction<T> function;
+    private VolatileObjectHolder<T> cached;
+    public BasicSdlLong2ObjectCache(long window, LongFunction<T> function) {
+        this.window = window;
+        this.function = function;
+    }
+
+    public T get() {
+        if (cached == null) {
+            return blockingGet();
+        }
+        scheduleUpdate();
+        return cached.getValue();
+    }
+
+    protected T blockingGet() {
+        this.cached = new VolatileObjectHolder<>(MainThreadDispatcher.query(() -> function.apply(window)));
+        return this.cached.getValue();
+    }
+
+    protected void scheduleUpdate() {
+        MainThreadDispatcher.run(() -> this.cached.setValue(function.apply(window)));
+    }
+}

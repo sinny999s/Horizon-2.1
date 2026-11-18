@@ -1,0 +1,28 @@
+package dev.horizon.input.core;
+
+import dev.horizon.input.core.util.LWJGLVersionHelper;
+import dev.horizon.input.core.util.PlatformHelper;
+
+public class MixinHelper {
+    public static boolean shouldApply(String mixinOrTransformerClassName) {
+        if (mixinOrTransformerClassName.contains("glfw") && !RuntimeBackend.HAS_GLFW) {
+            return false;
+        }
+        if (mixinOrTransformerClassName.contains("sdl") && !RuntimeBackend.HAS_SDL) {
+            return false;
+        }
+        if (mixinOrTransformerClassName.contains("_330") && !LWJGLVersionHelper.is330OrGreater()) {
+            return false;
+        }
+        if (mixinOrTransformerClassName.contains("_334") && !LWJGLVersionHelper.is334OrGreater()) {
+            return false;
+        }
+        if (mixinOrTransformerClassName.contains("flexible_threading") && !Ixeris.getConfig().useFlexibleThreading()) {
+            return false;
+        }
+        if (mixinOrTransformerClassName.contains("macos") && !PlatformHelper.isMacOs()) {
+            return false;
+        }
+        return true;
+    }
+}
