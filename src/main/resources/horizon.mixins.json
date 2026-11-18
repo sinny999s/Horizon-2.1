@@ -75,7 +75,9 @@
     "vk.CheckpointStorageMixin",
     "vk.VertexFormatMixin",
     "vk.VkDirectBufferMixin",
-    "vk.VkDirectBufferViewMixin"
+    "vk.VkDirectBufferViewMixin",
+    "perf.ParticleLightMixin",
+    "perf.ClientLevelLightMixin"
   ],
   "injectors": {
     "defaultRequire": 1

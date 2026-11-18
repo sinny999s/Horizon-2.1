@@ -47,6 +47,8 @@ object Storage {
         var gpuSync: Boolean = true,
         /** Options > Horizon > Performance: Minecraft's GPU crash markers (mixin/vk/CheckpointStorageMixin); off saves a little. */
         var crashMarkers: Boolean = false,
+        /** Options > Horizon > Performance: particles keep their world light until it changes (render/perf/ParticleLight). */
+        var particleLight: Boolean = true,
     )
 
     var shared = Shared()

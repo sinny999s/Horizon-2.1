@@ -243,6 +243,12 @@ class OptionsMenu(val vanilla: OptionsScreen) : Screen(Component.translatable("o
                     Storage.shared.crashMarkers = it
                     Storage.saveShared()
                 })
+                add(Header("World"))
+                add(Toggle("Particle Light Cache", { Storage.shared.particleLight }, tooltip =
+                    "Particles look up their light when it changes instead of every frame. Same picture; more FPS with lots of smoke.") {
+                    Storage.shared.particleLight = it
+                    Storage.saveShared()
+                })
             }
         }, icon = "rage", group = HORIZON)
         if (Sulkan.present) {
