@@ -26,7 +26,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * A popover of the new ClickGUI: a glass card over everything, closed by a click outside it (or Esc). [draw] lays it
+ * A popover of the ClickGUI: a glass card over everything, closed by a click outside it (or Esc). [draw] lays it
  * out and returns false to close it.
  */
 internal abstract class Popover {
@@ -55,7 +55,7 @@ internal abstract class Popover {
         // box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .75)
         Ui.glow(x + 6f, y + 18f, w - 12f, h - 12f, 6.5f, 17f, 0x7C000000)
         Ui.blur(x, y, w, h, 6.5f)
-        Ui.box(x, y, w, h, 6.5f, Colors.withAlpha(0xFF18161F.toInt(), o + 0.12f), 0.5f, Tok.LINE2)
+        Ui.box(x, y, w, h, 6.5f, Colors.withAlpha(Tok.POP, o + 0.14f), 0.5f, Tok.LINE2)
         Ui.block("pop", x, y, w, h)
     }
 
@@ -69,7 +69,7 @@ internal abstract class Popover {
             tx += 11f
         }
         Ui.text(Type.label, Ui.fit(Type.label, label, ow - (tx - ox) - 16f), tx, oy + 7.5f, if (checked) Tok.WHITE else if (over) Tok.T1 else color)
-        if (checked) Ui.icon("check", ox + ow - 12f, oy + 4f, 7f, Tok.light(Tok.a1, 0.2f))
+        if (checked) Ui.icon("check", ox + ow - 12f, oy + 4f, 7f, Tok.T1)
         return over
     }
 }
@@ -171,7 +171,7 @@ internal class ColorPicker(private val setting: ColorSetting, private val ax: Fl
         py += 10f
         // hex and presets
         Ui.box(px, py, 18f, 13f, 3f, setting.value.rgb, 0.5f, 0x2EFFFFFF)
-        Ui.box(px + 21f, py, pw - 21f, 13f, 3.5f, 0x4D000000, 0.5f, Tok.LINE2)
+        Ui.box(px + 21f, py, pw - 21f, 13f, 3.5f, Tok.FILL, 0.5f, Tok.LINE2)
         Ui.text(Type.value, GuiData.hex(setting.value.rgb), px + 25f, py + 6.5f, Tok.T1)
         py += 16f
         val presets = intArrayOf(Theme.primary or 0xFF000000.toInt(), Theme.secondary or 0xFF000000.toInt(), -1, 0xFF000000.toInt(),
@@ -208,7 +208,7 @@ internal class ListPicker(private val setting: ListSetting<*>, private val ax: F
         val f = field
         val focused = Ui.focused === f
         Ui.hit(Ui.fieldId(f), x + 3f, y + 3f, w - 6f, 15f, { if (it == Keys.MOUSE_LEFT) Ui.focused = f })
-        Ui.box(x + 3f, y + 3f, w - 6f, 15f, 4f, 0x4D000000, 0.5f, if (focused) Tok.alpha(Tok.a1, 0.55f) else Tok.LINE2)
+        Ui.box(x + 3f, y + 3f, w - 6f, 15f, 4f, if (focused) Tok.FILL2 else Tok.FILL, 0.5f, if (focused) 0x52FFFFFF else Tok.LINE2)
         Ui.fieldText(f, x + 8f, y + 10.5f, w - 16f, Type.label, "Search ${kind(setting)}...")
         val q = f.text.lowercase(Locale.ROOT).trim()
         val chosen = setting.value.map { Popovers.descId(it) }.toSet()
@@ -258,7 +258,7 @@ internal class ThemeMenu(private val ax: Float, private val ay: Float) : Popover
             val ty = y + 16f + (i / 2) * 23f
             val on = Themes.current === t
             val over = Ui.hit("theme:${t.id}", tx, ty, tw, 20f, { if (it == Keys.MOUSE_LEFT) Theme.select(t) })
-            Ui.box(tx, ty, tw, 20f, 5f, if (over) Tok.FILL2 else Tok.FILL, 0.5f, if (on) Tok.alpha(Tok.a1, 0.6f) else Tok.LINE)
+            Ui.box(tx, ty, tw, 20f, 5f, if (over || on) Tok.FILL2 else Tok.FILL, 0.5f, if (on) 0x70FFFFFF else Tok.LINE)
             Ui.dbox(tx + 4.5f, ty + 4.5f, 11f, 11f, 3.5f, t.primaryColor or 0xFF000000.toInt(), t.secondaryColor or 0xFF000000.toInt())
             Ui.text(Type.small, Ui.fit(Type.small, t.id, tw - 24f), tx + 20f, ty + 10f, if (on) Tok.WHITE else if (over) Tok.T1 else Tok.T2)
         }
@@ -276,11 +276,7 @@ internal class ThemeMenu(private val ax: Float, private val ay: Float) : Popover
         val ty = py + 11f
         Ui.hit("op", tx, ty - 1f, twd, 10f, drag = { mx, _ -> o.value = ((min + (max - min) * ((mx - tx) / twd)) * 100).toInt() / 100f },
             scroll = { a -> o.value = (o.value + if (a > 0) 0.01f else -0.01f).coerceIn(min, max); true })
-        val frac = ((o.value - min) / (max - min)).coerceIn(0f, 1f)
-        val hx = tx + 1f + (twd - 2f) * frac
-        if (hx - 3f - tx > 2.5f) Ui.box(tx, ty + 1.5f, hx - 3f - tx, 6f, 3f, Tok.mid)
-        if (tx + twd - hx - 3f > 2.5f) Ui.box(hx + 3f, ty + 1.5f, tx + twd - hx - 3f, 6f, 3f, 0x17FFFFFF)
-        Ui.box(hx - 1f, ty - 1f, 2f, 11f, 1f, Tok.WHITE)
+        Ui.track(tx, ty + 2f, twd, ((o.value - min) / (max - min)).coerceIn(0f, 1f))
         return true
     }
 }

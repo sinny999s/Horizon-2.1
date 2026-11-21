@@ -42,7 +42,7 @@ internal class LunarMenu(private val ax: Float, private val ay: Float) : Popover
         py += 12f
         val on = LunarSettings.network.value
         val netOver = Ui.hit("lunar:network", lx, py, col, 22f, { if (it == Keys.MOUSE_LEFT) flip(LunarSettings.network) })
-        Ui.box(lx, py, col, 22f, 5f, if (netOver) Tok.FILL2 else Tok.FILL, 0.5f, if (on) Tok.alpha(Tok.a1, 0.45f) else Tok.LINE)
+        Ui.box(lx, py, col, 22f, 5f, if (netOver) Tok.FILL2 else Tok.FILL, 0.5f, if (on) 0x38FFFFFF else Tok.LINE)
         Ui.text(Type.semi, "Lunar services", lx + 6f, py + 7.5f, Tok.T1)
         Ui.text(Type.tiny, "Signs in with your account", lx + 6f, py + 15.5f, Tok.T3)
         Ui.switch("lunar:network", lx + col - 27f, py + 5f, on, big = true)

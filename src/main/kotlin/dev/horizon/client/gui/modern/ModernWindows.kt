@@ -27,8 +27,8 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * The Windows screen in the new style (UI > Style: New), built from design/clickgui/windows.js and
- * windows.css. Five windows: every entry has its
+ * The Windows screen in the new style (UI > Style: New), built from design/clickgui/windows.js and
+ * windows.css. Five windows: every entry has its
  * own controls (eye, radio, switch, bind) and a click opens it in the editor (right click too); windows
  * come forward when clicked and grow from their corner; Delete asks once more; Homies removes a friend from its trash
  * button. The windows sit on the mockup's 800x450 stage (its 1600x900 halved), centred and shrunk to fit the screen;
@@ -165,8 +165,6 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
         pose.pushMatrix()
         pose.translate(ox, oy)
         pose.scale(k, k)
-        // From the main menu, no coloured glows: the menus out of a world are black through white.
-        if (only == null || mc.level != null) Ui.ambient(0f, 0f)
         Canvas.alpha = fade
         if (only == null) topNav(inT, 1)
         for (p in order.toList()) if (only == null || p === only) window(p, if (only != null) 0 else panes.indexOf(p), fade)
@@ -269,7 +267,6 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
         // shadow (0 30px 80px -26px, the front one 0 40px 100px -26px), the front one's ring in the accent
         if (front) Ui.glow(x + 13f, y + 33f, w - 26f, h - 26f, 8f, 28f, 0xD9000000.toInt())
         else Ui.glow(x + 13f, y + 28f, w - 26f, h - 26f, 8f, 22f, 0xCC000000.toInt())
-        if (front) Ui.box(x - 0.5f, y - 0.5f, w + 1f, h + 1f, 8.5f, 0, 0.5f, Tok.alpha(Tok.a1, 0.2f))
         val pulse = ((System.currentTimeMillis() - p.pulseAt) / 1000f).takeIf { it in 0f..1f }
         if (pulse != null) {
             val a = if (pulse < 0.35f) 1f else 1f - (pulse - 0.35f) / 0.65f
@@ -277,11 +274,8 @@ object ModernWindows : Screen(Component.literal("horizon-windows")) {
             Ui.box(x - 1f, y - 1f, w + 2f, h + 2f, 9f, 0, 1f, Tok.alpha(Tok.a1, 0.7f * a))
         }
         Ui.blur(x, y, w, h, 8f)
-        Ui.pushClip(x, y, w, h)
-        Ui.ambient(0f, 0f, floatArrayOf(x, y, w, h, 8f))
-        Ui.popClip()
         val g = ui.opacity.value
-        Ui.vbox(x, y, w, h, 8f, Colors.withAlpha(0xFF18151E.toInt(), g), Colors.withAlpha(0xFF0B0A0F.toInt(), g + 0.06f),
+        Ui.vbox(x, y, w, h, 8f, Colors.withAlpha(Tok.GLASS_TOP, g), Colors.withAlpha(Tok.GLASS_BOTTOM, g + 0.06f),
             0.5f, if (front) 0x21FFFFFF else 0x17FFFFFF)
         Ui.insetTop(x, y, w, 8f, if (front) 0x14FFFFFF else 0x12FFFFFF)
         Ui.block("win:" + p.id, x, y, w, h)
@@ -788,7 +782,7 @@ internal class Menu(private val ax: Float, private val ay: Float, private val it
         val o = Modules.get<ClickGuiModule>().opacity.value
         Ui.box(x - 1f, y + 3f, w + 2f, h, 7.5f, 0x40000000)
         Ui.blur(x, y, w, h, 6.5f)
-        Ui.box(x, y, w, h, 6.5f, Colors.withAlpha(0xFF18161F.toInt(), o + 0.12f), 0.5f, Tok.LINE2)
+        Ui.box(x, y, w, h, 6.5f, Colors.withAlpha(Tok.POP, o + 0.12f), 0.5f, Tok.LINE2)
         Ui.block("menu", x, y, w, h)
         for ((i, it) in items.withIndex()) {
             val oy = y + 3f + i * 15f

@@ -160,10 +160,8 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
         Ui.glow(15f, 40f, W - 30f, H - 30f, 11f, 40f, 0x8C000000.toInt())
         Ui.box(-0.5f, -0.5f, W + 1f, H + 1f, 11.5f, 0, 0.5f, 0x59000000)
         Ui.blur(0f, 0f, W, H, 11f)
-        Ui.ambient(-90f, -50f)
-        Ui.vbox(0f, 0f, W, H, 11f, 0xEB18151E.toInt(), 0xF20B0A0F.toInt(), 0.5f, 0x17FFFFFF)
+        Ui.vbox(0f, 0f, W, H, 11f, 0xEB161618.toInt(), 0xF20B0B0D.toInt(), 0.5f, 0x17FFFFFF)
         Ui.insetTop(0f, 0f, W, 11f, 0x12FFFFFF)
-        Ui.fadeLine(W * 0.1f, 0f, W * 0.8f, 0.5f, Tok.alpha(Tok.light(Tok.a1, 0.3f), 0.55f))
         Ui.block("friends", 0f, 0f, W, H)
         titleBar()
         list()
@@ -185,9 +183,8 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
 
     private fun titleBar() {
         Ui.box(0f, BAR, W, 0.5f, 0f, Tok.LINE)
-        Ui.glow(12.5f, 10.75f, 8f, 8f, 4f, 5f, Tok.alpha(Tok.a1, 0.3f))
         Ui.mark(9.5f, 7.75f, 14f)
-        Type.brand.drawGradientMiddle("Friends", 28.5f, 14.75f, Tok.a1, Tok.a2)
+        Ui.text(Type.brand, "Friends", 28.5f, 14.75f, Tok.T1)
         val vx = 28.5f + Type.brand.width("Friends") + 5f
         val vw = Type.ver.width("LUNAR") + 7f
         Ui.box(vx, 10.25f, vw, 9f, 3f, Tok.FILL, 0.5f, Tok.LINE)
@@ -367,7 +364,7 @@ object LunarFriendsScreen : Screen(Component.literal("horizon-lunar-friends")) {
     private val NAME = Regex("[A-Za-z0-9_]{1,16}")
 
     /** The window's background, for fading the ends of the friends list ([Ui.fade]). */
-    private val backdrop = Ui.Backdrop({ Ui.ambient(-90f, -50f) }, { y -> Ui.vboxAt(0f, H, 0xEB18151E.toInt(), 0xF20B0A0F.toInt(), y) })
+    private val backdrop = Ui.Backdrop(null, { y -> Ui.vboxAt(0f, H, 0xEB161618.toInt(), 0xF20B0B0D.toInt(), y) })
 
     private fun friend(f: Friend, x: Float, y: Float, w: Float, top: Float, bottom: Float) {
         val y0 = max(y, top)

@@ -16,9 +16,8 @@ import kotlin.math.sqrt
 import kotlin.math.min
 
 /**
- * The new ClickGUI's look (design/clickgui/index.html), in GUI units. The mockup is a 1600x900 window
- * at GUI scale 2, so its pixels halved are these units; its colours are below, with the theme's primary and secondary
- * standing in for its two accents.
+ * The ClickGUI's look, in GUI units (a 1600x900 window at GUI scale 2 is 800x450 of them). Everything is grey on
+ * neutral glass; the theme's colour is kept for what is switched on or filled in (a switch, a slider's filled part).
  */
 internal object Tok {
     val T1 = 0xFFF5F5F7.toInt()
@@ -30,6 +29,16 @@ internal object Tok {
     val FILL = 0x0AFFFFFF
     val FILL2 = 0x12FFFFFF
     val WHITE = -1
+
+    /** A window's glass: the tint over the blurred world at its top and bottom, before the window's opacity. */
+    val GLASS_TOP = 0xFF161618.toInt()
+    val GLASS_BOTTOM = 0xFF0B0B0D.toInt()
+
+    /** A popover's glass, a shade lighter than the window it lies on. */
+    val POP = 0xFF18181B.toInt()
+
+    /** A white button's text. */
+    val INK = 0xFF111113.toInt()
 
     val a1: Int get() = Theme.primary or 0xFF000000.toInt()
     val a2: Int get() = Theme.secondary or 0xFF000000.toInt()
@@ -44,7 +53,7 @@ internal object Tok {
     val mid: Int get() = Colors.lerp(a1, a2, 0.5f)
 }
 
-/** The mockup's type scale: CSS px / 2, SF Pro as in the game's fonts, with the mockup's letter-spacing (CSS px). */
+/** The type scale: SF Pro, sizes in GUI units, with letter-spacing in half units. */
 internal object Type {
     val label by lazy { WebText("sf_medium", 6.5f) }
     val nav by lazy { WebText("sf_medium", 6.75f) }
@@ -72,7 +81,7 @@ internal object Type {
 }
 
 /**
- * The toolkit the new ClickGUI is drawn with: an immediate-mode GUI. Every frame each control is drawn and registers
+ * The toolkit the ClickGUI is drawn with: an immediate-mode GUI. Every frame each control is drawn and registers
  * a hit box; input goes to the top-most box under the mouse in the last frame drawn (popovers are drawn last, so they
  * are on top). Hover is read from that same frame, so it never flickers between layers.
  */
@@ -218,26 +227,6 @@ internal object Ui {
     fun glow(x: Float, y: Float, w: Float, h: Float, r: Float, spread: Float, color: Int, dy: Float = 0f) =
         Canvas.glow(x, y + dy, w, h, r, spread * 0.35f, spread, Colors.withAlpha(color, Colors.alphaF(color) * 0.55f))
 
-    /**
-     * The mockup's ambient light: two big blurred glows in the accents behind the windows (#ambient, 50% over the
-     * world), drifting slowly, placed on the mockup's 800x450 stage whose origin is at ([ox], [oy]). Drawn over the
-     * world and under a window's tint, so the glass picks them up as the browser's backdrop-filter does.
-     */
-    fun ambient(ox: Float, oy: Float, mask: FloatArray? = null) {
-        val t = System.currentTimeMillis() / 1000.0
-        fun drift(period: Double) = ((1 - kotlin.math.cos(t / period * Math.PI)) / 2).toFloat()
-        val d1 = drift(18.0)
-        val d2 = drift(22.0)
-        blob(ox + 215f + 70f * d1, oy + 175f + 45f * d1, 155f * (1f + 0.15f * d1), Tok.alpha(Tok.a1, 0.275f), mask)
-        blob(ox + 595f - 80f * d2, oy + 325f - 35f * d2, 155f * (1f - 0.1f * d2), Tok.alpha(Tok.a2, 0.225f), mask)
-    }
-
-    /** A disc of radius [r] blurred by about a third of it (CSS blur(90px) on a 620px circle), [color] at the middle. */
-    private fun blob(cx: Float, cy: Float, r: Float, color: Int, mask: FloatArray?) {
-        val core = r * 0.7f
-        Canvas.glow(cx - core, cy - core, 2f * core, 2f * core, core, 0f, r * 0.6f, color, mask)
-    }
-
     /** A horizontal hairline fading in from the left and out to the right (CSS transparent, [c], transparent). */
     fun fadeLine(x: Float, y: Float, w: Float, h: Float, c: Int) {
         val clear = c and 0xFFFFFF
@@ -249,8 +238,8 @@ internal object Ui {
     fun blur(x: Float, y: Float, w: Float, h: Float, r: Float) = Canvas.blurBox(x, y, w, h, r)
 
     /**
-     * A window's background, for [fade]: the blurred world, then [ambient] (its faint lights, painted as the window
-     * paints them), then its [tints] from the bottom one up, each the colour it has at a height.
+     * A window's background, for [fade]: the blurred world, then [ambient] (anything the window paints over the blur
+     * and under its tints, if it does), then its [tints] from the bottom one up, each the colour it has at a height.
      */
     class Backdrop(val ambient: (() -> Unit)?, vararg val tints: (Float) -> Int)
 
@@ -299,7 +288,7 @@ internal object Ui {
             draw(up, down, ys[up], ys[down] - ys[up])
         }
         for (i in 0 until n) band(i) { t, b, y0, h -> Canvas.blurQuad(x, y0, w, h, blur[t], blur[b]) }
-        // The ambient light is faint under the tints: a unit at a time is fine enough.
+        // What lies under the tints is faint: a unit at a time is fine enough.
         back.ambient?.let { paint ->
             val pa = Canvas.alpha
             val top = if (bottom) y - len else y
@@ -343,9 +332,19 @@ internal object Ui {
     fun textC(font: WebText, s: String, cx: Float, cy: Float, color: Int) = font.drawMiddleCentered(s, cx, cy, color)
     fun textR(font: WebText, s: String, right: Float, cy: Float, color: Int) = font.drawMiddle(s, right - font.width(s), cy, color)
 
-    /** [s] cut to [w] with an ellipsis. */
+    private class Fitted(val w: Float, val text: String)
+    private val fitted = HashMap<WebText, HashMap<String, Fitted>>()
+
+    /** [s] cut to [w] with an ellipsis (remembered: lists ask for the same cut every frame). */
     fun fit(font: WebText, s: String, w: Float): String {
         if (font.width(s) <= w) return s
+        val byText = fitted.getOrPut(font) { HashMap() }
+        byText[s]?.let { if (it.w == w) return it.text }
+        if (byText.size > 2048) byText.clear()
+        return cut(font, s, w).also { byText[s] = Fitted(w, it) }
+    }
+
+    private fun cut(font: WebText, s: String, w: Float): String {
         var t = s
         while (t.isNotEmpty() && font.width("$t...") > w) t = t.dropLast(1)
         // no "203.0.113....": the cut never ends on a dot or a space
@@ -389,20 +388,36 @@ internal object Ui {
 
     // ---- controls ----
 
-    /** The mockup's switch (17x10, or 22x13 big): the knob springs over, the track fills with the accent. */
+    /** A switch (17x10, or 22x13 big): the knob slides over as the track fills with the accent. */
     fun switch(id: String, x: Float, y: Float, on: Boolean, big: Boolean = false, click: (() -> Unit)? = null): Boolean {
         val w = if (big) 22f else 17f
         val h = if (big) 13f else 10f
-        val t = anim("sw:$id", if (on) 1f else 0f, 450, Easing.OUT_BACK)
+        val t = anim("sw:$id", if (on) 1f else 0f, 260)
         val over = if (click != null) hit("sw:$id", x, y, w, h, { if (it == Keys.MOUSE_LEFT) click() }) else false
-        val f = t.coerceIn(0f, 1f)
-        if (f > 0.01f) glow(x, y, w, h, h / 2f, 5.5f, Tok.alpha(Tok.a1, 0.32f * f))
-        hbox(x, y, w, h, h / 2f, Colors.lerp(0x1FFFFFFF, Tok.a1, f), Colors.lerp(0x1FFFFFFF, Tok.a2, f))
-        val k = h - 2f
-        val kx = x + 1f + (w - h) * t
-        glow(kx, y + 1f, k, k, k / 2f, 1.5f, 0x40000000, 1f)
-        box(kx, y + 1f, k, k, k / 2f, if (over) 0xFFF4F4F6.toInt() else Tok.WHITE)
+        box(x, y, w, h, h / 2f, Colors.lerp(if (over) 0x2EFFFFFF else 0x24FFFFFF, Tok.a1, t))
+        val k = h - 3f
+        box(x + 1.5f + (w - h) * t, y + 1.5f, k, k, k / 2f, Colors.lerp(0xFFD4D4D8.toInt(), Tok.WHITE, t))
         return over
+    }
+
+    /**
+     * A slider's track, 5 tall from [y]: the part up to [frac] filled with the accent, a gap, the handle, a gap, the
+     * rest; a dot where the default ([def], a fraction, or negative for none) is. Returns the handle's x.
+     */
+    fun track(x: Float, y: Float, w: Float, frac: Float, def: Float = -1f, over: Boolean = false, dragging: Boolean = false): Float {
+        val hx = x + 1f + (w - 2f) * frac
+        val gap = 2.5f
+        val filled = hx - gap - x
+        if (filled > 2f) box(x, y, filled, 5f, 2.5f, Tok.a1)
+        val rest = x + w - hx - gap
+        if (rest > 2f) box(hx + gap, y, rest, 5f, 2.5f, if (over || dragging) 0x24FFFFFF else 0x1AFFFFFF)
+        if (def >= 0f) {
+            val dx = x + 1f + (w - 2f) * def
+            if (kotlin.math.abs(dx - hx) > gap + 1f) box(dx - 0.75f, y + 1.75f, 1.5f, 1.5f, 0.75f, 0x73FFFFFF)
+        }
+        val hw = if (dragging) 1.5f else 2f
+        box(hx - hw / 2f, y - 3f, hw, 11f, hw / 2f, Tok.WHITE)
+        return hx
     }
 
     /** A keycap ([text] in it, 9 tall); returns its width. */
@@ -415,26 +430,22 @@ internal object Ui {
     }
 
     /**
-     * The mockup's segmented control: [labels] in equal parts ([natural]: each its text plus 6 a side, as the filter),
-     * the selected one under a thumb that slides between them (accent, or [plain] grey).
+     * A segmented control: [labels] in equal parts ([natural]: each its text plus 6 a side, as the filter), the
+     * selected one under a thumb that slides between them ([plain]: a fainter one, for a filter rather than a value).
      */
     fun seg(id: String, x: Float, y: Float, w: Float, h: Float, labels: List<String>, selected: Int, plain: Boolean = false,
             font: WebText = Type.small, natural: Boolean = false, pick: (Int) -> Unit) {
-        box(x, y, w, h, 5f, 0x40000000, 0.5f, Tok.LINE)
+        box(x, y, w, h, 5f, 0x29000000, 0.5f, Tok.LINE)
         val n = labels.size
         val widths = if (natural) labels.map { font.width(it) + 12f } else List(n) { (w - 3f) / n }
         val lefts = widths.runningFold(x + 1.5f) { a, b -> a + b }
-        val tx = anim("seg:$id", selected.toFloat(), 450)
+        val tx = anim("seg:$id", selected.toFloat(), 320)
         val i0 = tx.toInt().coerceIn(0, n - 1)
         val i1 = (i0 + 1).coerceAtMost(n - 1)
         val f = tx - i0
         val thx = lefts[i0] + (lefts[i1] - lefts[i0]) * f
         val thw = widths[i0] + (widths[i1] - widths[i0]) * f
-        if (plain) box(thx, y + 1.5f, thw, h - 3f, 4f, 0x1AFFFFFF, 0.5f, 0x14FFFFFF)
-        else {
-            glow(thx, y + 2.5f, thw, h - 3f, 4f, 3f, Tok.alpha(Tok.a1, 0.3f))
-            dbox(thx, y + 1.5f, thw, h - 3f, 4f, Tok.a1, Tok.a2)
-        }
+        box(thx, y + 1.5f, thw, h - 3f, 3.5f, if (plain) 0x1AFFFFFF else 0x26FFFFFF, 0.5f, if (plain) 0x14FFFFFF else 0x1FFFFFFF)
         for ((i, l) in labels.withIndex()) {
             val bx = lefts[i]
             val bw = widths[i]
@@ -451,7 +462,7 @@ internal object Ui {
     /** The width [seg] takes with natural parts. */
     fun segWidth(labels: List<String>, font: WebText = Type.small) = labels.sumOf { (font.width(it) + 12f).toDouble() }.toFloat() + 3f
 
-    /** A small bordered button with an optional icon; returns its width. */
+    /** A small bordered button with an optional icon ([accent]: the one that matters, white); returns its width. */
     fun button(id: String, x: Float, y: Float, h: Float, label: String?, iconName: String?, accent: Boolean = false,
                active: Boolean = false, click: () -> Unit): Float {
         val font = Type.small
@@ -460,11 +471,11 @@ internal object Ui {
         val bw = if (label == null) h else w
         val over = hit("btn:$id", x, y, bw, h, { if (it == Keys.MOUSE_LEFT) click() })
         when {
-            accent -> box(x, y, bw, h, 4.5f, if (over) Tok.light(Tok.mid, 0.08f) else Tok.mid)
-            active -> box(x, y, bw, h, 4.5f, Tok.FILL2, 0.5f, Tok.alpha(Tok.a1, 0.7f))
+            accent -> box(x, y, bw, h, 4.5f, if (over) Tok.WHITE else 0xFFE8E8EC.toInt())
+            active -> box(x, y, bw, h, 4.5f, Tok.FILL2, 0.5f, 0x8CFFFFFF.toInt())
             else -> box(x, y, bw, h, 4.5f, if (over) Tok.FILL2 else Tok.FILL, 0.5f, if (over) Tok.LINE2 else Tok.LINE)
         }
-        val c = if (accent || over || active) Tok.T1 else Tok.T2
+        val c = if (accent) Tok.INK else if (over || active) Tok.T1 else Tok.T2
         if (label == null) {
             if (iconName != null) icon(iconName, x + (bw - 7f) / 2f, y + (h - 7f) / 2f, 7f, c)
         } else {
@@ -516,6 +527,6 @@ internal object Ui {
         while (shown.isNotEmpty() && font.width(shown) > w - 3f) shown = shown.drop(1)
         if (f.text.isEmpty()) text(font, fit(font, placeholder, w), x, cy, Tok.T4)
         text(font, shown, x, cy, color)
-        if (focusedNow && System.currentTimeMillis() % 1000 < 530) box(x + font.width(shown) + 0.5f, cy - 3.5f, 0.75f, 7f, 0f, Tok.a1)
+        if (focusedNow && System.currentTimeMillis() % 1000 < 530) box(x + font.width(shown) + 0.5f, cy - 3.5f, 0.75f, 7f, 0f, Tok.T1)
     }
 }

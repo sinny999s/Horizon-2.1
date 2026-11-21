@@ -328,7 +328,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
         Ui.glow(x + 13f, y + 28f, w - 26f, h - 26f, 8f, 22f, 0xCC000000.toInt())
         Ui.blur(x, y, w, h, 8f)
         val g = ui.opacity.value
-        Ui.vbox(x, y, w, h, 8f, Colors.withAlpha(0xFF18151E.toInt(), g), Colors.withAlpha(0xFF0B0A0F.toInt(), g + 0.06f), 0.5f, 0x1AFFFFFF)
+        Ui.vbox(x, y, w, h, 8f, Colors.withAlpha(Tok.GLASS_TOP, g), Colors.withAlpha(Tok.GLASS_BOTTOM, g + 0.06f), 0.5f, 0x1AFFFFFF)
         Ui.insetTop(x, y, w, 8f, 0x12FFFFFF)
         Ui.block("hpanel", x, y, w, h)
 
@@ -473,7 +473,7 @@ object ModernHudEditor : Screen(Component.literal("horizon-widget-editor")) {
             val o = Modules.get<ClickGuiModule>().opacity.value
             Ui.box(x - 1f, y + 3f, w + 2f, h, 7.5f, 0x40000000)
             Ui.blur(x, y, w, h, 6.5f)
-            Ui.box(x, y, w, h, 6.5f, Colors.withAlpha(0xFF18161F.toInt(), o + 0.12f), 0.5f, Tok.LINE2)
+            Ui.box(x, y, w, h, 6.5f, Colors.withAlpha(Tok.POP, o + 0.12f), 0.5f, Tok.LINE2)
             Ui.block("hpop", x, y, w, h)
         }
 
