@@ -40,7 +40,7 @@ import kotlin.math.floor
  * screen still hold, but draws none of it. Over the animated backdrop (no panel; only the rows sit on a quiet card), a
  * column down the left holds the logo (its letters white, its horizon lines a softer white), a greeting and the
  * menu as the new ClickGUI's sidebar rows (design/clickgui: icon and label, the pill and chevron on hover), under Play
- * (Rejoin, the last server joined, once there is one; vanilla's actions; and Proxies) and Game. The versions are in the bottom-left corner and Mojang's copyright line
+ * (Rejoin, the last server joined, once there is one; vanilla's actions; Proxies and Accounts) and Game. The versions are in the bottom-left corner and Mojang's copyright line
  * (opening the credits, as vanilla's does) in the bottom-right. Everything fades and slides in the first time a menu is
  * shown, quicker when coming back to it from the screens it opens; on a short screen the column is scaled down to fit.
  */
@@ -61,11 +61,15 @@ class MainMenu : TitleScreen(), MenuScreen {
     /** Not in vanilla: joins the server last joined (or tried), in one click; shown once there is one. */
     private val rejoin = Row("Rejoin", "play") { rejoin() }
 
+    /** Not in vanilla: the accounts the game can play as, to switch between without a restart; the one in use at its right. */
+    private val accounts = Row("Accounts", "account") { mc.gui.setScreen(AccountsMenu(this)) }
+
     private val play = listOf(
         Row("Singleplayer", "player") { mc.gui.setScreen(SelectWorldScreen(this)) },
         Row("Multiplayer", "users") { mc.gui.setScreen(if (mc.options.skipMultiplayerWarning) JoinMultiplayerScreen(this) else SafetyScreen(this)) },
         // Not in vanilla: the Windows screen's proxies, so one can be picked before the first connection.
         Row("Proxies", "globe") { ModernWindows.openProxies(this) },
+        accounts,
     )
     private val game = listOf(
         Row("Options", "gear") { mc.gui.setScreen(OptionsScreen(this, mc.options)) },
@@ -76,6 +80,7 @@ class MainMenu : TitleScreen(), MenuScreen {
     private fun sections(): List<Pair<String, List<Row>>> {
         val name = Storage.shared.lastServerName.ifBlank { Storage.shared.lastServerIp }
         rejoin.detail = name
+        accounts.detail = mc.user.name
         val playRows = if (Storage.shared.lastServerIp.isBlank()) play else listOf(rejoin) + play
         return listOf("Play" to playRows, "Game" to game)
     }

@@ -24,6 +24,7 @@
 - **Visual HUD Editor**: Drag-and-drop HUD elements, real-time widget snapping, custom margins, and persistent layouts.
 - **Profile & Config Engine**: Switch between module configurations and HUD layouts with instant hot-swapping and smooth audio feedback.
 - **Customizable Theming**: High-contrast Crimson Red accents, subtle glass blurs, and crisp typography.
+- **Account Switcher**: An Accounts screen on the title screen plays as another Microsoft account without restarting the game. Sign accounts in through your browser, or, started from the Horizon Launcher, pick any account the launcher is signed in to.
 
 ---
 
